@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, TextInput, Alert } from 'react-native';
 import { Stack, Link } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
+import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { weeklySpecials, upcomingEvents, contactInfo } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
@@ -59,6 +60,11 @@ export default function HomeScreen() {
       )}
       
       <View style={[commonStyles.container, styles.container]}>
+        {/* Banner for non-iOS */}
+        {Platform.OS !== 'ios' && (
+          <CustomerBanner onLoginPress={() => setLoginModalVisible(true)} />
+        )}
+
         <ScrollView 
           contentContainerStyle={[
             styles.scrollContent,
@@ -66,24 +72,11 @@ export default function HomeScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
-          {Platform.OS !== 'ios' && (
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>McLoone&apos;s Boathouse</Text>
-              <Pressable
-                onPress={() => setLoginModalVisible(true)}
-                style={styles.headerButton}
-              >
-                <IconSymbol name="person.circle.fill" color={colors.accent} size={28} />
-              </Pressable>
-            </View>
-          )}
-
           {/* Welcome Message */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Welcome to the Shore&apos;s Finest</Text>
+            <Text style={styles.welcomeTitle}>Welcome to McLoone&apos;s Boathouse Deck Team</Text>
             <Text style={styles.welcomeText}>
-              Experience exceptional waterfront dining with stunning views of the Shrewsbury River
+              Let&apos;s get you ready for your next adventure!
             </Text>
           </View>
 
@@ -217,21 +210,6 @@ const styles = StyleSheet.create({
   },
   scrollContentWithTabBar: {
     paddingBottom: 100,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
   },
   headerButton: {
     padding: 4,

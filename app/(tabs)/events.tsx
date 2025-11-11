@@ -1,12 +1,15 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Linking } from 'react-native';
 import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
+import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { upcomingEvents } from '@/data/mockData';
 
 export default function EventsScreen() {
+  const [loginModalVisible, setLoginModalVisible] = useState(false);
+
   const handleRSVP = (rsvpLink: string) => {
     Linking.openURL(rsvpLink);
   };
@@ -26,11 +29,9 @@ export default function EventsScreen() {
       )}
       
       <View style={[commonStyles.container, styles.container]}>
-        {/* Header for non-iOS */}
+        {/* Banner for non-iOS */}
         {Platform.OS !== 'ios' && (
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Events & Entertainment</Text>
-          </View>
+          <CustomerBanner onLoginPress={() => setLoginModalVisible(true)} />
         )}
 
         <ScrollView
@@ -93,18 +94,6 @@ export default function EventsScreen() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background,
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
   },
   scrollContent: {
     paddingHorizontal: 16,

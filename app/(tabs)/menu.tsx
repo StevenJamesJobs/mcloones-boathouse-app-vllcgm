@@ -2,12 +2,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
+import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useMenu, MenuItemWithCategory } from '@/hooks/useMenu';
 
 export default function MenuScreen() {
   const [selectedMeal, setSelectedMeal] = useState<'lunch' | 'dinner'>('lunch');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [loginModalVisible, setLoginModalVisible] = useState(false);
 
   const { items, categories, loading, error } = useMenu(selectedMeal);
 
@@ -61,11 +63,9 @@ export default function MenuScreen() {
       )}
       
       <View style={[commonStyles.container, styles.container]}>
-        {/* Header for non-iOS */}
+        {/* Banner for non-iOS */}
         {Platform.OS !== 'ios' && (
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Menu</Text>
-          </View>
+          <CustomerBanner onLoginPress={() => setLoginModalVisible(true)} />
         )}
 
         {/* Meal Type Selector */}
@@ -213,18 +213,6 @@ export default function MenuScreen() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background,
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
   },
   mealSelector: {
     flexDirection: 'row',
