@@ -28,6 +28,12 @@ export default function TabLayout() {
       label: 'Events',
     },
     {
+      name: 'reviews',
+      route: '/(tabs)/reviews',
+      icon: 'star.fill',
+      label: 'Reviews',
+    },
+    {
       name: 'about',
       route: '/(tabs)/about',
       icon: 'info.circle.fill',
@@ -57,6 +63,10 @@ export default function TabLayout() {
           <Icon sf="calendar" drawable="ic_calendar" />
           <Label>Events</Label>
         </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="reviews">
+          <Icon sf="star.fill" drawable="ic_star" />
+          <Label>Reviews</Label>
+        </NativeTabs.Trigger>
         <NativeTabs.Trigger name="about">
           <Icon sf="info.circle.fill" drawable="ic_info" />
           <Label>About</Label>
@@ -81,6 +91,7 @@ export default function TabLayout() {
         <Stack.Screen name="(home)" />
         <Stack.Screen name="menu" />
         <Stack.Screen name="events" />
+        <Stack.Screen name="reviews" />
         <Stack.Screen name="about" />
         <Stack.Screen name="gallery" />
       </Stack>

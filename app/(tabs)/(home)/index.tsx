@@ -1,14 +1,15 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, TextInput, Alert, ActivityIndicator, Linking } from 'react-native';
 import { Stack, Link } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { contactInfo } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWeeklySpecials } from '@/hooks/useWeeklySpecials';
 import { useEvents } from '@/hooks/useEvents';
+import { useContactUs } from '@/hooks/useContactUs';
+import { useReviews } from '@/hooks/useReviews';
 import { router } from 'expo-router';
 
 export default function HomeScreen() {
@@ -18,6 +19,8 @@ export default function HomeScreen() {
   const { login, user } = useAuth();
   const { specials, loading: specialsLoading } = useWeeklySpecials();
   const { events, loading: eventsLoading } = useEvents();
+  const { contactInfo, loading: contactLoading } = useContactUs();
+  const { reviews, loading: reviewsLoading } = useReviews();
 
   const handleLogin = () => {
     if (login(email, password)) {
@@ -44,6 +47,29 @@ export default function HomeScreen() {
       <IconSymbol name="person.circle.fill" color={colors.accent} size={28} />
     </Pressable>
   );
+
+  const renderStars = (rating: number) => {
+    return (
+      <View style={styles.ratingContainer}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <IconSymbol
+            key={star}
+            name="star.fill"
+            size={14}
+            color={star <= rating ? '#FFD700' : '#ccc'}
+          />
+        ))}
+      </View>
+    );
+  };
+
+  const handleLeaveReview = () => {
+    const googleReviewUrl = 'https://www.google.com/search?q=mcloone%27s+boathouse&rlz=1C5CHFA_enUS1042US1042#lrd=0x89c22e7b6dd8b5a1:0x8e3c3e3e3e3e3e3e,3';
+    Linking.openURL(googleReviewUrl).catch(err => {
+      console.error('Failed to open URL:', err);
+      Alert.alert('Error', 'Could not open review page');
+    });
+  };
 
   // Get next two upcoming events
   const nextTwoEvents = events.slice(0, 2);
@@ -84,7 +110,7 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          {/* Upcoming Events - NOW FIRST */}
+          {/* Upcoming Events */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={commonStyles.subtitle}>Upcoming Events</Text>
@@ -121,7 +147,7 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* Weekly Specials - NOW SECOND */}
+          {/* Weekly Specials */}
           <View style={styles.section}>
             <Text style={commonStyles.subtitle}>Weekly Specials</Text>
             {specialsLoading ? (
@@ -151,28 +177,84 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* Contact Information - Updated with correct info */}
+          {/* Customer Reviews */}
+          <View style={styles.section}>
+            <Text style={commonStyles.subtitle}>What Our Customers Say</Text>
+            {reviewsLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text style={styles.loadingText}>Loading reviews...</Text>
+              </View>
+            ) : reviews.length === 0 ? (
+              <View style={commonStyles.card}>
+                <Text style={styles.noReviewsText}>No reviews yet</Text>
+              </View>
+            ) : (
+              <>
+                {reviews.map((review) => (
+                  <View key={review.id} style={commonStyles.card}>
+                    <View style={styles.reviewHeader}>
+                      <Text style={styles.reviewAuthor}>{review.author_name}</Text>
+                      {renderStars(review.rating)}
+                    </View>
+                    <Text style={styles.reviewText}>{review.review_text}</Text>
+                    <Text style={styles.reviewDate}>
+                      {new Date(review.review_date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </Text>
+                  </View>
+                ))}
+                <Pressable style={styles.leaveReviewButton} onPress={handleLeaveReview}>
+                  <IconSymbol name="star.fill" size={20} color="#fff" />
+                  <Text style={styles.leaveReviewText}>Leave a Review on Google</Text>
+                </Pressable>
+              </>
+            )}
+          </View>
+
+          {/* Contact Information */}
           <View style={styles.section}>
             <Text style={commonStyles.subtitle}>Contact Us</Text>
-            <View style={commonStyles.card}>
-              <View style={styles.contactRow}>
-                <IconSymbol name="phone.fill" color={colors.accent} size={20} />
-                <Text style={styles.contactText}>{contactInfo.phone}</Text>
+            {contactLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text style={styles.loadingText}>Loading contact info...</Text>
               </View>
-              <View style={styles.contactRow}>
-                <IconSymbol name="envelope.fill" color={colors.accent} size={20} />
-                <Text style={styles.contactText}>{contactInfo.email}</Text>
+            ) : contactInfo ? (
+              <View style={commonStyles.card}>
+                <View style={styles.contactRow}>
+                  <IconSymbol name="phone.fill" color={colors.accent} size={20} />
+                  <Text style={styles.contactText}>{contactInfo.phone}</Text>
+                </View>
+                <View style={styles.contactRow}>
+                  <IconSymbol name="envelope.fill" color={colors.accent} size={20} />
+                  <Text style={styles.contactText}>{contactInfo.email}</Text>
+                </View>
+                <View style={styles.contactRow}>
+                  <IconSymbol name="mappin.circle.fill" color={colors.accent} size={20} />
+                  <Text style={styles.contactText}>{contactInfo.address}</Text>
+                </View>
+                {(contactInfo.hours_weekday || contactInfo.hours_weekend) && (
+                  <>
+                    <View style={styles.divider} />
+                    <Text style={styles.hoursTitle}>Hours</Text>
+                    {contactInfo.hours_weekday && (
+                      <Text style={styles.hoursText}>Weekdays: {contactInfo.hours_weekday}</Text>
+                    )}
+                    {contactInfo.hours_weekend && (
+                      <Text style={styles.hoursText}>Weekends: {contactInfo.hours_weekend}</Text>
+                    )}
+                  </>
+                )}
               </View>
-              <View style={styles.contactRow}>
-                <IconSymbol name="mappin.circle.fill" color={colors.accent} size={20} />
-                <Text style={styles.contactText}>{contactInfo.address}</Text>
+            ) : (
+              <View style={commonStyles.card}>
+                <Text style={styles.noContactText}>Contact information not available</Text>
               </View>
-              <View style={styles.divider} />
-              <Text style={styles.hoursTitle}>Hours</Text>
-              <Text style={styles.hoursText}>Mon-Thu: {contactInfo.hours.weekday}</Text>
-              <Text style={styles.hoursText}>Fri-Sat: 11:30 AM - 10:00 PM</Text>
-              <Text style={styles.hoursText}>Sun: {contactInfo.hours.weekend} (Brunch until 3:00 PM)</Text>
-            </View>
+            )}
           </View>
         </ScrollView>
       </View>
@@ -336,6 +418,51 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontStyle: 'italic',
   },
+  noReviewsText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  reviewAuthor: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  reviewText: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  reviewDate: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  leaveReviewButton: {
+    backgroundColor: colors.accent,
+    borderRadius: 10,
+    padding: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 10,
+  },
+  leaveReviewText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   contactRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -362,6 +489,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     marginBottom: 4,
+  },
+  noContactText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,
