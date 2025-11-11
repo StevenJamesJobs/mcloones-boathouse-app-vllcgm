@@ -3,16 +3,19 @@ import React from 'react';
 import { View, StyleSheet, Pressable, Image, Platform } from 'react-native';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors } from '@/styles/commonStyles';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface CustomerBannerProps {
   onLoginPress: () => void;
 }
 
 export default function CustomerBanner({ onLoginPress }: CustomerBannerProps) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.banner}>
+    <View style={[styles.banner, { paddingTop: insets.top + 8 }]}>
       <Image 
-        source={require('@/assets/images/8802b18f-7c19-4d0c-9e6f-0d6b6ad24453.png')}
+        source={require('@/assets/images/c04edc3f-20ab-4cc0-b4b5-995857d3b5d7.png')}
         style={styles.logo}
         resizeMode="contain"
       />
@@ -25,14 +28,19 @@ export default function CustomerBanner({ onLoginPress }: CustomerBannerProps) {
 
 const styles = StyleSheet.create({
   banner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 12,
     backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    zIndex: 1000,
     ...Platform.select({
       ios: {
         shadowColor: '#000',

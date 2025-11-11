@@ -5,10 +5,12 @@ import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
-import { announcements, upcomingShifts } from '@/data/mockData';
+import { useAnnouncements } from '@/hooks/useAnnouncements';
+import { upcomingShifts } from '@/data/mockData';
 
 export default function EmployeeHomeScreen() {
   const { user, logout } = useAuth();
+  const { announcements } = useAnnouncements();
 
   useEffect(() => {
     if (!user || user.role === 'customer') {
@@ -25,6 +27,19 @@ export default function EmployeeHomeScreen() {
   const weather = {
     temperature: 72,
     condition: 'Partly Cloudy',
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return colors.error;
+      case 'medium':
+        return colors.warning;
+      case 'low':
+        return colors.textSecondary;
+      default:
+        return colors.textSecondary;
+    }
   };
 
   return (
@@ -51,8 +66,8 @@ export default function EmployeeHomeScreen() {
         >
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Welcome back, {user?.name}!</Text>
-            <Text style={styles.welcomeSubtitle}>Employee Portal</Text>
+            <Text style={styles.welcomeTitle}>Welcome to McLoone&apos;s Boathouse Deck Team</Text>
+            <Text style={styles.welcomeSubtitle}>Let&apos;s get you ready for your next adventure!</Text>
           </View>
 
           {/* Weather Card */}
@@ -96,24 +111,27 @@ export default function EmployeeHomeScreen() {
               <IconSymbol name="megaphone.fill" color={colors.employeeAccent} size={24} />
               <Text style={styles.cardTitle}>Announcements</Text>
             </View>
-            {announcements.map((announcement) => (
-              <View key={announcement.id} style={styles.announcementItem}>
-                <View style={[
-                  styles.priorityBadge,
-                  announcement.priority === 'high' && styles.priorityHigh,
-                  announcement.priority === 'medium' && styles.priorityMedium,
-                ]}>
-                  <Text style={styles.priorityText}>
-                    {announcement.priority.toUpperCase()}
+            {announcements.length === 0 ? (
+              <Text style={styles.noAnnouncementsText}>No announcements at this time</Text>
+            ) : (
+              announcements.map((announcement) => (
+                <View key={announcement.id} style={styles.announcementItem}>
+                  <View style={[
+                    styles.priorityBadge,
+                    { backgroundColor: getPriorityColor(announcement.priority) },
+                  ]}>
+                    <Text style={styles.priorityText}>
+                      {announcement.priority.toUpperCase()}
+                    </Text>
+                  </View>
+                  <Text style={styles.announcementTitle}>{announcement.title}</Text>
+                  <Text style={styles.announcementMessage}>{announcement.message}</Text>
+                  <Text style={styles.announcementDate}>
+                    {new Date(announcement.created_at || '').toLocaleDateString()}
                   </Text>
                 </View>
-                <Text style={styles.announcementTitle}>{announcement.title}</Text>
-                <Text style={styles.announcementMessage}>{announcement.message}</Text>
-                <Text style={styles.announcementDate}>
-                  {new Date(announcement.date).toLocaleDateString()}
-                </Text>
-              </View>
-            ))}
+              ))
+            )}
           </View>
 
           {/* Quick Links */}
@@ -230,14 +248,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
-    backgroundColor: colors.textSecondary,
     marginBottom: 8,
-  },
-  priorityHigh: {
-    backgroundColor: colors.error,
-  },
-  priorityMedium: {
-    backgroundColor: colors.warning,
   },
   priorityText: {
     fontSize: 10,
@@ -259,6 +270,11 @@ const styles = StyleSheet.create({
   announcementDate: {
     fontSize: 12,
     color: colors.textSecondary,
+  },
+  noAnnouncementsText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
   },
   quickLinks: {
     flexDirection: 'row',
