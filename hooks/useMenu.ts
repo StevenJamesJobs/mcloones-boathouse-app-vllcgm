@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/app/integrations/supabase/client';
 import { Tables } from '@/app/integrations/supabase/types';
 
@@ -16,33 +16,7 @@ export function useMenu(mealType?: 'lunch' | 'dinner' | 'both') {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchMenu();
-    
-    // Subscribe to real-time changes
-    const itemsSubscription = supabase
-      .channel('menu_items_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => {
-        console.log('Menu items changed, refetching...');
-        fetchMenu();
-      })
-      .subscribe();
-
-    const categoriesSubscription = supabase
-      .channel('menu_categories_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_categories' }, () => {
-        console.log('Menu categories changed, refetching...');
-        fetchMenu();
-      })
-      .subscribe();
-
-    return () => {
-      itemsSubscription.unsubscribe();
-      categoriesSubscription.unsubscribe();
-    };
-  }, [mealType]);
-
-  const fetchMenu = async () => {
+  const fetchMenu = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -90,7 +64,33 @@ export function useMenu(mealType?: 'lunch' | 'dinner' | 'both') {
     } finally {
       setLoading(false);
     }
-  };
+  }, [mealType]);
+
+  useEffect(() => {
+    fetchMenu();
+    
+    // Subscribe to real-time changes
+    const itemsSubscription = supabase
+      .channel('menu_items_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, () => {
+        console.log('Menu items changed, refetching...');
+        fetchMenu();
+      })
+      .subscribe();
+
+    const categoriesSubscription = supabase
+      .channel('menu_categories_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_categories' }, () => {
+        console.log('Menu categories changed, refetching...');
+        fetchMenu();
+      })
+      .subscribe();
+
+    return () => {
+      itemsSubscription.unsubscribe();
+      categoriesSubscription.unsubscribe();
+    };
+  }, [fetchMenu]);
 
   const refetch = () => {
     fetchMenu();
