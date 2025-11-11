@@ -1,34 +1,37 @@
+
 {
   "expo": {
-    "name": "Natively",
-    "slug": "Natively",
+    "name": "McLoone's Boathouse",
+    "slug": "mcloones-boathouse",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/natively-dark.png",
+    "icon": "./assets/images/072bf4b4-b2c4-470c-8fed-19fe343d0767.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/natively-dark.png",
+      "image": "./assets/images/072bf4b4-b2c4-470c-8fed-19fe343d0767.png",
       "resizeMode": "contain",
-      "backgroundColor": "#000000"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.Natively",
+      "bundleIdentifier": "com.mcloones.boathouse",
+      "icon": "./assets/images/072bf4b4-b2c4-470c-8fed-19fe343d0767.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/natively-dark.png",
-        "backgroundColor": "#000000"
+        "foregroundImage": "./assets/images/072bf4b4-b2c4-470c-8fed-19fe343d0767.png",
+        "backgroundColor": "#FFFFFF"
       },
+      "icon": "./assets/images/072bf4b4-b2c4-470c-8fed-19fe343d0767.png",
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.Natively"
+      "package": "com.mcloones.boathouse"
     },
     "web": {
-      "favicon": "./assets/images/final_quest_240x240.png",
+      "favicon": "./assets/images/072bf4b4-b2c4-470c-8fed-19fe343d0767.png",
       "bundler": "metro"
     },
     "plugins": [
@@ -36,7 +39,7 @@
       "expo-router",
       "expo-web-browser"
     ],
-    "scheme": "natively",
+    "scheme": "mcloones",
     "experiments": {
       "typedRoutes": true
     },
