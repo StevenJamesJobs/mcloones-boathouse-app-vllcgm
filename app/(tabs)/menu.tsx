@@ -172,6 +172,8 @@ export default function MenuScreen() {
                     styles.categoryButtonText,
                     selectedCategory === 'all' && styles.categoryButtonTextActive,
                   ]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
                 >
                   All
                 </Text>
@@ -190,8 +192,10 @@ export default function MenuScreen() {
                       styles.categoryButtonText,
                       selectedCategory === category.id && styles.categoryButtonTextActive,
                     ]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
                   >
-                    {category.name}
+                    {category.name || 'Unnamed'}
                   </Text>
                 </Pressable>
               ))}
@@ -375,31 +379,35 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   categoryScroll: {
-    maxHeight: 50,
+    maxHeight: 60,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   categoryScrollContent: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 8,
+    paddingVertical: 10,
+    gap: 10,
   },
   categoryButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
+    minWidth: 90,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 24,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   categoryButtonActive: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
   categoryButtonText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
     color: colors.text,
+    textAlign: 'center',
   },
   categoryButtonTextActive: {
     color: colors.accent,
