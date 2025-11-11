@@ -1,61 +1,35 @@
 
-import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { StyleSheet } from 'react-native';
 
-// McLoone's Boathouse Color Scheme
 export const colors = {
-  // Customer-facing colors (Light blue and white theme)
+  // Customer side colors (light blue and white theme)
   background: '#FFFFFF',
   text: '#333333',
   textSecondary: '#666666',
-  primary: '#ADD8E6',
-  secondary: '#87CEEB',
-  accent: '#4682B4',
-  card: '#F0F8FF',
-  highlight: '#B0E2FF',
-  
-  // Employee-facing colors (Slightly darker)
-  employeeBackground: '#F0F8FF',
-  employeeCard: '#E6F3FF',
-  employeePrimary: '#6BA3D1',
-  employeeAccent: '#3A6EA5',
-  
-  // Manager-specific colors
-  managerPrimary: '#4682B4',
-  managerAccent: '#2E5A8A',
-  
-  // Utility colors
-  success: '#34C759',
-  warning: '#FF9500',
-  error: '#FF3B30',
+  primary: '#ADD8E6',      // Light blue
+  secondary: '#87CEEB',    // Sky blue
+  accent: '#4682B4',       // Steel blue
+  card: '#F0F8FF',         // Alice blue
+  highlight: '#B0E2FF',    // Light sky blue
   border: '#E0E0E0',
+  error: '#DC3545',
+  success: '#28A745',
+  warning: '#FFC107',
+  
+  // Employee side colors (slightly darker)
+  employeeBackground: '#F5F5F5',
+  employeePrimary: '#87CEEB',
+  employeeSecondary: '#4682B4',
+  employeeAccent: '#5F9EA0',
+  employeeCard: '#E6F3F7',
+  
+  // Manager side colors (darker blue and gray)
+  managerBackground: '#E8EEF2',
+  managerPrimary: '#2C5F7C',
+  managerSecondary: '#4682B4',
+  managerAccent: '#5F9EA0',
+  managerCard: '#D6E4EC',
 };
-
-export const buttonStyles = StyleSheet.create({
-  primary: {
-    backgroundColor: colors.accent,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  primaryText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondary: {
-    backgroundColor: colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  secondaryText: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
 
 export const commonStyles = StyleSheet.create({
   container: {
@@ -66,39 +40,59 @@ export const commonStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.employeeBackground,
   },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
+  managerContainer: {
+    flex: 1,
+    backgroundColor: colors.managerBackground,
   },
   card: {
     backgroundColor: colors.card,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 3,
   },
   employeeCard: {
     backgroundColor: colors.employeeCard,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  managerCard: {
+    backgroundColor: colors.managerCard,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 3,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '700',
     color: colors.text,
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
@@ -114,9 +108,27 @@ export const commonStyles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 20,
   },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: 16,
+  button: {
+    backgroundColor: colors.accent,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  input: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: colors.text,
   },
 });

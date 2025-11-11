@@ -1,33 +1,50 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { lunchMenuItems, dinnerMenuItems } from '@/data/mockData';
-import { MenuItem } from '@/types';
+import { useMenu, MenuItemWithCategory } from '@/hooks/useMenu';
 
 export default function MenuScreen() {
   const [selectedMeal, setSelectedMeal] = useState<'lunch' | 'dinner'>('lunch');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  const currentMenuItems = selectedMeal === 'lunch' ? lunchMenuItems : dinnerMenuItems;
-  
-  // Get unique categories
-  const categories = ['all', ...Array.from(new Set(currentMenuItems.map(item => item.category)))];
-  
+  const { items, categories, loading, error } = useMenu(selectedMeal);
+
+  // Get unique categories for the selected meal type
+  const availableCategories = categories.filter(cat => 
+    cat.meal_type === selectedMeal || cat.meal_type === 'both'
+  );
+
   // Filter items by category
   const filteredItems = selectedCategory === 'all' 
-    ? currentMenuItems 
-    : currentMenuItems.filter(item => item.category === selectedCategory);
+    ? items 
+    : items.filter(item => item.category_id === selectedCategory);
 
   // Group items by category
   const groupedItems = filteredItems.reduce((acc, item) => {
-    if (!acc[item.category]) {
-      acc[item.category] = [];
+    const categoryName = item.category?.name || 'Uncategorized';
+    if (!acc[categoryName]) {
+      acc[categoryName] = [];
     }
-    acc[item.category].push(item);
+    acc[categoryName].push(item);
     return acc;
-  }, {} as Record<string, MenuItem[]>);
+  }, {} as Record<string, MenuItemWithCategory[]>);
+
+  const getDietaryBadge = (dietaryInfo: string[] | null) => {
+    if (!dietaryInfo || dietaryInfo.length === 0) return null;
+    
+    const badges = dietaryInfo.map(info => {
+      switch (info) {
+        case 'gf': return 'GF';
+        case 'v': return 'V';
+        case 'va': return 'VA';
+        default: return info.toUpperCase();
+      }
+    });
+
+    return badges.join(' · ');
+  };
 
   return (
     <>
@@ -100,50 +117,94 @@ export default function MenuScreen() {
           style={styles.categoryScroll}
           contentContainerStyle={styles.categoryScrollContent}
         >
-          {categories.map((category) => (
+          <Pressable
+            style={[
+              styles.categoryButton,
+              selectedCategory === 'all' && styles.categoryButtonActive,
+            ]}
+            onPress={() => setSelectedCategory('all')}
+          >
+            <Text
+              style={[
+                styles.categoryButtonText,
+                selectedCategory === 'all' && styles.categoryButtonTextActive,
+              ]}
+            >
+              All
+            </Text>
+          </Pressable>
+          {availableCategories.map((category) => (
             <Pressable
-              key={category}
+              key={category.id}
               style={[
                 styles.categoryButton,
-                selectedCategory === category && styles.categoryButtonActive,
+                selectedCategory === category.id && styles.categoryButtonActive,
               ]}
-              onPress={() => setSelectedCategory(category)}
+              onPress={() => setSelectedCategory(category.id)}
             >
               <Text
                 style={[
                   styles.categoryButtonText,
-                  selectedCategory === category && styles.categoryButtonTextActive,
+                  selectedCategory === category.id && styles.categoryButtonTextActive,
                 ]}
               >
-                {category.charAt(0).toUpperCase() + category.slice(1)}
+                {category.name}
               </Text>
             </Pressable>
           ))}
         </ScrollView>
 
         {/* Menu Items */}
-        <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            Platform.OS !== 'ios' && styles.scrollContentWithTabBar,
-          ]}
-          showsVerticalScrollIndicator={false}
-        >
-          {Object.entries(groupedItems).map(([category, items]) => (
-            <View key={category} style={styles.categorySection}>
-              <Text style={styles.categoryTitle}>{category}</Text>
-              {items.map((item) => (
-                <View key={item.id} style={commonStyles.card}>
-                  <View style={styles.menuItemHeader}>
-                    <Text style={styles.menuItemName}>{item.name}</Text>
-                    <Text style={styles.menuItemPrice}>${item.price.toFixed(2)}</Text>
-                  </View>
-                  <Text style={styles.menuItemDescription}>{item.description}</Text>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.accent} />
+            <Text style={styles.loadingText}>Loading menu...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Error loading menu: {error}</Text>
+          </View>
+        ) : (
+          <ScrollView
+            contentContainerStyle={[
+              styles.scrollContent,
+              Platform.OS !== 'ios' && styles.scrollContentWithTabBar,
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            {Object.entries(groupedItems).length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No menu items available</Text>
+              </View>
+            ) : (
+              Object.entries(groupedItems).map(([categoryName, categoryItems]) => (
+                <View key={categoryName} style={styles.categorySection}>
+                  <Text style={styles.categoryTitle}>{categoryName}</Text>
+                  {categoryItems.map((item) => (
+                    <View key={item.id} style={commonStyles.card}>
+                      <View style={styles.menuItemHeader}>
+                        <View style={styles.menuItemTitleContainer}>
+                          <Text style={styles.menuItemName}>{item.name}</Text>
+                          {item.dietary_info && item.dietary_info.length > 0 && (
+                            <Text style={styles.dietaryBadge}>
+                              {getDietaryBadge(item.dietary_info)}
+                            </Text>
+                          )}
+                        </View>
+                        {item.price && (
+                          <Text style={styles.menuItemPrice}>${item.price.toFixed(2)}</Text>
+                        )}
+                      </View>
+                      {item.description && (
+                        <Text style={styles.menuItemDescription}>{item.description}</Text>
+                      )}
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
-          ))}
-        </ScrollView>
+              ))
+            )}
+          </ScrollView>
+        )}
       </View>
     </>
   );
@@ -246,21 +307,61 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 8,
   },
+  menuItemTitleContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
   menuItemName: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.text,
-    flex: 1,
+    marginBottom: 4,
+  },
+  dietaryBadge: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: colors.accent,
+    letterSpacing: 0.5,
   },
   menuItemPrice: {
     fontSize: 18,
     fontWeight: '700',
     color: colors.accent,
-    marginLeft: 12,
   },
   menuItemDescription: {
     fontSize: 14,
     color: colors.textSecondary,
     lineHeight: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 60,
+  },
+  errorText: {
+    fontSize: 16,
+    color: colors.error,
+    textAlign: 'center',
+  },
+  emptyContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textSecondary,
   },
 });
