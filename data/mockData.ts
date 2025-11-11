@@ -309,21 +309,21 @@ export const topEmployees: EmployeeReward[] = [
   { employeeId: '6', employeeName: 'David Bartender', totalBucks: 150 },
 ];
 
-// Contact Information
+// Contact Information - Updated with correct McLoone's Boathouse info
 export const contactInfo = {
-  phone: '(732) 555-0123',
+  phone: '(732) 872-1245',
   email: 'info@mcloones.com',
   address: '1 Ocean Avenue, West End, NJ 07740',
   hours: {
-    weekday: '11:00 AM - 10:00 PM',
-    weekend: '10:00 AM - 11:00 PM',
+    weekday: '11:30 AM - 9:00 PM',
+    weekend: '10:00 AM - 9:00 PM',
   },
 };
 
 // About Us Content
 export const aboutUsContent = {
   title: 'About McLoone&apos;s Boathouse',
-  description: 'McLoone&apos;s Boathouse has been serving the Jersey Shore community for over 25 years. Located on the beautiful South Mountain Recreation Complex, we offer stunning waterfront views and exceptional dining experiences. Our commitment to fresh, locally-sourced ingredients and outstanding service has made us a favorite destination for locals and visitors alike.',
+  description: 'McLoone&apos;s Boathouse is located on the Shrewsbury River in West End, New Jersey. We offer stunning waterfront views, exceptional cuisine, and a warm, welcoming atmosphere that has made us a favorite destination for locals and visitors alike.',
   mission: 'To provide an unforgettable dining experience that combines exceptional food, breathtaking views, and warm hospitality.',
-  history: 'Founded in 1998 by Tim McLoone, our restaurant has grown from a small waterfront eatery to one of the premier dining destinations on the Jersey Shore. We take pride in our rich history and our continued commitment to excellence.',
+  history: 'Founded by Tim McLoone, our restaurant has grown to become one of the premier dining destinations on the Jersey Shore. We take pride in our commitment to fresh, locally-sourced ingredients and outstanding service.',
 };

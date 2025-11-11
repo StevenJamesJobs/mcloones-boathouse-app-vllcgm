@@ -78,9 +78,9 @@ export default function HomeScreen() {
         >
           {/* Welcome Message */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Welcome to McLoone&apos;s Boathouse Deck Team</Text>
+            <Text style={styles.welcomeTitle}>Welcome to McLoone&apos;s Boathouse</Text>
             <Text style={styles.welcomeText}>
-              Let&apos;s get you ready for your next adventure!
+              Experience waterfront dining at its finest on the Shrewsbury River
             </Text>
           </View>
 
@@ -151,7 +151,7 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* Contact Information */}
+          {/* Contact Information - Updated with correct info */}
           <View style={styles.section}>
             <Text style={commonStyles.subtitle}>Contact Us</Text>
             <View style={commonStyles.card}>
@@ -169,8 +169,9 @@ export default function HomeScreen() {
               </View>
               <View style={styles.divider} />
               <Text style={styles.hoursTitle}>Hours</Text>
-              <Text style={styles.hoursText}>Mon-Fri: {contactInfo.hours.weekday}</Text>
-              <Text style={styles.hoursText}>Sat-Sun: {contactInfo.hours.weekend}</Text>
+              <Text style={styles.hoursText}>Mon-Thu: {contactInfo.hours.weekday}</Text>
+              <Text style={styles.hoursText}>Fri-Sat: 11:30 AM - 10:00 PM</Text>
+              <Text style={styles.hoursText}>Sun: {contactInfo.hours.weekend} (Brunch until 3:00 PM)</Text>
             </View>
           </View>
         </ScrollView>
