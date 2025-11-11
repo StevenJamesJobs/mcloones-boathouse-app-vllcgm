@@ -5,17 +5,19 @@ import { Stack } from 'expo-router';
 import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useMenu, MenuItemWithCategory } from '@/hooks/useMenu';
+import { useWeeklySpecials } from '@/hooks/useWeeklySpecials';
 
 export default function MenuScreen() {
-  const [selectedMeal, setSelectedMeal] = useState<'lunch' | 'dinner'>('lunch');
+  const [selectedTab, setSelectedTab] = useState<'lunch' | 'dinner' | 'specials'>('lunch');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loginModalVisible, setLoginModalVisible] = useState(false);
 
-  const { items, categories, loading, error } = useMenu(selectedMeal);
+  const { items, categories, loading, error } = useMenu(selectedTab === 'specials' ? 'lunch' : selectedTab);
+  const { specials, loading: specialsLoading } = useWeeklySpecials();
 
   // Get unique categories for the selected meal type
   const availableCategories = categories.filter(cat => 
-    cat.meal_type === selectedMeal || cat.meal_type === 'both'
+    cat.meal_type === selectedTab || cat.meal_type === 'both'
   );
 
   // Filter items by category
@@ -68,22 +70,22 @@ export default function MenuScreen() {
           <CustomerBanner onLoginPress={() => setLoginModalVisible(true)} />
         )}
 
-        {/* Meal Type Selector */}
-        <View style={styles.mealSelector}>
+        {/* Tab Selector - Lunch, Dinner, Weekly Specials */}
+        <View style={styles.tabSelector}>
           <Pressable
             style={[
-              styles.mealButton,
-              selectedMeal === 'lunch' && styles.mealButtonActive,
+              styles.tabButton,
+              selectedTab === 'lunch' && styles.tabButtonActive,
             ]}
             onPress={() => {
-              setSelectedMeal('lunch');
+              setSelectedTab('lunch');
               setSelectedCategory('all');
             }}
           >
             <Text
               style={[
-                styles.mealButtonText,
-                selectedMeal === 'lunch' && styles.mealButtonTextActive,
+                styles.tabButtonText,
+                selectedTab === 'lunch' && styles.tabButtonTextActive,
               ]}
             >
               Lunch
@@ -91,80 +93,93 @@ export default function MenuScreen() {
           </Pressable>
           <Pressable
             style={[
-              styles.mealButton,
-              selectedMeal === 'dinner' && styles.mealButtonActive,
+              styles.tabButton,
+              selectedTab === 'dinner' && styles.tabButtonActive,
             ]}
             onPress={() => {
-              setSelectedMeal('dinner');
+              setSelectedTab('dinner');
               setSelectedCategory('all');
             }}
           >
             <Text
               style={[
-                styles.mealButtonText,
-                selectedMeal === 'dinner' && styles.mealButtonTextActive,
+                styles.tabButtonText,
+                selectedTab === 'dinner' && styles.tabButtonTextActive,
               ]}
             >
               Dinner
             </Text>
           </Pressable>
-        </View>
-
-        {/* Category Filter */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.categoryScroll}
-          contentContainerStyle={styles.categoryScrollContent}
-        >
           <Pressable
             style={[
-              styles.categoryButton,
-              selectedCategory === 'all' && styles.categoryButtonActive,
+              styles.tabButton,
+              selectedTab === 'specials' && styles.tabButtonActive,
             ]}
-            onPress={() => setSelectedCategory('all')}
+            onPress={() => {
+              setSelectedTab('specials');
+              setSelectedCategory('all');
+            }}
           >
             <Text
               style={[
-                styles.categoryButtonText,
-                selectedCategory === 'all' && styles.categoryButtonTextActive,
+                styles.tabButtonText,
+                selectedTab === 'specials' && styles.tabButtonTextActive,
               ]}
             >
-              All
+              Weekly Specials
             </Text>
           </Pressable>
-          {availableCategories.map((category) => (
+        </View>
+
+        {/* Category Filter - Only show for Lunch/Dinner */}
+        {selectedTab !== 'specials' && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.categoryScroll}
+            contentContainerStyle={styles.categoryScrollContent}
+          >
             <Pressable
-              key={category.id}
               style={[
                 styles.categoryButton,
-                selectedCategory === category.id && styles.categoryButtonActive,
+                selectedCategory === 'all' && styles.categoryButtonActive,
               ]}
-              onPress={() => setSelectedCategory(category.id)}
+              onPress={() => setSelectedCategory('all')}
             >
               <Text
                 style={[
                   styles.categoryButtonText,
-                  selectedCategory === category.id && styles.categoryButtonTextActive,
+                  selectedCategory === 'all' && styles.categoryButtonTextActive,
                 ]}
               >
-                {category.name}
+                All
               </Text>
             </Pressable>
-          ))}
-        </ScrollView>
+            {availableCategories.map((category) => (
+              <Pressable
+                key={category.id}
+                style={[
+                  styles.categoryButton,
+                  selectedCategory === category.id && styles.categoryButtonActive,
+                ]}
+                onPress={() => setSelectedCategory(category.id)}
+              >
+                <Text
+                  style={[
+                    styles.categoryButtonText,
+                    selectedCategory === category.id && styles.categoryButtonTextActive,
+                  ]}
+                >
+                  {category.name}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
 
-        {/* Menu Items */}
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.accent} />
-            <Text style={styles.loadingText}>Loading menu...</Text>
-          </View>
-        ) : error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>Error loading menu: {error}</Text>
-          </View>
-        ) : (
+        {/* Content */}
+        {selectedTab === 'specials' ? (
+          // Weekly Specials Content
           <ScrollView
             contentContainerStyle={[
               styles.scrollContent,
@@ -172,38 +187,84 @@ export default function MenuScreen() {
             ]}
             showsVerticalScrollIndicator={false}
           >
-            {Object.entries(groupedItems).length === 0 ? (
+            {specialsLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={colors.accent} />
+                <Text style={styles.loadingText}>Loading specials...</Text>
+              </View>
+            ) : specials.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No menu items available</Text>
+                <Text style={styles.emptyText}>No weekly specials at this time</Text>
               </View>
             ) : (
-              Object.entries(groupedItems).map(([categoryName, categoryItems]) => (
-                <View key={categoryName} style={styles.categorySection}>
-                  <Text style={styles.categoryTitle}>{categoryName}</Text>
-                  {categoryItems.map((item) => (
-                    <View key={item.id} style={commonStyles.card}>
-                      <View style={styles.menuItemHeader}>
-                        <View style={styles.menuItemTitleContainer}>
-                          <Text style={styles.menuItemName}>{item.name}</Text>
-                          {item.dietary_info && item.dietary_info.length > 0 && (
-                            <Text style={styles.dietaryBadge}>
-                              {getDietaryBadge(item.dietary_info)}
-                            </Text>
-                          )}
-                        </View>
-                        {item.price && (
-                          <Text style={styles.menuItemPrice}>${item.price.toFixed(2)}</Text>
-                        )}
-                      </View>
-                      {item.description && (
-                        <Text style={styles.menuItemDescription}>{item.description}</Text>
-                      )}
-                    </View>
-                  ))}
+              specials.map((special) => (
+                <View key={special.id} style={commonStyles.card}>
+                  <Text style={styles.specialTitle}>{special.title}</Text>
+                  <Text style={styles.specialDescription}>{special.description}</Text>
+                  {special.price && (
+                    <Text style={styles.specialPrice}>${special.price.toFixed(2)}</Text>
+                  )}
+                  {special.valid_until && (
+                    <Text style={styles.specialValidUntil}>
+                      Valid until {new Date(special.valid_until).toLocaleDateString()}
+                    </Text>
+                  )}
                 </View>
               ))
             )}
           </ScrollView>
+        ) : (
+          // Menu Items Content
+          loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.accent} />
+              <Text style={styles.loadingText}>Loading menu...</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>Error loading menu: {error}</Text>
+            </View>
+          ) : (
+            <ScrollView
+              contentContainerStyle={[
+                styles.scrollContent,
+                Platform.OS !== 'ios' && styles.scrollContentWithTabBar,
+              ]}
+              showsVerticalScrollIndicator={false}
+            >
+              {Object.entries(groupedItems).length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No menu items available</Text>
+                </View>
+              ) : (
+                Object.entries(groupedItems).map(([categoryName, categoryItems]) => (
+                  <View key={categoryName} style={styles.categorySection}>
+                    <Text style={styles.categoryTitle}>{categoryName}</Text>
+                    {categoryItems.map((item) => (
+                      <View key={item.id} style={commonStyles.card}>
+                        <View style={styles.menuItemHeader}>
+                          <View style={styles.menuItemTitleContainer}>
+                            <Text style={styles.menuItemName}>{item.name}</Text>
+                            {item.dietary_info && item.dietary_info.length > 0 && (
+                              <Text style={styles.dietaryBadge}>
+                                {getDietaryBadge(item.dietary_info)}
+                              </Text>
+                            )}
+                          </View>
+                          {item.price && (
+                            <Text style={styles.menuItemPrice}>${item.price.toFixed(2)}</Text>
+                          )}
+                        </View>
+                        {item.description && (
+                          <Text style={styles.menuItemDescription}>{item.description}</Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                ))
+              )}
+            </ScrollView>
+          )
         )}
       </View>
     </>
@@ -214,32 +275,32 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background,
   },
-  mealSelector: {
+  tabSelector: {
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    gap: 12,
+    gap: 8,
   },
-  mealButton: {
+  tabButton: {
     flex: 1,
     paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingHorizontal: 12,
     borderRadius: 8,
     backgroundColor: colors.card,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
   },
-  mealButtonActive: {
+  tabButtonActive: {
     backgroundColor: colors.accent,
     borderColor: colors.accent,
   },
-  mealButtonText: {
-    fontSize: 16,
+  tabButtonText: {
+    fontSize: 14,
     fontWeight: '600',
     color: colors.text,
   },
-  mealButtonTextActive: {
+  tabButtonTextActive: {
     color: '#FFFFFF',
   },
   categoryScroll: {
@@ -320,6 +381,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     lineHeight: 20,
+  },
+  specialTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  specialDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  specialPrice: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.accent,
+    marginBottom: 4,
+  },
+  specialValidUntil: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
   },
   loadingContainer: {
     flex: 1,

@@ -1,17 +1,20 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Linking, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { upcomingEvents } from '@/data/mockData';
+import { useEvents } from '@/hooks/useEvents';
 
 export default function EventsScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
+  const { events, loading } = useEvents();
 
-  const handleRSVP = (rsvpLink: string) => {
-    Linking.openURL(rsvpLink);
+  const handleRSVP = (rsvpLink: string | null) => {
+    if (rsvpLink) {
+      Linking.openURL(rsvpLink);
+    }
   };
 
   return (
@@ -45,39 +48,54 @@ export default function EventsScreen() {
             Join us for exciting events and live entertainment throughout the year!
           </Text>
 
-          {upcomingEvents.map((event) => (
-            <View key={event.id} style={styles.eventCard}>
-              <View style={styles.eventHeader}>
-                <IconSymbol name="calendar" color={colors.accent} size={24} />
-                <View style={styles.eventHeaderText}>
-                  <Text style={styles.eventTitle}>{event.title}</Text>
-                  <Text style={styles.eventDate}>
-                    {new Date(event.date).toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.eventTime}>
-                <IconSymbol name="clock.fill" color={colors.textSecondary} size={16} />
-                <Text style={styles.eventTimeText}>{event.time}</Text>
-              </View>
-
-              <Text style={styles.eventDescription}>{event.description}</Text>
-
-              <Pressable
-                style={styles.rsvpButton}
-                onPress={() => handleRSVP(event.rsvpLink)}
-              >
-                <Text style={styles.rsvpButtonText}>RSVP Now</Text>
-                <IconSymbol name="arrow.right" color="#FFFFFF" size={16} />
-              </Pressable>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.accent} />
+              <Text style={styles.loadingText}>Loading events...</Text>
             </View>
-          ))}
+          ) : events.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <IconSymbol name="calendar" color={colors.textSecondary} size={64} />
+              <Text style={styles.emptyText}>No upcoming events at this time</Text>
+              <Text style={styles.emptySubtext}>Check back soon for exciting events!</Text>
+            </View>
+          ) : (
+            events.map((event) => (
+              <View key={event.id} style={styles.eventCard}>
+                <View style={styles.eventHeader}>
+                  <IconSymbol name="calendar" color={colors.accent} size={24} />
+                  <View style={styles.eventHeaderText}>
+                    <Text style={styles.eventTitle}>{event.title}</Text>
+                    <Text style={styles.eventDate}>
+                      {new Date(event.event_date).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.eventTime}>
+                  <IconSymbol name="clock.fill" color={colors.textSecondary} size={16} />
+                  <Text style={styles.eventTimeText}>{event.event_time}</Text>
+                </View>
+
+                <Text style={styles.eventDescription}>{event.description}</Text>
+
+                {event.rsvp_link && (
+                  <Pressable
+                    style={styles.rsvpButton}
+                    onPress={() => handleRSVP(event.rsvp_link)}
+                  >
+                    <Text style={styles.rsvpButtonText}>RSVP Now</Text>
+                    <IconSymbol name="arrow.right" color="#FFFFFF" size={16} />
+                  </Pressable>
+                )}
+              </View>
+            ))
+          )}
 
           <View style={styles.infoCard}>
             <IconSymbol name="info.circle.fill" color={colors.accent} size={24} />
@@ -108,6 +126,32 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 24,
     textAlign: 'center',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 8,
   },
   eventCard: {
     backgroundColor: colors.card,

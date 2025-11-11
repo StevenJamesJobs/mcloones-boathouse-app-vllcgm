@@ -37,17 +37,12 @@ export default function GalleryScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.placeholderContainer}>
-            <IconSymbol name="photo.fill" color={colors.accent} size={64} />
-            <Text style={styles.placeholderTitle}>Gallery Coming Soon</Text>
+            <IconSymbol name="photo.on.rectangle" color={colors.accent} size={64} />
+            <Text style={styles.placeholderTitle}>Photo Gallery</Text>
             <Text style={styles.placeholderText}>
-              We&apos;re working on adding beautiful photos of our restaurant, food, and events. Check back soon!
+              Browse our collection of beautiful waterfront views, delicious dishes, and memorable moments at McLoone&apos;s Boathouse.
             </Text>
-          </View>
-
-          <View style={commonStyles.card}>
-            <Text style={styles.infoText}>
-              In the meantime, follow us on social media to see the latest photos and updates from McLoone&apos;s Boathouse!
-            </Text>
+            <Text style={styles.comingSoon}>Coming Soon</Text>
           </View>
         </ScrollView>
       </View>
@@ -84,11 +79,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 32,
+    marginBottom: 16,
   },
-  infoText: {
-    fontSize: 15,
-    color: colors.text,
-    lineHeight: 22,
-    textAlign: 'center',
+  comingSoon: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.accent,
+    textTransform: 'uppercase',
   },
 });

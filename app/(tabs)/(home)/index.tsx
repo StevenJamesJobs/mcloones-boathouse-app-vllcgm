@@ -5,9 +5,10 @@ import { Stack, Link } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { upcomingEvents, contactInfo } from '@/data/mockData';
+import { contactInfo } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWeeklySpecials } from '@/hooks/useWeeklySpecials';
+import { useEvents } from '@/hooks/useEvents';
 import { router } from 'expo-router';
 
 export default function HomeScreen() {
@@ -16,6 +17,7 @@ export default function HomeScreen() {
   const [password, setPassword] = useState('');
   const { login, user } = useAuth();
   const { specials, loading: specialsLoading } = useWeeklySpecials();
+  const { events, loading: eventsLoading } = useEvents();
 
   const handleLogin = () => {
     if (login(email, password)) {
@@ -44,7 +46,7 @@ export default function HomeScreen() {
   );
 
   // Get next two upcoming events
-  const nextTwoEvents = upcomingEvents.slice(0, 2);
+  const nextTwoEvents = events.slice(0, 2);
 
   return (
     <>
@@ -92,20 +94,31 @@ export default function HomeScreen() {
                 </Pressable>
               </Link>
             </View>
-            {nextTwoEvents.map((event) => (
-              <View key={event.id} style={commonStyles.card}>
-                <Text style={styles.eventTitle}>{event.title}</Text>
-                <Text style={styles.eventDate}>
-                  {new Date(event.date).toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })} at {event.time}
-                </Text>
-                <Text style={styles.eventDescription}>{event.description}</Text>
+            {eventsLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text style={styles.loadingText}>Loading events...</Text>
               </View>
-            ))}
+            ) : nextTwoEvents.length === 0 ? (
+              <View style={commonStyles.card}>
+                <Text style={styles.noEventsText}>No upcoming events at this time</Text>
+              </View>
+            ) : (
+              nextTwoEvents.map((event) => (
+                <View key={event.id} style={commonStyles.card}>
+                  <Text style={styles.eventTitle}>{event.title}</Text>
+                  <Text style={styles.eventDate}>
+                    {new Date(event.event_date).toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })} at {event.event_time}
+                  </Text>
+                  <Text style={styles.eventDescription}>{event.description}</Text>
+                </View>
+              ))
+            )}
           </View>
 
           {/* Weekly Specials - NOW SECOND */}
@@ -264,6 +277,22 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontWeight: '600',
   },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  noEventsText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
   eventTitle: {
     fontSize: 18,
     fontWeight: '600',
@@ -276,17 +305,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   eventDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 20,
-    gap: 12,
-  },
-  loadingText: {
     fontSize: 14,
     color: colors.textSecondary,
   },
