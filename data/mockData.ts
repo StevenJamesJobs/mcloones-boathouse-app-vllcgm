@@ -323,7 +323,7 @@ export const contactInfo = {
 // About Us Content
 export const aboutUsContent = {
   title: 'About McLoone&apos;s Boathouse',
-  description: 'McLoone&apos;s Boathouse has been serving the Jersey Shore community for over 25 years. Located on the beautiful Shrewsbury River, we offer stunning waterfront views and exceptional dining experiences. Our commitment to fresh, locally-sourced ingredients and outstanding service has made us a favorite destination for locals and visitors alike.',
+  description: 'McLoone&apos;s Boathouse has been serving the Jersey Shore community for over 25 years. Located on the beautiful South Mountain Recreation Complex, we offer stunning waterfront views and exceptional dining experiences. Our commitment to fresh, locally-sourced ingredients and outstanding service has made us a favorite destination for locals and visitors alike.',
   mission: 'To provide an unforgettable dining experience that combines exceptional food, breathtaking views, and warm hospitality.',
   history: 'Founded in 1998 by Tim McLoone, our restaurant has grown from a small waterfront eatery to one of the premier dining destinations on the Jersey Shore. We take pride in our rich history and our continued commitment to excellence.',
 };

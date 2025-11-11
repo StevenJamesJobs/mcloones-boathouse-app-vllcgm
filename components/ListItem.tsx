@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, useColorScheme, View, Text } from "react-native"
 import ReanimatedSwipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, {
   configureReanimatedLogger,
-  FadeIn,
+  FadeIn
   SharedValue,
   useAnimatedStyle,
 } from "react-native-reanimated";

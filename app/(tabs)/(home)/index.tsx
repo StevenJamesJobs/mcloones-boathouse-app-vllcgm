@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { Stack, Link } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { weeklySpecials, upcomingEvents, contactInfo } from '@/data/mockData';
+import { upcomingEvents, contactInfo } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWeeklySpecials } from '@/hooks/useWeeklySpecials';
 import { router } from 'expo-router';
 
 export default function HomeScreen() {
@@ -14,6 +15,7 @@ export default function HomeScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login, user } = useAuth();
+  const { specials, loading: specialsLoading } = useWeeklySpecials();
 
   const handleLogin = () => {
     if (login(email, password)) {
@@ -80,21 +82,7 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          {/* Weekly Specials */}
-          <View style={styles.section}>
-            <Text style={commonStyles.subtitle}>Weekly Specials</Text>
-            {weeklySpecials.map((special) => (
-              <View key={special.id} style={commonStyles.card}>
-                <Text style={styles.specialTitle}>{special.title}</Text>
-                <Text style={styles.specialDescription}>{special.description}</Text>
-                {special.price && (
-                  <Text style={styles.specialPrice}>${special.price.toFixed(2)}</Text>
-                )}
-              </View>
-            ))}
-          </View>
-
-          {/* Upcoming Events */}
+          {/* Upcoming Events - NOW FIRST */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={commonStyles.subtitle}>Upcoming Events</Text>
@@ -118,6 +106,36 @@ export default function HomeScreen() {
                 <Text style={styles.eventDescription}>{event.description}</Text>
               </View>
             ))}
+          </View>
+
+          {/* Weekly Specials - NOW SECOND */}
+          <View style={styles.section}>
+            <Text style={commonStyles.subtitle}>Weekly Specials</Text>
+            {specialsLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text style={styles.loadingText}>Loading specials...</Text>
+              </View>
+            ) : specials.length === 0 ? (
+              <View style={commonStyles.card}>
+                <Text style={styles.noSpecialsText}>No weekly specials at this time</Text>
+              </View>
+            ) : (
+              specials.map((special) => (
+                <View key={special.id} style={commonStyles.card}>
+                  <Text style={styles.specialTitle}>{special.title}</Text>
+                  <Text style={styles.specialDescription}>{special.description}</Text>
+                  {special.price && (
+                    <Text style={styles.specialPrice}>${special.price.toFixed(2)}</Text>
+                  )}
+                  {special.valid_until && (
+                    <Text style={styles.specialValidUntil}>
+                      Valid until {new Date(special.valid_until).toLocaleDateString()}
+                    </Text>
+                  )}
+                </View>
+              ))
+            )}
           </View>
 
           {/* Contact Information */}
@@ -246,6 +264,37 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontWeight: '600',
   },
+  eventTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  eventDate: {
+    fontSize: 14,
+    color: colors.accent,
+    marginBottom: 8,
+  },
+  eventDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+  },
+  noSpecialsText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
   specialTitle: {
     fontSize: 18,
     fontWeight: '600',
@@ -261,21 +310,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: colors.accent,
-  },
-  eventTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
     marginBottom: 4,
   },
-  eventDate: {
-    fontSize: 14,
-    color: colors.accent,
-    marginBottom: 8,
-  },
-  eventDescription: {
-    fontSize: 14,
+  specialValidUntil: {
+    fontSize: 12,
     color: colors.textSecondary,
+    fontStyle: 'italic',
   },
   contactRow: {
     flexDirection: 'row',
