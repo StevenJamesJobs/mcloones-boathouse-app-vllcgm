@@ -162,18 +162,16 @@ export default function MenuScreen() {
             >
               <Pressable
                 style={[
-                  styles.categoryButton,
-                  selectedCategory === 'all' && styles.categoryButtonActive,
+                  styles.categoryBox,
+                  selectedCategory === 'all' && styles.categoryBoxActive,
                 ]}
                 onPress={() => setSelectedCategory('all')}
               >
                 <Text
                   style={[
-                    styles.categoryButtonText,
-                    selectedCategory === 'all' && styles.categoryButtonTextActive,
+                    styles.categoryBoxText,
+                    selectedCategory === 'all' && styles.categoryBoxTextActive,
                   ]}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
                 >
                   All
                 </Text>
@@ -182,18 +180,16 @@ export default function MenuScreen() {
                 <Pressable
                   key={category.id}
                   style={[
-                    styles.categoryButton,
-                    selectedCategory === category.id && styles.categoryButtonActive,
+                    styles.categoryBox,
+                    selectedCategory === category.id && styles.categoryBoxActive,
                   ]}
                   onPress={() => setSelectedCategory(category.id)}
                 >
                   <Text
                     style={[
-                      styles.categoryButtonText,
-                      selectedCategory === category.id && styles.categoryButtonTextActive,
+                      styles.categoryBoxText,
+                      selectedCategory === category.id && styles.categoryBoxTextActive,
                     ]}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
                   >
                     {category.name || 'Unnamed'}
                   </Text>
@@ -379,39 +375,54 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   categoryScroll: {
-    maxHeight: 60,
+    maxHeight: 80,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+    backgroundColor: colors.background,
   },
   categoryScrollContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 10,
-  },
-  categoryButton: {
-    minWidth: 90,
+    paddingHorizontal: 12,
     paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 24,
+    gap: 12,
+    alignItems: 'center',
+  },
+  categoryBox: {
+    minWidth: 120,
+    height: 50,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 10,
     backgroundColor: colors.card,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderWidth: 2,
+    borderColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  categoryButtonActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+  categoryBoxActive: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  categoryButtonText: {
-    fontSize: 15,
-    fontWeight: '500',
+  categoryBoxText: {
+    fontSize: 16,
+    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
+    letterSpacing: 0.3,
   },
-  categoryButtonTextActive: {
-    color: colors.accent,
-    fontWeight: '600',
+  categoryBoxTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
   },
   scrollContent: {
     paddingHorizontal: 16,
