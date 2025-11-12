@@ -9,6 +9,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function EventsEditorScreen() {
   const [modalVisible, setModalVisible] = useState(false);
+  const [infoBubbleModalVisible, setInfoBubbleModalVisible] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -17,8 +18,9 @@ export default function EventsEditorScreen() {
   const [rsvpLink, setRsvpLink] = useState('');
   const [displayOrder, setDisplayOrder] = useState('0');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [infoBubbleTextEdit, setInfoBubbleTextEdit] = useState('');
 
-  const { events, loading, refetch, addEvent, updateEvent, deleteEvent } = useEventsEditor();
+  const { events, infoBubbleText, loading, refetch, addEvent, updateEvent, deleteEvent, updateInfoBubble } = useEventsEditor();
 
   const openAddModal = () => {
     setEditingEvent(null);
@@ -42,6 +44,11 @@ export default function EventsEditorScreen() {
     setModalVisible(true);
   };
 
+  const openInfoBubbleModal = () => {
+    setInfoBubbleTextEdit(infoBubbleText || 'For private events and bookings, please contact us at (732) 555-0123 or email events@mcloones.com');
+    setInfoBubbleModalVisible(true);
+  };
+
   const handleSave = async () => {
     if (!title.trim() || !description.trim() || !eventTime.trim()) {
       Alert.alert('Error', 'Please fill in all required fields');
@@ -57,6 +64,7 @@ export default function EventsEditorScreen() {
       image_url: null,
       is_active: true,
       display_order: parseInt(displayOrder) || 0,
+      info_bubble_text: infoBubbleText || 'For private events and bookings, please contact us at (732) 555-0123 or email events@mcloones.com',
     };
 
     if (editingEvent) {
@@ -76,6 +84,22 @@ export default function EventsEditorScreen() {
     }
 
     setModalVisible(false);
+  };
+
+  const handleSaveInfoBubble = async () => {
+    if (!infoBubbleTextEdit.trim()) {
+      Alert.alert('Error', 'Please enter information text');
+      return;
+    }
+
+    const { error } = await updateInfoBubble(infoBubbleTextEdit.trim());
+    if (error) {
+      Alert.alert('Error', error);
+      return;
+    }
+
+    Alert.alert('Success', 'Information bubble updated successfully');
+    setInfoBubbleModalVisible(false);
   };
 
   const handleDelete = (event: Event) => {
@@ -124,9 +148,14 @@ export default function EventsEditorScreen() {
           },
           headerTintColor: '#FFFFFF',
           headerRight: () => (
-            <Pressable onPress={openAddModal} style={styles.headerButton}>
-              <IconSymbol name="plus.circle.fill" color="#FFFFFF" size={28} />
-            </Pressable>
+            <View style={styles.headerButtons}>
+              <Pressable onPress={openInfoBubbleModal} style={styles.headerButton}>
+                <IconSymbol name="info.circle.fill" color="#FFFFFF" size={28} />
+              </Pressable>
+              <Pressable onPress={openAddModal} style={styles.headerButton}>
+                <IconSymbol name="plus.circle.fill" color="#FFFFFF" size={28} />
+              </Pressable>
+            </View>
           ),
         }}
       />
@@ -145,6 +174,19 @@ export default function EventsEditorScreen() {
             <Text style={styles.infoText}>
               Manage upcoming events and entertainment. Events will appear on the customer home screen and events page.
             </Text>
+
+            {/* Info Bubble Preview */}
+            <View style={styles.infoBubblePreview}>
+              <View style={styles.infoBubbleHeader}>
+                <IconSymbol name="info.circle.fill" color={colors.accent} size={20} />
+                <Text style={styles.infoBubbleTitle}>Information Bubble Preview</Text>
+              </View>
+              <Text style={styles.infoBubbleText}>{infoBubbleText}</Text>
+              <Pressable style={styles.editInfoButton} onPress={openInfoBubbleModal}>
+                <IconSymbol name="pencil" color={colors.managerAccent} size={16} />
+                <Text style={styles.editInfoButtonText}>Edit Information</Text>
+              </Pressable>
+            </View>
 
             {events.length === 0 ? (
               <View style={styles.emptyContainer}>
@@ -214,7 +256,7 @@ export default function EventsEditorScreen() {
         )}
       </View>
 
-      {/* Add/Edit Modal */}
+      {/* Add/Edit Event Modal */}
       <Modal
         visible={modalVisible}
         animationType="slide"
@@ -323,6 +365,47 @@ export default function EventsEditorScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Info Bubble Edit Modal */}
+      <Modal
+        visible={infoBubbleModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setInfoBubbleModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Information Bubble</Text>
+              <Pressable onPress={() => setInfoBubbleModalVisible(false)}>
+                <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
+              </Pressable>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.infoModalDescription}>
+                This text will appear in the blue information bubble at the bottom of the Events page.
+              </Text>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Information Text *</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Enter information text..."
+                  value={infoBubbleTextEdit}
+                  onChangeText={setInfoBubbleTextEdit}
+                  multiline
+                  numberOfLines={4}
+                />
+              </View>
+
+              <Pressable style={styles.saveButton} onPress={handleSaveInfoBubble}>
+                <Text style={styles.saveButtonText}>Save Information</Text>
+              </Pressable>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -330,6 +413,10 @@ export default function EventsEditorScreen() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.employeeBackground,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: 12,
   },
   headerButton: {
     padding: 4,
@@ -355,6 +442,48 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 20,
     textAlign: 'center',
+  },
+  infoBubblePreview: {
+    backgroundColor: colors.highlight,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: colors.accent,
+  },
+  infoBubbleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  infoBubbleTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  infoBubbleText: {
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  editInfoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.managerAccent,
+  },
+  editInfoButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.managerAccent,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -490,6 +619,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     color: colors.text,
+  },
+  infoModalDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 16,
   },
   inputContainer: {
     marginBottom: 16,

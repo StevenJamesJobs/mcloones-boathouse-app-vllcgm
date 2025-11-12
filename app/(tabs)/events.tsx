@@ -13,7 +13,7 @@ export default function EventsScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { events, loading } = useEvents();
+  const { events, infoBubbleText, loading } = useEvents();
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
 
@@ -119,7 +119,7 @@ export default function EventsScreen() {
           <View style={styles.infoCard}>
             <IconSymbol name="info.circle.fill" color={colors.accent} size={24} />
             <Text style={styles.infoText}>
-              For private events and bookings, please contact us at (732) 555-0123 or email events@mcloones.com
+              {infoBubbleText || 'For private events and bookings, please contact us at (732) 555-0123 or email events@mcloones.com'}
             </Text>
           </View>
         </ScrollView>

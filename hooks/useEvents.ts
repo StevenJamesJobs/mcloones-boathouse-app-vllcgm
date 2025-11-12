@@ -12,12 +12,14 @@ export interface Event {
   image_url: string | null;
   is_active: boolean;
   display_order: number;
+  info_bubble_text: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export function useEvents() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [infoBubbleText, setInfoBubbleText] = useState<string>('For private events and bookings, please contact us at (732) 555-0123 or email events@mcloones.com');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,6 +38,11 @@ export function useEvents() {
       if (fetchError) throw fetchError;
 
       setEvents(data || []);
+      
+      // Get the info bubble text from the first active event (they should all have the same value)
+      if (data && data.length > 0 && data[0].info_bubble_text) {
+        setInfoBubbleText(data[0].info_bubble_text);
+      }
     } catch (err) {
       console.error('Error fetching events:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch events');
@@ -61,11 +68,11 @@ export function useEvents() {
     };
   }, [fetchEvents]);
 
-  return { events, loading, error, refetch: fetchEvents };
+  return { events, infoBubbleText, loading, error, refetch: fetchEvents };
 }
 
 export function useEventsEditor() {
-  const { events, loading, error, refetch } = useEvents();
+  const { events, infoBubbleText, loading, error, refetch } = useEvents();
   const [allEvents, setAllEvents] = useState<Event[]>([]);
 
   const fetchAllEvents = useCallback(async () => {
@@ -142,13 +149,33 @@ export function useEventsEditor() {
     }
   };
 
+  const updateInfoBubble = async (text: string) => {
+    try {
+      // Update all events with the new info bubble text
+      const { error } = await supabase
+        .from('events')
+        .update({ info_bubble_text: text, updated_at: new Date().toISOString() })
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Update all rows
+
+      if (error) throw error;
+      refetch();
+      fetchAllEvents();
+      return { error: null };
+    } catch (err) {
+      console.error('Error updating info bubble:', err);
+      return { error: err instanceof Error ? err.message : 'Failed to update info bubble' };
+    }
+  };
+
   return {
     events: allEvents,
+    infoBubbleText,
     loading,
     error,
     refetch: fetchAllEvents,
     addEvent,
     updateEvent,
     deleteEvent,
+    updateInfoBubble,
   };
 }
