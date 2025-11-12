@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform, ActivityIndicator, Modal, TextInput, Alert, Image, Linking } from 'react-native';
 import { Stack, router } from 'expo-router';
 import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
@@ -48,6 +48,7 @@ export default function MenuScreen() {
     const badges = dietaryInfo.map(info => {
       switch (info) {
         case 'gf': return 'GF';
+        case 'gfa': return 'GFA';
         case 'v': return 'V';
         case 'va': return 'VA';
         default: return info.toUpperCase();
@@ -79,6 +80,14 @@ export default function MenuScreen() {
     }
   };
 
+  const handleDoorDashPress = () => {
+    const doorDashUrl = 'https://www.doordash.com/store/24675054?utm_source=mx_share&aw=wex0tknQ360rlun_';
+    Linking.openURL(doorDashUrl).catch(err => {
+      console.error('Failed to open DoorDash link:', err);
+      Alert.alert('Error', 'Could not open DoorDash link');
+    });
+  };
+
   const bannerHeight = insets.top + 60;
 
   return (
@@ -91,6 +100,19 @@ export default function MenuScreen() {
 
         {/* Content with top padding */}
         <View style={[styles.content, { paddingTop: bannerHeight + 16 }]}>
+          {/* DoorDash Button */}
+          <View style={styles.doorDashContainer}>
+            <Pressable style={styles.doorDashButton} onPress={handleDoorDashPress}>
+              <IconSymbol 
+                ios_icon_name="bag.fill" 
+                android_material_icon_name="shopping_bag" 
+                size={24} 
+                color="#FFFFFF" 
+              />
+              <Text style={styles.doorDashButtonText}>Order on DoorDash</Text>
+            </Pressable>
+          </View>
+
           {/* Tab Selector - Lunch, Dinner, Weekly Specials */}
           <View style={styles.tabSelector}>
             <Pressable
@@ -263,22 +285,33 @@ export default function MenuScreen() {
                       <Text style={styles.categoryTitle}>{categoryName}</Text>
                       {categoryItems.map((item) => (
                         <View key={item.id} style={commonStyles.card}>
-                          <View style={styles.menuItemHeader}>
-                            <View style={styles.menuItemTitleContainer}>
-                              <Text style={styles.menuItemName}>{item.name}</Text>
-                              {item.dietary_info && item.dietary_info.length > 0 && (
-                                <Text style={styles.dietaryBadge}>
-                                  {getDietaryBadge(item.dietary_info)}
-                                </Text>
+                          <View style={styles.menuItemContent}>
+                            {item.image_url && (
+                              <Image
+                                source={{ uri: item.image_url }}
+                                style={styles.menuItemThumbnail}
+                                resizeMode="cover"
+                              />
+                            )}
+                            <View style={styles.menuItemDetails}>
+                              <View style={styles.menuItemHeader}>
+                                <View style={styles.menuItemTitleContainer}>
+                                  <Text style={styles.menuItemName}>{item.name}</Text>
+                                  {item.dietary_info && item.dietary_info.length > 0 && (
+                                    <Text style={styles.dietaryBadge}>
+                                      {getDietaryBadge(item.dietary_info)}
+                                    </Text>
+                                  )}
+                                </View>
+                                {item.price && (
+                                  <Text style={styles.menuItemPrice}>${item.price.toFixed(2)}</Text>
+                                )}
+                              </View>
+                              {item.description && (
+                                <Text style={styles.menuItemDescription}>{item.description}</Text>
                               )}
                             </View>
-                            {item.price && (
-                              <Text style={styles.menuItemPrice}>${item.price.toFixed(2)}</Text>
-                            )}
                           </View>
-                          {item.description && (
-                            <Text style={styles.menuItemDescription}>{item.description}</Text>
-                          )}
                         </View>
                       ))}
                     </View>
@@ -345,6 +378,34 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  doorDashContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  doorDashButton: {
+    backgroundColor: '#FF3008',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  doorDashButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   tabSelector: {
     flexDirection: 'row',
@@ -439,6 +500,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     marginBottom: 12,
+  },
+  menuItemContent: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  menuItemThumbnail: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    backgroundColor: colors.border,
+  },
+  menuItemDetails: {
+    flex: 1,
   },
   menuItemHeader: {
     flexDirection: 'row',

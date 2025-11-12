@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, Alert, ActivityIndicator, Platform, Image } from 'react-native';
 import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useMenuEditor, MenuItem, MenuCategory } from '@/hooks/useMenu';
+import * as ImagePicker from 'expo-image-picker';
+import { supabase } from '@/app/integrations/supabase/client';
 
 type EditMode = 'item' | 'category' | null;
 
@@ -15,6 +17,7 @@ export default function MenuEditorScreen() {
   const [editMode, setEditMode] = useState<EditMode>(null);
   const [selectedMealType, setSelectedMealType] = useState<'lunch' | 'dinner' | 'both'>('both');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   // Form states for menu item
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -25,6 +28,7 @@ export default function MenuEditorScreen() {
   const [itemMealType, setItemMealType] = useState<'lunch' | 'dinner' | 'both'>('both');
   const [itemDietaryInfo, setItemDietaryInfo] = useState<string[]>([]);
   const [itemDisplayOrder, setItemDisplayOrder] = useState('0');
+  const [itemImageUrl, setItemImageUrl] = useState<string | null>(null);
   
   // Form states for category
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
@@ -56,6 +60,7 @@ export default function MenuEditorScreen() {
     setItemMealType('both');
     setItemDietaryInfo([]);
     setItemDisplayOrder('0');
+    setItemImageUrl(null);
     setEditMode('item');
     setModalVisible(true);
   };
@@ -69,6 +74,7 @@ export default function MenuEditorScreen() {
     setItemMealType(item.meal_type as 'lunch' | 'dinner' | 'both');
     setItemDietaryInfo(item.dietary_info || []);
     setItemDisplayOrder(item.display_order.toString());
+    setItemImageUrl(item.image_url || null);
     setEditMode('item');
     setModalVisible(true);
   };
@@ -91,6 +97,87 @@ export default function MenuEditorScreen() {
     setModalVisible(true);
   };
 
+  const pickImage = async () => {
+    try {
+      // Request permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant permission to access your photo library');
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await uploadImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image');
+    }
+  };
+
+  const uploadImage = async (uri: string) => {
+    try {
+      setUploadingImage(true);
+
+      // Convert image to blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      // Generate unique filename
+      const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('menu-thumbnails')
+        .upload(filePath, blob, {
+          contentType: `image/${fileExt}`,
+          upsert: false,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('menu-thumbnails')
+        .getPublicUrl(filePath);
+
+      setItemImageUrl(publicUrl);
+      Alert.alert('Success', 'Image uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Error', 'Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeImage = () => {
+    Alert.alert(
+      'Remove Image',
+      'Are you sure you want to remove this image?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => setItemImageUrl(null),
+        },
+      ]
+    );
+  };
+
   const handleSaveItem = async () => {
     if (!itemName.trim()) {
       Alert.alert('Error', 'Please enter an item name');
@@ -106,6 +193,7 @@ export default function MenuEditorScreen() {
       dietary_info: itemDietaryInfo.length > 0 ? itemDietaryInfo : null,
       display_order: parseInt(itemDisplayOrder) || 0,
       is_available: true,
+      image_url: itemImageUrl || null,
     };
 
     if (editingItem) {
@@ -312,30 +400,41 @@ export default function MenuEditorScreen() {
                     style={styles.menuItemCard}
                     onPress={() => openEditItemModal(item)}
                   >
-                    <View style={styles.menuItemHeader}>
-                      <Text style={styles.menuItemName}>{item.name}</Text>
-                      <Text style={styles.menuItemPrice}>
-                        {item.price ? `$${item.price.toFixed(2)}` : 'N/A'}
-                      </Text>
-                    </View>
-                    {item.description && (
-                      <Text style={styles.menuItemDescription} numberOfLines={2}>
-                        {item.description}
-                      </Text>
-                    )}
-                    <View style={styles.menuItemFooter}>
-                      <Text style={styles.menuItemMealType}>{item.meal_type}</Text>
-                      {item.dietary_info && item.dietary_info.length > 0 && (
-                        <Text style={styles.menuItemDietary}>
-                          {item.dietary_info.join(', ')}
-                        </Text>
+                    <View style={styles.menuItemContent}>
+                      {item.image_url && (
+                        <Image
+                          source={{ uri: item.image_url }}
+                          style={styles.menuItemThumbnail}
+                          resizeMode="cover"
+                        />
                       )}
-                      <Pressable
-                        style={styles.deleteButton}
-                        onPress={() => handleDeleteItem(item)}
-                      >
-                        <IconSymbol name="trash" color={colors.error} size={18} />
-                      </Pressable>
+                      <View style={styles.menuItemDetails}>
+                        <View style={styles.menuItemHeader}>
+                          <Text style={styles.menuItemName}>{item.name}</Text>
+                          <Text style={styles.menuItemPrice}>
+                            {item.price ? `$${item.price.toFixed(2)}` : 'N/A'}
+                          </Text>
+                        </View>
+                        {item.description && (
+                          <Text style={styles.menuItemDescription} numberOfLines={2}>
+                            {item.description}
+                          </Text>
+                        )}
+                        <View style={styles.menuItemFooter}>
+                          <Text style={styles.menuItemMealType}>{item.meal_type}</Text>
+                          {item.dietary_info && item.dietary_info.length > 0 && (
+                            <Text style={styles.menuItemDietary}>
+                              {item.dietary_info.join(', ').toUpperCase()}
+                            </Text>
+                          )}
+                          <Pressable
+                            style={styles.deleteButton}
+                            onPress={() => handleDeleteItem(item)}
+                          >
+                            <IconSymbol name="trash" color={colors.error} size={18} />
+                          </Pressable>
+                        </View>
+                      </View>
                     </View>
                   </Pressable>
                 ))}
@@ -398,6 +497,50 @@ export default function MenuEditorScreen() {
                       keyboardType="decimal-pad"
                     />
 
+                    <Text style={styles.label}>Thumbnail Image (Optional)</Text>
+                    {itemImageUrl ? (
+                      <View style={styles.imagePreviewContainer}>
+                        <Image
+                          source={{ uri: itemImageUrl }}
+                          style={styles.imagePreview}
+                          resizeMode="cover"
+                        />
+                        <View style={styles.imageActions}>
+                          <Pressable
+                            style={styles.changeImageButton}
+                            onPress={pickImage}
+                            disabled={uploadingImage}
+                          >
+                            <IconSymbol name="photo" color="#FFFFFF" size={16} />
+                            <Text style={styles.changeImageButtonText}>Change</Text>
+                          </Pressable>
+                          <Pressable
+                            style={styles.removeImageButton}
+                            onPress={removeImage}
+                            disabled={uploadingImage}
+                          >
+                            <IconSymbol name="trash" color="#FFFFFF" size={16} />
+                            <Text style={styles.removeImageButtonText}>Remove</Text>
+                          </Pressable>
+                        </View>
+                      </View>
+                    ) : (
+                      <Pressable
+                        style={styles.uploadButton}
+                        onPress={pickImage}
+                        disabled={uploadingImage}
+                      >
+                        {uploadingImage ? (
+                          <ActivityIndicator color="#FFFFFF" />
+                        ) : (
+                          <>
+                            <IconSymbol name="photo.badge.plus" color="#FFFFFF" size={24} />
+                            <Text style={styles.uploadButtonText}>Upload Thumbnail</Text>
+                          </>
+                        )}
+                      </Pressable>
+                    )}
+
                     <Text style={styles.label}>Category</Text>
                     <View style={styles.pickerContainer}>
                       {categories.map(cat => (
@@ -442,7 +585,7 @@ export default function MenuEditorScreen() {
 
                     <Text style={styles.label}>Dietary Info</Text>
                     <View style={styles.dietarySelector}>
-                      {['gf', 'v', 'va'].map(info => (
+                      {['gf', 'gfa', 'v', 'va'].map(info => (
                         <Pressable
                           key={info}
                           style={[
@@ -659,6 +802,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
+  menuItemContent: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  menuItemThumbnail: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    backgroundColor: colors.border,
+  },
+  menuItemDetails: {
+    flex: 1,
+  },
   menuItemHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -786,6 +942,66 @@ const styles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: 'top',
   },
+  uploadButton: {
+    backgroundColor: colors.managerAccent,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  uploadButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  imagePreviewContainer: {
+    gap: 12,
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    backgroundColor: colors.border,
+  },
+  imageActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  changeImageButton: {
+    flex: 1,
+    backgroundColor: colors.managerAccent,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  changeImageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  removeImageButton: {
+    flex: 1,
+    backgroundColor: colors.error,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  removeImageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   pickerContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -841,6 +1057,7 @@ const styles = StyleSheet.create({
   },
   dietarySelector: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   dietaryButton: {
