@@ -20,6 +20,9 @@ const styles = StyleSheet.create({
   scrollContentWithTabBar: {
     paddingBottom: 100,
   },
+  scrollContentWithBanner: {
+    paddingTop: 70,
+  },
   headerButton: {
     padding: 4,
   },
@@ -227,7 +230,7 @@ export default function ReviewsScreen() {
       {Platform.OS === 'ios' && (
         <Stack.Screen
           options={{
-            title: 'Customer Reviews',
+            title: 'Reviews',
             headerStyle: {
               backgroundColor: colors.background,
             },
@@ -244,7 +247,7 @@ export default function ReviewsScreen() {
         />
       )}
 
-      <View style={[styles.container, { paddingTop: Platform.OS !== 'ios' ? insets.top : 0 }]}>
+      <View style={styles.container}>
         {Platform.OS !== 'ios' && (
           <CustomerBanner onLoginPress={() => setLoginModalVisible(true)} />
         )}
@@ -252,7 +255,8 @@ export default function ReviewsScreen() {
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            Platform.OS !== 'ios' && styles.scrollContentWithTabBar
+            Platform.OS !== 'ios' && styles.scrollContentWithTabBar,
+            Platform.OS !== 'ios' && styles.scrollContentWithBanner,
           ]}
           showsVerticalScrollIndicator={false}
         >
