@@ -135,23 +135,33 @@ export default function MenuEditorScreen() {
 
       console.log('Generated filename:', fileName);
 
-      // For React Native, we need to create a FormData object
-      const formData = new FormData();
+      // Fetch the image as a blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
       
-      // Create a file object from the URI
-      const file = {
-        uri: uri,
-        type: `image/${fileExt}`,
-        name: fileName,
-      } as any;
+      console.log('Blob created, size:', blob.size, 'type:', blob.type);
 
-      console.log('Uploading file:', file);
+      // Convert blob to ArrayBuffer for upload
+      const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (reader.result instanceof ArrayBuffer) {
+            resolve(reader.result);
+          } else {
+            reject(new Error('Failed to convert blob to ArrayBuffer'));
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(blob);
+      });
 
-      // Upload using FormData approach for React Native
+      console.log('ArrayBuffer created, size:', arrayBuffer.byteLength);
+
+      // Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from('menu-thumbnails')
-        .upload(filePath, file, {
-          contentType: `image/${fileExt}`,
+        .upload(filePath, arrayBuffer, {
+          contentType: blob.type || `image/${fileExt}`,
           upsert: false,
         });
 
@@ -173,7 +183,7 @@ export default function MenuEditorScreen() {
       Alert.alert('Success', 'Image uploaded successfully');
     } catch (error) {
       console.error('Error uploading image:', error);
-      Alert.alert('Error', 'Failed to upload image. Please try again.');
+      Alert.alert('Error', `Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploadingImage(false);
     }
