@@ -21,14 +21,15 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   scrollContentWithBanner: {
-    paddingTop: 70,
+    paddingTop: 80,
   },
   headerButton: {
     padding: 4,
   },
   header: {
     paddingHorizontal: 16,
-    paddingVertical: 24,
+    paddingTop: 32,
+    paddingBottom: 24,
     backgroundColor: colors.primary,
     marginBottom: 20,
   },
