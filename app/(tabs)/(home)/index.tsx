@@ -10,6 +10,7 @@ import { useWeeklySpecials } from '@/hooks/useWeeklySpecials';
 import { useEvents } from '@/hooks/useEvents';
 import { useContactUs } from '@/hooks/useContactUs';
 import { useReviews } from '@/hooks/useReviews';
+import { useTagline } from '@/hooks/useTagline';
 import { router } from 'expo-router';
 
 export default function HomeScreen() {
@@ -21,6 +22,7 @@ export default function HomeScreen() {
   const { events, loading: eventsLoading } = useEvents();
   const { contactInfo, loading: contactLoading } = useContactUs();
   const { reviews, loading: reviewsLoading } = useReviews();
+  const { tagline, loading: taglineLoading } = useTagline();
 
   const handleLogin = () => {
     if (login(email, password)) {
@@ -102,12 +104,18 @@ export default function HomeScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          {/* Welcome Message */}
+          {/* Welcome Message with Dynamic Tagline */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Welcome to McLoone&apos;s Boathouse</Text>
-            <Text style={styles.welcomeText}>
-              Experience waterfront dining at its finest on the Shrewsbury River
-            </Text>
+            <Text style={styles.welcomeTitle}>McLoone&apos;s Boathouse</Text>
+            {taglineLoading ? (
+              <View style={styles.taglineLoadingContainer}>
+                <ActivityIndicator size="small" color={colors.textSecondary} />
+              </View>
+            ) : (
+              <Text style={styles.welcomeText}>
+                {tagline?.tagline_text || 'Experience waterfront dining at its finest on the Shrewsbury River'}
+              </Text>
+            )}
           </View>
 
           {/* Upcoming Events */}
@@ -344,6 +352,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
     lineHeight: 24,
+  },
+  taglineLoadingContainer: {
+    paddingVertical: 8,
   },
   section: {
     paddingHorizontal: 16,
