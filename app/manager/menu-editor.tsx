@@ -126,38 +126,54 @@ export default function MenuEditorScreen() {
   const uploadImage = async (uri: string) => {
     try {
       setUploadingImage(true);
-
-      // Convert image to blob
-      const response = await fetch(uri);
-      const blob = await response.blob();
+      console.log('Starting image upload for URI:', uri);
 
       // Generate unique filename
       const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      // Upload to Supabase Storage
+      console.log('Generated filename:', fileName);
+
+      // For React Native, we need to create a FormData object
+      const formData = new FormData();
+      
+      // Create a file object from the URI
+      const file = {
+        uri: uri,
+        type: `image/${fileExt}`,
+        name: fileName,
+      } as any;
+
+      console.log('Uploading file:', file);
+
+      // Upload using FormData approach for React Native
       const { data, error } = await supabase.storage
         .from('menu-thumbnails')
-        .upload(filePath, blob, {
+        .upload(filePath, file, {
           contentType: `image/${fileExt}`,
           upsert: false,
         });
 
       if (error) {
+        console.error('Supabase upload error:', error);
         throw error;
       }
+
+      console.log('Upload successful, data:', data);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('menu-thumbnails')
         .getPublicUrl(filePath);
 
+      console.log('Public URL:', publicUrl);
+
       setItemImageUrl(publicUrl);
       Alert.alert('Success', 'Image uploaded successfully');
     } catch (error) {
       console.error('Error uploading image:', error);
-      Alert.alert('Error', 'Failed to upload image');
+      Alert.alert('Error', 'Failed to upload image. Please try again.');
     } finally {
       setUploadingImage(false);
     }
@@ -195,6 +211,8 @@ export default function MenuEditorScreen() {
       is_available: true,
       image_url: itemImageUrl || null,
     };
+
+    console.log('Saving item with data:', itemData);
 
     if (editingItem) {
       const { error } = await updateMenuItem(editingItem.id, itemData);
