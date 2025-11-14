@@ -39,6 +39,11 @@ export default function AboutScreen() {
     }
   };
 
+  const handleGalleryPress = () => {
+    console.log('Gallery button pressed - navigating to gallery');
+    router.push('/(tabs)/gallery');
+  };
+
   const bannerHeight = insets.top + 60;
 
   // Helper function to render section content with icons
@@ -152,8 +157,12 @@ export default function AboutScreen() {
                   <React.Fragment key={`section-${section.id}`}>
                     {/* Gallery Action Banner */}
                     <Pressable 
-                      style={styles.galleryBanner}
-                      onPress={() => router.push('/(tabs)/gallery')}
+                      style={({ pressed }) => [
+                        styles.galleryBanner,
+                        pressed && styles.galleryBannerPressed
+                      ]}
+                      onPress={handleGalleryPress}
+                      android_ripple={{ color: 'rgba(255, 255, 255, 0.3)' }}
                     >
                       <View style={styles.galleryBannerContent}>
                         <View style={styles.galleryBannerLeft}>
@@ -319,6 +328,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  galleryBannerPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
   },
   galleryBannerContent: {
     flexDirection: 'row',

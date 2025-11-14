@@ -260,7 +260,7 @@ export default function MenuScreen() {
             </Pressable>
           </ScrollView>
 
-          {/* Subcategory Filter - Only show for Wine/Libations (NOT for Weekly Specials) */}
+          {/* Subcategory Filter - Only show for Wine/Libations (NOT for Weekly Specials or Lunch/Dinner) */}
           {selectedTab !== 'specials' && (selectedTab === 'wine' || selectedTab === 'libations') && subcategories.length > 0 && (
             <ScrollView
               horizontal
@@ -308,8 +308,8 @@ export default function MenuScreen() {
             </ScrollView>
           )}
 
-          {/* Category Filter - Only show for Lunch/Dinner (NOT for Weekly Specials) */}
-          {selectedTab !== 'specials' && selectedTab !== 'wine' && selectedTab !== 'libations' && (
+          {/* Category Filter - Only show for Lunch/Dinner (NOT for Weekly Specials, Wine, or Libations) */}
+          {selectedTab !== 'specials' && selectedTab !== 'wine' && selectedTab !== 'libations' && availableCategories.length > 0 && (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
