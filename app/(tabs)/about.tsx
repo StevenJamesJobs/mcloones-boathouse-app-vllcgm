@@ -45,6 +45,11 @@ export default function AboutScreen() {
     }
   };
 
+  const handleGalleryPress = () => {
+    console.log('Navigating to gallery page...');
+    router.push('/(tabs)/gallery');
+  };
+
   const bannerHeight = insets.top + 60;
 
   // Helper function to render section content with icons
@@ -171,10 +176,10 @@ export default function AboutScreen() {
                       <View style={styles.galleryHeader}>
                         <View style={styles.gallerySectionHeader}>
                           <IconSymbol name="photo.fill" color={colors.accent} size={24} />
-                          <Text style={styles.sectionTitle}>McLoone&apos;s Boathouse Gallery</Text>
+                          <Text style={styles.sectionTitle}>Gallery</Text>
                         </View>
-                        <Pressable onPress={() => router.push('/(tabs)/gallery')}>
-                          <Text style={styles.viewAllLink}>View our Full Gallery</Text>
+                        <Pressable onPress={handleGalleryPress}>
+                          <Text style={styles.viewAllLink}>View Full Gallery</Text>
                         </Pressable>
                       </View>
                       
@@ -182,7 +187,7 @@ export default function AboutScreen() {
                         {diningThumbnail && (
                           <Pressable 
                             style={styles.galleryThumbnail}
-                            onPress={() => router.push('/(tabs)/gallery')}
+                            onPress={handleGalleryPress}
                           >
                             <Image
                               source={{ uri: diningThumbnail.image_url }}
@@ -198,7 +203,7 @@ export default function AboutScreen() {
                         {banquetsThumbnail && (
                           <Pressable 
                             style={styles.galleryThumbnail}
-                            onPress={() => router.push('/(tabs)/gallery')}
+                            onPress={handleGalleryPress}
                           >
                             <Image
                               source={{ uri: banquetsThumbnail.image_url }}
@@ -214,7 +219,7 @@ export default function AboutScreen() {
                         {eventsThumbnail && (
                           <Pressable 
                             style={styles.galleryThumbnail}
-                            onPress={() => router.push('/(tabs)/gallery')}
+                            onPress={handleGalleryPress}
                           >
                             <Image
                               source={{ uri: eventsThumbnail.image_url }}

@@ -168,7 +168,7 @@ export default function MenuScreen() {
               <IconSymbol 
                 ios_icon_name="star.fill" 
                 android_material_icon_name="star" 
-                size={28} 
+                size={24} 
                 color={selectedTab === 'specials' ? '#FFFFFF' : colors.accent} 
               />
               <Text
@@ -194,7 +194,7 @@ export default function MenuScreen() {
               <IconSymbol 
                 ios_icon_name="sun.max.fill" 
                 android_material_icon_name="wb_sunny" 
-                size={28} 
+                size={24} 
                 color={selectedTab === 'lunch' ? '#FFFFFF' : colors.accent} 
               />
               <Text
@@ -220,7 +220,7 @@ export default function MenuScreen() {
               <IconSymbol 
                 ios_icon_name="moon.stars.fill" 
                 android_material_icon_name="nights_stay" 
-                size={28} 
+                size={24} 
                 color={selectedTab === 'dinner' ? '#FFFFFF' : colors.accent} 
               />
               <Text
@@ -247,7 +247,7 @@ export default function MenuScreen() {
               <IconSymbol 
                 ios_icon_name="clock.fill" 
                 android_material_icon_name="schedule" 
-                size={28} 
+                size={24} 
                 color={selectedTab === 'happyhour' ? '#FFFFFF' : colors.accent} 
               />
               <Text
@@ -273,7 +273,7 @@ export default function MenuScreen() {
               <IconSymbol 
                 ios_icon_name="wineglass.fill" 
                 android_material_icon_name="local_bar" 
-                size={28} 
+                size={24} 
                 color={selectedTab === 'libations' ? '#FFFFFF' : colors.accent} 
               />
               <Text
@@ -299,7 +299,7 @@ export default function MenuScreen() {
               <IconSymbol 
                 ios_icon_name="leaf.fill" 
                 android_material_icon_name="eco" 
-                size={28} 
+                size={24} 
                 color={selectedTab === 'wine' ? '#FFFFFF' : colors.accent} 
               />
               <Text
@@ -629,22 +629,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: 12,
-    paddingVertical: 12,
-    gap: 12,
+    paddingVertical: 8,
+    gap: 8,
     backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
   categoryTile: {
-    width: 'calc(33.333% - 8px)',
-    aspectRatio: 1.2,
+    width: 'calc(33.333% - 6px)',
+    aspectRatio: 1.5,
     backgroundColor: colors.card,
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 2,
     borderColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
+    padding: 8,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -662,12 +662,12 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   categoryTileText: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
-    marginTop: 8,
-    letterSpacing: 0.3,
+    marginTop: 6,
+    letterSpacing: 0.2,
   },
   categoryTileTextActive: {
     color: '#FFFFFF',
