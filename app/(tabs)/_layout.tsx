@@ -8,7 +8,6 @@ import { colors } from '@/styles/commonStyles';
 
 export default function TabLayout() {
   // Define the tabs configuration for customer-facing app
-  // Reordered: Welcome, Menu, Events, About Us, Reviews (Gallery removed)
   const tabs: TabBarItem[] = [
     {
       name: '(home)',
@@ -29,16 +28,22 @@ export default function TabLayout() {
       label: 'Events',
     },
     {
-      name: 'about',
-      route: '/(tabs)/about',
-      icon: 'info.circle.fill',
-      label: 'About Us',
-    },
-    {
       name: 'reviews',
       route: '/(tabs)/reviews',
       icon: 'star.fill',
       label: 'Reviews',
+    },
+    {
+      name: 'about',
+      route: '/(tabs)/about',
+      icon: 'info.circle.fill',
+      label: 'About',
+    },
+    {
+      name: 'gallery',
+      route: '/(tabs)/gallery',
+      icon: 'photo.fill',
+      label: 'Gallery',
     },
   ];
 
@@ -58,13 +63,17 @@ export default function TabLayout() {
           <Icon sf="calendar" drawable="ic_calendar" />
           <Label>Events</Label>
         </NativeTabs.Trigger>
-        <NativeTabs.Trigger name="about">
-          <Icon sf="info.circle.fill" drawable="ic_info" />
-          <Label>About Us</Label>
-        </NativeTabs.Trigger>
         <NativeTabs.Trigger name="reviews">
           <Icon sf="star.fill" drawable="ic_star" />
           <Label>Reviews</Label>
+        </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="about">
+          <Icon sf="info.circle.fill" drawable="ic_info" />
+          <Label>About</Label>
+        </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="gallery">
+          <Icon sf="photo.fill" drawable="ic_photo" />
+          <Label>Gallery</Label>
         </NativeTabs.Trigger>
       </NativeTabs>
     );
@@ -82,8 +91,8 @@ export default function TabLayout() {
         <Stack.Screen name="(home)" />
         <Stack.Screen name="menu" />
         <Stack.Screen name="events" />
-        <Stack.Screen name="about" />
         <Stack.Screen name="reviews" />
+        <Stack.Screen name="about" />
         <Stack.Screen name="gallery" />
       </Stack>
       <FloatingTabBar tabs={tabs} />

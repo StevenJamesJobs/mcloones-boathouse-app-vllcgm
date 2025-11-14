@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Platform, Modal, TextInput, Pressable, Alert, Image, ActivityIndicator } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
+import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,34 +59,20 @@ export default function GalleryScreen() {
   const isLoading = diningLoading || banquetsLoading || eventsLoading;
   const currentImages = getCurrentImages();
 
+  const bannerHeight = insets.top + 60;
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       
       <View style={[commonStyles.container, styles.container]}>
-        {/* Custom Header with Back Button */}
-        <View style={[styles.customHeader, { paddingTop: insets.top }]}>
-          <View style={styles.headerContent}>
-            <Pressable 
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              <IconSymbol 
-                ios_icon_name="chevron.left" 
-                android_material_icon_name="arrow_back" 
-                color={colors.text} 
-                size={24} 
-              />
-              <Text style={styles.backButtonText}>Back</Text>
-            </Pressable>
-            <Text style={styles.headerTitle}>Gallery</Text>
-            <View style={styles.headerSpacer} />
-          </View>
-        </View>
+        {/* Hovering Header */}
+        <CustomerBanner onLoginPress={() => setLoginModalVisible(true)} />
 
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
+            { paddingTop: bannerHeight + 16 },
             Platform.OS !== 'ios' && styles.scrollContentWithTabBar,
           ]}
           showsVerticalScrollIndicator={false}
@@ -123,12 +110,7 @@ export default function GalleryScreen() {
             </View>
           ) : currentImages.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <IconSymbol 
-                ios_icon_name="photo.on.rectangle" 
-                android_material_icon_name="photo_library" 
-                color={colors.textSecondary} 
-                size={64} 
-              />
+              <IconSymbol name="photo.on.rectangle" color={colors.textSecondary} size={64} />
               <Text style={styles.emptyText}>No images in this category yet</Text>
               <Text style={styles.emptySubtext}>Check back soon for beautiful photos!</Text>
             </View>
@@ -170,12 +152,7 @@ export default function GalleryScreen() {
               style={styles.closeButton}
               onPress={() => setExpandedImage(null)}
             >
-              <IconSymbol 
-                ios_icon_name="xmark.circle.fill" 
-                android_material_icon_name="cancel" 
-                color="#FFFFFF" 
-                size={36} 
-              />
+              <IconSymbol name="xmark.circle.fill" color="#FFFFFF" size={36} />
             </Pressable>
             {expandedImage && (
               <Image
@@ -199,12 +176,7 @@ export default function GalleryScreen() {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Employee Login</Text>
                 <Pressable onPress={() => setLoginModalVisible(false)}>
-                  <IconSymbol 
-                    ios_icon_name="xmark.circle.fill" 
-                    android_material_icon_name="cancel" 
-                    color={colors.textSecondary} 
-                    size={28} 
-                  />
+                  <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
                 </Pressable>
               </View>
 
@@ -245,50 +217,6 @@ export default function GalleryScreen() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background,
-  },
-  customHeader: {
-    backgroundColor: colors.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 4,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-    paddingRight: 8,
-  },
-  backButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-  },
-  headerSpacer: {
-    width: 80,
   },
   scrollContent: {
     paddingHorizontal: 16,

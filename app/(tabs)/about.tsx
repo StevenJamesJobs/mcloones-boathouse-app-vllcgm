@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Platform, Modal, TextInput, Pressable, Alert, ActivityIndicator } from 'react-native';
-import { Stack, router, Link } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
@@ -52,12 +52,7 @@ export default function AboutScreen() {
         <View style={commonStyles.card}>
           {features.map((feature: string, index: number) => (
             <View key={index} style={styles.featureItem}>
-              <IconSymbol 
-                ios_icon_name="checkmark.circle.fill" 
-                android_material_icon_name="check_circle" 
-                color={colors.accent} 
-                size={20} 
-              />
+              <IconSymbol name="checkmark.circle.fill" color={colors.accent} size={20} />
               <Text style={styles.featureText}>{feature.trim()}</Text>
             </View>
           ))}
@@ -72,28 +67,19 @@ export default function AboutScreen() {
         <View style={commonStyles.card}>
           {lines.map((line: string, index: number) => {
             const trimmedLine = line.trim();
-            let iosIcon = 'info.circle.fill';
-            let androidIcon = 'info';
+            let icon = 'info.circle.fill';
             
             if (trimmedLine.toLowerCase().includes('ocean') || trimmedLine.toLowerCase().includes('avenue')) {
-              iosIcon = 'mappin.circle.fill';
-              androidIcon = 'location_on';
+              icon = 'mappin.circle.fill';
             } else if (trimmedLine.match(/\(\d{3}\)/)) {
-              iosIcon = 'phone.fill';
-              androidIcon = 'phone';
+              icon = 'phone.fill';
             } else if (trimmedLine.toLowerCase().includes('hours') || trimmedLine.toLowerCase().includes('monday')) {
-              iosIcon = 'clock.fill';
-              androidIcon = 'schedule';
+              icon = 'clock.fill';
             }
             
             return (
               <View key={index} style={styles.contactRow}>
-                <IconSymbol 
-                  ios_icon_name={iosIcon} 
-                  android_material_icon_name={androidIcon} 
-                  color={colors.accent} 
-                  size={20} 
-                />
+                <IconSymbol name={icon} color={colors.accent} size={20} />
                 <Text style={styles.contactText}>{trimmedLine}</Text>
               </View>
             );
@@ -113,12 +99,12 @@ export default function AboutScreen() {
   // Helper function to get icon for section
   const getSectionIcon = (title: string) => {
     const lowerTitle = title.toLowerCase();
-    if (lowerTitle.includes('story') || lowerTitle.includes('history')) return { ios: 'book.fill', android: 'menu_book' };
-    if (lowerTitle.includes('offer')) return { ios: 'star.fill', android: 'star' };
-    if (lowerTitle.includes('experience')) return { ios: 'sparkles', android: 'auto_awesome' };
-    if (lowerTitle.includes('event') || lowerTitle.includes('private')) return { ios: 'gift.fill', android: 'card_giftcard' };
-    if (lowerTitle.includes('visit') || lowerTitle.includes('contact')) return { ios: 'mappin.circle.fill', android: 'location_on' };
-    return { ios: 'info.circle.fill', android: 'info' };
+    if (lowerTitle.includes('story') || lowerTitle.includes('history')) return 'book.fill';
+    if (lowerTitle.includes('offer')) return 'star.fill';
+    if (lowerTitle.includes('experience')) return 'sparkles';
+    if (lowerTitle.includes('event') || lowerTitle.includes('private')) return 'gift.fill';
+    if (lowerTitle.includes('visit') || lowerTitle.includes('contact')) return 'mappin.circle.fill';
+    return 'info.circle.fill';
   };
 
   return (
@@ -160,72 +146,11 @@ export default function AboutScreen() {
                 );
               }
               
-              // Add Gallery Button before "What We Offer" section (index 1)
-              if (index === 1) {
-                const sectionIcon = getSectionIcon(section.title);
-                return (
-                  <React.Fragment key={`section-${section.id}`}>
-                    {/* Gallery Action Banner using Link */}
-                    <Link href="/(tabs)/gallery" asChild>
-                      <Pressable 
-                        style={({ pressed }) => [
-                          styles.galleryBanner,
-                          pressed && styles.galleryBannerPressed
-                        ]}
-                      >
-                        <View style={styles.galleryBannerContent}>
-                          <View style={styles.galleryBannerLeft}>
-                            <IconSymbol 
-                              ios_icon_name="photo.fill" 
-                              android_material_icon_name="photo_library" 
-                              color="#FFFFFF" 
-                              size={32} 
-                            />
-                            <View style={styles.galleryBannerTextContainer}>
-                              <Text style={styles.galleryBannerTitle}>View Our Gallery</Text>
-                              <Text style={styles.galleryBannerSubtitle}>
-                                Explore beautiful photos of our waterfront dining
-                              </Text>
-                            </View>
-                          </View>
-                          <IconSymbol 
-                            ios_icon_name="chevron.right" 
-                            android_material_icon_name="chevron_right" 
-                            color="#FFFFFF" 
-                            size={24} 
-                          />
-                        </View>
-                      </Pressable>
-                    </Link>
-
-                    {/* Regular Section */}
-                    <View style={styles.section}>
-                      <View style={styles.sectionHeader}>
-                        <IconSymbol 
-                          ios_icon_name={sectionIcon.ios} 
-                          android_material_icon_name={sectionIcon.android} 
-                          color={colors.accent} 
-                          size={24} 
-                        />
-                        <Text style={styles.sectionTitle}>{section.title}</Text>
-                      </View>
-                      {renderSectionContent(section)}
-                    </View>
-                  </React.Fragment>
-                );
-              }
-              
               // Other sections
-              const sectionIcon = getSectionIcon(section.title);
               return (
                 <View key={section.id} style={styles.section}>
                   <View style={styles.sectionHeader}>
-                    <IconSymbol 
-                      ios_icon_name={sectionIcon.ios} 
-                      android_material_icon_name={sectionIcon.android} 
-                      color={colors.accent} 
-                      size={24} 
-                    />
+                    <IconSymbol name={getSectionIcon(section.title)} color={colors.accent} size={24} />
                     <Text style={styles.sectionTitle}>{section.title}</Text>
                   </View>
                   {renderSectionContent(section)}
@@ -247,12 +172,7 @@ export default function AboutScreen() {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Employee Login</Text>
                 <Pressable onPress={() => setLoginModalVisible(false)}>
-                  <IconSymbol 
-                    ios_icon_name="xmark.circle.fill" 
-                    android_material_icon_name="cancel" 
-                    color={colors.textSecondary} 
-                    size={28} 
-                  />
+                  <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
                 </Pressable>
               </View>
 
@@ -339,51 +259,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
     lineHeight: 24,
-  },
-  galleryBanner: {
-    marginHorizontal: 16,
-    marginBottom: 24,
-    borderRadius: 16,
-    overflow: 'hidden',
-    backgroundColor: colors.accent,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  galleryBannerPressed: {
-    opacity: 0.85,
-  },
-  galleryBannerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
-  },
-  galleryBannerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 16,
-  },
-  galleryBannerTextContainer: {
-    flex: 1,
-  },
-  galleryBannerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  galleryBannerSubtitle: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    opacity: 0.9,
-    lineHeight: 20,
   },
   section: {
     paddingHorizontal: 16,
