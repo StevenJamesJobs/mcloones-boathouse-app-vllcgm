@@ -15,7 +15,6 @@ export default function MenuEditorScreen() {
   
   const [modalVisible, setModalVisible] = useState(false);
   const [editMode, setEditMode] = useState<EditMode>(null);
-  const [selectedMealType, setSelectedMealType] = useState<'lunch' | 'dinner' | 'both'>('both');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
   const [uploadingImage, setUploadingImage] = useState(false);
   
@@ -37,11 +36,10 @@ export default function MenuEditorScreen() {
   const [categoryMealType, setCategoryMealType] = useState<'lunch' | 'dinner' | 'both'>('both');
   const [categoryDisplayOrder, setCategoryDisplayOrder] = useState('0');
 
-  const filteredItems = items.filter(item => {
-    const mealTypeMatch = selectedMealType === 'both' || item.meal_type === selectedMealType || item.meal_type === 'both';
-    const categoryMatch = selectedCategoryFilter === 'all' || item.category_id === selectedCategoryFilter;
-    return mealTypeMatch && categoryMatch;
-  });
+  // Filter items by selected category
+  const filteredItems = selectedCategoryFilter === 'all' 
+    ? items 
+    : items.filter(item => item.category_id === selectedCategoryFilter);
 
   const groupedItems = filteredItems.reduce((acc, item) => {
     const categoryName = item.category?.name || 'Uncategorized';
@@ -213,25 +211,25 @@ export default function MenuEditorScreen() {
       return;
     }
 
-    // Check if selected category is Wine or Libations
+    // Check if selected category is Wine, Libations, or Happy Hour
     const selectedCategory = categories.find(cat => cat.id === itemCategoryId);
-    const isWineOrLibations = selectedCategory?.name === 'Wine' || selectedCategory?.name === 'Libations';
+    const isSpecialCategory = selectedCategory?.name === 'Wine' || selectedCategory?.name === 'Libations' || selectedCategory?.name === 'Happy Hour';
 
-    // Prevent adding Wine/Libations items to Lunch or Dinner meal types
-    if (isWineOrLibations && (itemMealType === 'lunch' || itemMealType === 'dinner')) {
+    // Prevent adding special category items to Lunch or Dinner meal types
+    if (isSpecialCategory && (itemMealType === 'lunch' || itemMealType === 'dinner')) {
       Alert.alert(
         'Invalid Configuration',
-        'Wine and Libations items cannot be assigned to Lunch or Dinner meal types. They must be set to "Both" to appear in their own dedicated categories.',
+        'Wine, Libations, and Happy Hour items cannot be assigned to Lunch or Dinner meal types. They must be set to "Both" to appear in their own dedicated categories.',
         [{ text: 'OK' }]
       );
       return;
     }
 
-    // Prevent adding Lunch/Dinner items to Wine/Libations categories
-    if (isWineOrLibations && itemMealType !== 'both') {
+    // Prevent adding Lunch/Dinner items to special categories
+    if (isSpecialCategory && itemMealType !== 'both') {
       Alert.alert(
         'Invalid Configuration',
-        'Wine and Libations items must have meal type set to "Both".',
+        'Wine, Libations, and Happy Hour items must have meal type set to "Both".',
         [{ text: 'OK' }]
       );
       return;
@@ -354,15 +352,15 @@ export default function MenuEditorScreen() {
     }
   };
 
-  // Check if selected category is Wine or Libations
+  // Check if selected category is Wine, Libations, or Happy Hour
   const selectedCategory = categories.find(cat => cat.id === itemCategoryId);
-  const isWineOrLibations = selectedCategory?.name === 'Wine' || selectedCategory?.name === 'Libations';
+  const isSpecialCategory = selectedCategory?.name === 'Wine' || selectedCategory?.name === 'Libations' || selectedCategory?.name === 'Happy Hour';
 
-  // Get available categories - filter out Wine/Libations when meal type is lunch or dinner
+  // Get available categories - filter out special categories when meal type is lunch or dinner
   const availableCategories = categories.filter(cat => {
-    // If meal type is lunch or dinner, exclude Wine and Libations
+    // If meal type is lunch or dinner, exclude Wine, Libations, and Happy Hour
     if (itemMealType === 'lunch' || itemMealType === 'dinner') {
-      return cat.name !== 'Wine' && cat.name !== 'Libations';
+      return cat.name !== 'Wine' && cat.name !== 'Libations' && cat.name !== 'Happy Hour';
     }
     return true;
   });
@@ -392,31 +390,86 @@ export default function MenuEditorScreen() {
           </Pressable>
         </View>
 
-        {/* Filters */}
+        {/* Category Filter */}
         <View style={styles.filters}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
             <Pressable
-              style={[styles.filterButton, selectedMealType === 'both' && styles.filterButtonActive]}
-              onPress={() => setSelectedMealType('both')}
+              style={[styles.filterButton, selectedCategoryFilter === 'all' && styles.filterButtonActive]}
+              onPress={() => setSelectedCategoryFilter('all')}
             >
-              <Text style={[styles.filterButtonText, selectedMealType === 'both' && styles.filterButtonTextActive]}>
+              <Text style={[styles.filterButtonText, selectedCategoryFilter === 'all' && styles.filterButtonTextActive]}>
                 All
               </Text>
             </Pressable>
             <Pressable
-              style={[styles.filterButton, selectedMealType === 'lunch' && styles.filterButtonActive]}
-              onPress={() => setSelectedMealType('lunch')}
+              style={[styles.filterButton, selectedCategoryFilter === 'lunch' && styles.filterButtonActive]}
+              onPress={() => {
+                const lunchCategories = categories.filter(cat => 
+                  (cat.meal_type === 'lunch' || cat.meal_type === 'both') && 
+                  cat.name !== 'Wine' && cat.name !== 'Libations' && cat.name !== 'Happy Hour'
+                );
+                if (lunchCategories.length > 0) {
+                  setSelectedCategoryFilter(lunchCategories[0].id);
+                }
+              }}
             >
-              <Text style={[styles.filterButtonText, selectedMealType === 'lunch' && styles.filterButtonTextActive]}>
+              <Text style={[styles.filterButtonText, selectedCategoryFilter === 'lunch' && styles.filterButtonTextActive]}>
                 Lunch
               </Text>
             </Pressable>
             <Pressable
-              style={[styles.filterButton, selectedMealType === 'dinner' && styles.filterButtonActive]}
-              onPress={() => setSelectedMealType('dinner')}
+              style={[styles.filterButton, selectedCategoryFilter === 'dinner' && styles.filterButtonActive]}
+              onPress={() => {
+                const dinnerCategories = categories.filter(cat => 
+                  (cat.meal_type === 'dinner' || cat.meal_type === 'both') && 
+                  cat.name !== 'Wine' && cat.name !== 'Libations' && cat.name !== 'Happy Hour'
+                );
+                if (dinnerCategories.length > 0) {
+                  setSelectedCategoryFilter(dinnerCategories[0].id);
+                }
+              }}
             >
-              <Text style={[styles.filterButtonText, selectedMealType === 'dinner' && styles.filterButtonTextActive]}>
+              <Text style={[styles.filterButtonText, selectedCategoryFilter === 'dinner' && styles.filterButtonTextActive]}>
                 Dinner
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.filterButton, selectedCategoryFilter === 'libations' && styles.filterButtonActive]}
+              onPress={() => {
+                const libationsCategory = categories.find(cat => cat.name === 'Libations');
+                if (libationsCategory) {
+                  setSelectedCategoryFilter(libationsCategory.id);
+                }
+              }}
+            >
+              <Text style={[styles.filterButtonText, selectedCategoryFilter === 'libations' && styles.filterButtonTextActive]}>
+                Libations
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.filterButton, selectedCategoryFilter === 'wine' && styles.filterButtonActive]}
+              onPress={() => {
+                const wineCategory = categories.find(cat => cat.name === 'Wine');
+                if (wineCategory) {
+                  setSelectedCategoryFilter(wineCategory.id);
+                }
+              }}
+            >
+              <Text style={[styles.filterButtonText, selectedCategoryFilter === 'wine' && styles.filterButtonTextActive]}>
+                Wine
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.filterButton, selectedCategoryFilter === 'happyhour' && styles.filterButtonActive]}
+              onPress={() => {
+                const happyHourCategory = categories.find(cat => cat.name === 'Happy Hour');
+                if (happyHourCategory) {
+                  setSelectedCategoryFilter(happyHourCategory.id);
+                }
+              }}
+            >
+              <Text style={[styles.filterButtonText, selectedCategoryFilter === 'happyhour' && styles.filterButtonTextActive]}>
+                Happy Hour
               </Text>
             </Pressable>
           </ScrollView>
@@ -642,7 +695,7 @@ export default function MenuEditorScreen() {
                         <IconSymbol name="exclamationmark.triangle.fill" color={colors.warning} size={20} />
                         <Text style={styles.warningText}>
                           No categories available for {itemMealType === 'both' ? 'this meal type' : itemMealType}. 
-                          {itemMealType !== 'both' && ' Wine and Libations can only be added with meal type "Both".'}
+                          {itemMealType !== 'both' && ' Wine, Libations, and Happy Hour can only be added with meal type "Both".'}
                         </Text>
                       </View>
                     ) : (
@@ -667,20 +720,20 @@ export default function MenuEditorScreen() {
                       </View>
                     )}
 
-                    {isWineOrLibations && (
+                    {isSpecialCategory && (
                       <>
-                        <Text style={styles.label}>Subcategory (for Wine/Libations)</Text>
+                        <Text style={styles.label}>Subcategory (for Wine/Libations/Happy Hour)</Text>
                         <TextInput
                           style={styles.input}
                           value={itemSubcategory}
                           onChangeText={setItemSubcategory}
-                          placeholder="e.g., Sparkling, Chardonnay, Signature Cocktails"
+                          placeholder="e.g., Sparkling, Chardonnay, Signature Cocktails, Appetizers"
                           placeholderTextColor={colors.textSecondary}
                         />
                         <View style={styles.infoBox}>
                           <IconSymbol name="info.circle.fill" color={colors.accent} size={20} />
                           <Text style={styles.infoText}>
-                            Wine and Libations items must have meal type set to "Both" to appear in their dedicated categories.
+                            Wine, Libations, and Happy Hour items must have meal type set to "Both" to appear in their dedicated categories.
                           </Text>
                         </View>
                       </>

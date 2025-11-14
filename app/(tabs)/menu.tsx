@@ -12,57 +12,64 @@ import { IconSymbol } from '@/components/IconSymbol';
 
 export default function MenuScreen() {
   // Set default to 'specials' (Weekly Specials)
-  const [selectedTab, setSelectedTab] = useState<'specials' | 'lunch' | 'dinner' | 'libations' | 'wine'>('specials');
+  const [selectedTab, setSelectedTab] = useState<'specials' | 'lunch' | 'dinner' | 'happyhour' | 'libations' | 'wine'>('specials');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loginModalVisible, setLoginModalVisible] = useState(false);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const { items, categories, loading, error } = useMenu(selectedTab === 'specials' ? 'lunch' : selectedTab === 'wine' || selectedTab === 'libations' ? 'both' : selectedTab);
+  const { items, categories, loading, error } = useMenu(
+    selectedTab === 'specials' ? 'lunch' : 
+    selectedTab === 'wine' || selectedTab === 'libations' || selectedTab === 'happyhour' ? 'both' : 
+    selectedTab
+  );
   const { specials, loading: specialsLoading } = useWeeklySpecials();
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
 
-  // Get unique categories for the selected meal type, excluding Wine and Libations from Lunch/Dinner
+  // Get unique categories for the selected meal type
   const availableCategories = categories.filter(cat => {
     if (selectedTab === 'wine') return cat.name === 'Wine';
     if (selectedTab === 'libations') return cat.name === 'Libations';
-    // Exclude Wine and Libations from Lunch/Dinner tabs
+    if (selectedTab === 'happyhour') return cat.name === 'Happy Hour';
+    // Exclude Wine, Libations, and Happy Hour from Lunch/Dinner tabs
     if (selectedTab === 'lunch' || selectedTab === 'dinner') {
-      return cat.name !== 'Wine' && cat.name !== 'Libations' && (cat.meal_type === selectedTab || cat.meal_type === 'both');
+      return cat.name !== 'Wine' && cat.name !== 'Libations' && cat.name !== 'Happy Hour' && 
+             (cat.meal_type === selectedTab || cat.meal_type === 'both');
     }
     return cat.meal_type === selectedTab || cat.meal_type === 'both';
   });
 
-  // Filter items by category, excluding Wine and Libations from Lunch/Dinner
-  const filteredItems = selectedTab === 'wine' || selectedTab === 'libations'
+  // Filter items by category
+  const filteredItems = selectedTab === 'wine' || selectedTab === 'libations' || selectedTab === 'happyhour'
     ? items.filter(item => {
         const categoryMatch = availableCategories.some(cat => cat.id === item.category_id);
         return categoryMatch && (selectedCategory === 'all' || item.subcategory === selectedCategory);
       })
     : selectedCategory === 'all' 
       ? items.filter(item => {
-          // Exclude Wine and Libations items from Lunch/Dinner tabs
+          // Exclude Wine, Libations, and Happy Hour items from Lunch/Dinner tabs
           if (selectedTab === 'lunch' || selectedTab === 'dinner') {
             const itemCategory = categories.find(cat => cat.id === item.category_id);
-            return itemCategory?.name !== 'Wine' && itemCategory?.name !== 'Libations';
+            return itemCategory?.name !== 'Wine' && itemCategory?.name !== 'Libations' && itemCategory?.name !== 'Happy Hour';
           }
           return true;
         })
       : items.filter(item => {
           const categoryMatch = item.category_id === selectedCategory;
-          // Exclude Wine and Libations items from Lunch/Dinner tabs
+          // Exclude Wine, Libations, and Happy Hour items from Lunch/Dinner tabs
           if (selectedTab === 'lunch' || selectedTab === 'dinner') {
             const itemCategory = categories.find(cat => cat.id === item.category_id);
-            return categoryMatch && itemCategory?.name !== 'Wine' && itemCategory?.name !== 'Libations';
+            return categoryMatch && itemCategory?.name !== 'Wine' && itemCategory?.name !== 'Libations' && itemCategory?.name !== 'Happy Hour';
           }
           return categoryMatch;
         });
 
-  // Group items by subcategory for Wine/Libations, or by category for others
+  // Group items by subcategory for Wine/Libations/Happy Hour, or by category for others
   const groupedItems = filteredItems.reduce((acc, item) => {
     let groupName = '';
-    if (selectedTab === 'wine' || selectedTab === 'libations') {
+    if (selectedTab === 'wine' || selectedTab === 'libations' || selectedTab === 'happyhour') {
       groupName = item.subcategory || 'Other';
     } else {
       groupName = item.category?.name || 'Uncategorized';
@@ -75,8 +82,8 @@ export default function MenuScreen() {
     return acc;
   }, {} as Record<string, MenuItemWithCategory[]>);
 
-  // Get unique subcategories for Wine/Libations
-  const subcategories = selectedTab === 'wine' || selectedTab === 'libations'
+  // Get unique subcategories for Wine/Libations/Happy Hour
+  const subcategories = selectedTab === 'wine' || selectedTab === 'libations' || selectedTab === 'happyhour'
     ? Array.from(new Set(filteredItems.map(item => item.subcategory).filter(Boolean)))
     : [];
 
@@ -126,6 +133,18 @@ export default function MenuScreen() {
     });
   };
 
+  const getCategoryLabel = () => {
+    switch (selectedTab) {
+      case 'specials': return 'Weekly Specials';
+      case 'lunch': return 'Lunch';
+      case 'dinner': return 'Dinner';
+      case 'happyhour': return 'Happy Hour';
+      case 'libations': return 'Libations';
+      case 'wine': return 'Wine';
+      default: return 'Select Category';
+    }
+  };
+
   const bannerHeight = insets.top + 60;
 
   return (
@@ -151,117 +170,119 @@ export default function MenuScreen() {
 
         {/* Content with top padding */}
         <View style={[styles.content, { paddingTop: 8 }]}>
-          {/* Tab Selector - Reordered: Weekly Specials, Lunch, Dinner, Libations, Wine */}
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            style={styles.tabScrollView}
-            contentContainerStyle={styles.tabSelector}
-          >
+          {/* Category Dropdown Selector */}
+          <View style={styles.dropdownContainer}>
             <Pressable
-              style={[
-                styles.tabButton,
-                selectedTab === 'specials' && styles.tabButtonActive,
-              ]}
-              onPress={() => {
-                setSelectedTab('specials');
-                setSelectedCategory('all');
-              }}
+              style={styles.dropdownButton}
+              onPress={() => setDropdownVisible(!dropdownVisible)}
             >
-              <Text
-                style={[
-                  styles.tabButtonText,
-                  selectedTab === 'specials' && styles.tabButtonTextActive,
-                ]}
-                numberOfLines={1}
-              >
-                Weekly Specials
-              </Text>
+              <Text style={styles.dropdownButtonText}>{getCategoryLabel()}</Text>
+              <IconSymbol 
+                ios_icon_name={dropdownVisible ? "chevron.up" : "chevron.down"}
+                android_material_icon_name={dropdownVisible ? "expand_less" : "expand_more"}
+                size={24} 
+                color={colors.text} 
+              />
             </Pressable>
-            <Pressable
-              style={[
-                styles.tabButton,
-                selectedTab === 'lunch' && styles.tabButtonActive,
-              ]}
-              onPress={() => {
-                setSelectedTab('lunch');
-                setSelectedCategory('all');
-              }}
-            >
-              <Text
-                style={[
-                  styles.tabButtonText,
-                  selectedTab === 'lunch' && styles.tabButtonTextActive,
-                ]}
-                numberOfLines={1}
-              >
-                Lunch
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.tabButton,
-                selectedTab === 'dinner' && styles.tabButtonActive,
-              ]}
-              onPress={() => {
-                setSelectedTab('dinner');
-                setSelectedCategory('all');
-              }}
-            >
-              <Text
-                style={[
-                  styles.tabButtonText,
-                  selectedTab === 'dinner' && styles.tabButtonTextActive,
-                ]}
-                numberOfLines={1}
-              >
-                Dinner
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.tabButton,
-                selectedTab === 'libations' && styles.tabButtonActive,
-              ]}
-              onPress={() => {
-                setSelectedTab('libations');
-                setSelectedCategory('all');
-              }}
-            >
-              <Text
-                style={[
-                  styles.tabButtonText,
-                  selectedTab === 'libations' && styles.tabButtonTextActive,
-                ]}
-                numberOfLines={1}
-              >
-                Libations
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.tabButton,
-                selectedTab === 'wine' && styles.tabButtonActive,
-              ]}
-              onPress={() => {
-                setSelectedTab('wine');
-                setSelectedCategory('all');
-              }}
-            >
-              <Text
-                style={[
-                  styles.tabButtonText,
-                  selectedTab === 'wine' && styles.tabButtonTextActive,
-                ]}
-                numberOfLines={1}
-              >
-                Wine
-              </Text>
-            </Pressable>
-          </ScrollView>
 
-          {/* Subcategory Filter - Only show for Wine/Libations */}
-          {(selectedTab === 'wine' || selectedTab === 'libations') && subcategories.length > 0 && (
+            {dropdownVisible && (
+              <View style={styles.dropdownMenu}>
+                <Pressable
+                  style={[styles.dropdownItem, selectedTab === 'specials' && styles.dropdownItemActive]}
+                  onPress={() => {
+                    setSelectedTab('specials');
+                    setSelectedCategory('all');
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={[styles.dropdownItemText, selectedTab === 'specials' && styles.dropdownItemTextActive]}>
+                    Weekly Specials
+                  </Text>
+                  {selectedTab === 'specials' && (
+                    <IconSymbol ios_icon_name="checkmark" android_material_icon_name="check" size={20} color={colors.accent} />
+                  )}
+                </Pressable>
+                <Pressable
+                  style={[styles.dropdownItem, selectedTab === 'lunch' && styles.dropdownItemActive]}
+                  onPress={() => {
+                    setSelectedTab('lunch');
+                    setSelectedCategory('all');
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={[styles.dropdownItemText, selectedTab === 'lunch' && styles.dropdownItemTextActive]}>
+                    Lunch
+                  </Text>
+                  {selectedTab === 'lunch' && (
+                    <IconSymbol ios_icon_name="checkmark" android_material_icon_name="check" size={20} color={colors.accent} />
+                  )}
+                </Pressable>
+                <Pressable
+                  style={[styles.dropdownItem, selectedTab === 'dinner' && styles.dropdownItemActive]}
+                  onPress={() => {
+                    setSelectedTab('dinner');
+                    setSelectedCategory('all');
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={[styles.dropdownItemText, selectedTab === 'dinner' && styles.dropdownItemTextActive]}>
+                    Dinner
+                  </Text>
+                  {selectedTab === 'dinner' && (
+                    <IconSymbol ios_icon_name="checkmark" android_material_icon_name="check" size={20} color={colors.accent} />
+                  )}
+                </Pressable>
+                <Pressable
+                  style={[styles.dropdownItem, selectedTab === 'happyhour' && styles.dropdownItemActive]}
+                  onPress={() => {
+                    setSelectedTab('happyhour');
+                    setSelectedCategory('all');
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={[styles.dropdownItemText, selectedTab === 'happyhour' && styles.dropdownItemTextActive]}>
+                    Happy Hour
+                  </Text>
+                  {selectedTab === 'happyhour' && (
+                    <IconSymbol ios_icon_name="checkmark" android_material_icon_name="check" size={20} color={colors.accent} />
+                  )}
+                </Pressable>
+                <Pressable
+                  style={[styles.dropdownItem, selectedTab === 'libations' && styles.dropdownItemActive]}
+                  onPress={() => {
+                    setSelectedTab('libations');
+                    setSelectedCategory('all');
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={[styles.dropdownItemText, selectedTab === 'libations' && styles.dropdownItemTextActive]}>
+                    Libations
+                  </Text>
+                  {selectedTab === 'libations' && (
+                    <IconSymbol ios_icon_name="checkmark" android_material_icon_name="check" size={20} color={colors.accent} />
+                  )}
+                </Pressable>
+                <Pressable
+                  style={[styles.dropdownItem, selectedTab === 'wine' && styles.dropdownItemActive]}
+                  onPress={() => {
+                    setSelectedTab('wine');
+                    setSelectedCategory('all');
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={[styles.dropdownItemText, selectedTab === 'wine' && styles.dropdownItemTextActive]}>
+                    Wine
+                  </Text>
+                  {selectedTab === 'wine' && (
+                    <IconSymbol ios_icon_name="checkmark" android_material_icon_name="check" size={20} color={colors.accent} />
+                  )}
+                </Pressable>
+              </View>
+            )}
+          </View>
+
+          {/* Subcategory Filter - Only show for Wine/Libations/Happy Hour */}
+          {(selectedTab === 'wine' || selectedTab === 'libations' || selectedTab === 'happyhour') && subcategories.length > 0 && (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -309,7 +330,7 @@ export default function MenuScreen() {
           )}
 
           {/* Category Filter - Only show for Lunch/Dinner */}
-          {selectedTab !== 'specials' && selectedTab !== 'wine' && selectedTab !== 'libations' && (
+          {selectedTab !== 'specials' && selectedTab !== 'wine' && selectedTab !== 'libations' && selectedTab !== 'happyhour' && (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -572,40 +593,68 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  tabScrollView: {
+  dropdownContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     backgroundColor: colors.background,
+    zIndex: 1000,
   },
-  tabSelector: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 8,
-  },
-  tabButton: {
-    paddingVertical: 10,
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.card,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 8,
-    backgroundColor: colors.card,
-    alignItems: 'center',
-    justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    minWidth: 90,
-    height: 44,
   },
-  tabButtonActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
-  },
-  tabButtonText: {
-    fontSize: 13,
+  dropdownButtonText: {
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    textAlign: 'center',
   },
-  tabButtonTextActive: {
-    color: '#FFFFFF',
+  dropdownMenu: {
+    backgroundColor: colors.card,
+    borderRadius: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  dropdownItemActive: {
+    backgroundColor: colors.accent + '10',
+  },
+  dropdownItemText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  dropdownItemTextActive: {
+    fontWeight: '600',
+    color: colors.accent,
   },
   categoryScroll: {
     maxHeight: 80,
