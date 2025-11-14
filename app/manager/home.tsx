@@ -32,14 +32,15 @@ export default function ManagerHomeScreen() {
     { id: 1, title: 'Menu Editor', icon: 'fork.knife', route: '/manager/menu-editor', color: colors.managerAccent },
     { id: 2, title: 'Weekly Specials', icon: 'star.fill', route: '/manager/weekly-specials-editor', color: colors.managerAccent },
     { id: 3, title: 'Events Editor', icon: 'calendar', route: '/manager/events-editor', color: colors.managerAccent },
-    { id: 4, title: 'Announcements', icon: 'megaphone.fill', route: '/manager/announcements-editor', color: colors.managerAccent },
-    { id: 5, title: 'About Us Editor', icon: 'info.circle.fill', route: '/manager/about-us-editor', color: colors.managerAccent },
-    { id: 6, title: 'Contact Us Editor', icon: 'phone.fill', route: '/manager/contact-us-editor', color: colors.managerAccent },
-    { id: 7, title: 'Tagline Editor', icon: 'text.quote', route: '/manager/tagline-editor', color: colors.managerAccent },
-    { id: 8, title: 'Reviews Editor', icon: 'star.fill', route: '/manager/reviews-editor', color: colors.managerAccent },
-    { id: 9, title: 'Employees', icon: 'person.3.fill', route: '/manager/employees', color: colors.managerSecondary },
-    { id: 10, title: 'Schedule', icon: 'calendar.badge.clock', route: '/manager/schedule', color: colors.managerSecondary },
-    { id: 11, title: 'Rewards', icon: 'dollarsign.circle.fill', route: '/manager/rewards', color: colors.managerSecondary },
+    { id: 4, title: 'Gallery Editor', icon: 'photo.on.rectangle', route: '/manager/gallery-editor', color: colors.managerAccent },
+    { id: 5, title: 'Announcements', icon: 'megaphone.fill', route: '/manager/announcements-editor', color: colors.managerAccent },
+    { id: 6, title: 'About Us Editor', icon: 'info.circle.fill', route: '/manager/about-us-editor', color: colors.managerAccent },
+    { id: 7, title: 'Contact Us Editor', icon: 'phone.fill', route: '/manager/contact-us-editor', color: colors.managerAccent },
+    { id: 8, title: 'Tagline Editor', icon: 'text.quote', route: '/manager/tagline-editor', color: colors.managerAccent },
+    { id: 9, title: 'Reviews Editor', icon: 'star.fill', route: '/manager/reviews-editor', color: colors.managerAccent },
+    { id: 10, title: 'Employees', icon: 'person.3.fill', route: '/manager/employees', color: colors.managerSecondary },
+    { id: 11, title: 'Schedule', icon: 'calendar.badge.clock', route: '/manager/schedule', color: colors.managerSecondary },
+    { id: 12, title: 'Rewards', icon: 'dollarsign.circle.fill', route: '/manager/rewards', color: colors.managerSecondary },
   ];
 
   return (

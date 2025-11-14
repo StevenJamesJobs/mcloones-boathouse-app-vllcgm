@@ -1,19 +1,25 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Platform, Modal, TextInput, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform, Modal, TextInput, Pressable, Alert, Image, ActivityIndicator } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
+import { useGallery } from '@/hooks/useGallery';
 
 export default function GalleryScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<'dining' | 'banquets' | 'events'>('dining');
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
+  const { images: diningImages, loading: diningLoading } = useGallery('dining');
+  const { images: banquetsImages, loading: banquetsLoading } = useGallery('banquets');
+  const { images: eventsImages, loading: eventsLoading } = useGallery('events');
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -37,6 +43,22 @@ export default function GalleryScreen() {
     }
   };
 
+  const getCurrentImages = () => {
+    switch (selectedCategory) {
+      case 'dining':
+        return diningImages;
+      case 'banquets':
+        return banquetsImages;
+      case 'events':
+        return eventsImages;
+      default:
+        return [];
+    }
+  };
+
+  const isLoading = diningLoading || banquetsLoading || eventsLoading;
+  const currentImages = getCurrentImages();
+
   const bannerHeight = insets.top + 60;
 
   return (
@@ -55,15 +77,92 @@ export default function GalleryScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.placeholderContainer}>
-            <IconSymbol name="photo.on.rectangle" color={colors.accent} size={64} />
-            <Text style={styles.placeholderTitle}>Photo Gallery</Text>
-            <Text style={styles.placeholderText}>
-              Browse our collection of beautiful waterfront views, delicious dishes, and memorable moments at McLoone&apos;s Boathouse.
-            </Text>
-            <Text style={styles.comingSoon}>Coming Soon</Text>
+          <Text style={styles.introText}>
+            Browse our collection of beautiful waterfront views, delicious dishes, and memorable moments at McLoone&apos;s Boathouse.
+          </Text>
+
+          {/* Category Tabs */}
+          <View style={styles.categoryTabs}>
+            {(['dining', 'banquets', 'events'] as const).map(cat => (
+              <Pressable
+                key={cat}
+                style={[
+                  styles.categoryTab,
+                  selectedCategory === cat && styles.categoryTabActive
+                ]}
+                onPress={() => setSelectedCategory(cat)}
+              >
+                <Text style={[
+                  styles.categoryTabText,
+                  selectedCategory === cat && styles.categoryTabTextActive
+                ]}>
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </Text>
+              </Pressable>
+            ))}
           </View>
+
+          {/* Gallery Grid */}
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.accent} />
+              <Text style={styles.loadingText}>Loading gallery...</Text>
+            </View>
+          ) : currentImages.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <IconSymbol name="photo.on.rectangle" color={colors.textSecondary} size={64} />
+              <Text style={styles.emptyText}>No images in this category yet</Text>
+              <Text style={styles.emptySubtext}>Check back soon for beautiful photos!</Text>
+            </View>
+          ) : (
+            <View style={styles.galleryGrid}>
+              {currentImages.map((image) => (
+                <Pressable
+                  key={image.id}
+                  style={styles.galleryItem}
+                  onPress={() => setExpandedImage(image.image_url)}
+                >
+                  <Image
+                    source={{ uri: image.image_url }}
+                    style={styles.galleryImage}
+                    resizeMode="cover"
+                  />
+                  {image.caption && (
+                    <View style={styles.captionOverlay}>
+                      <Text style={styles.captionText} numberOfLines={2}>
+                        {image.caption}
+                      </Text>
+                    </View>
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          )}
         </ScrollView>
+
+        {/* Expanded Image Modal */}
+        <Modal
+          visible={expandedImage !== null}
+          animationType="fade"
+          transparent={true}
+          onRequestClose={() => setExpandedImage(null)}
+        >
+          <View style={styles.expandedModalOverlay}>
+            <Pressable
+              style={styles.closeButton}
+              onPress={() => setExpandedImage(null)}
+            >
+              <IconSymbol name="xmark.circle.fill" color="#FFFFFF" size={36} />
+            </Pressable>
+            {expandedImage && (
+              <Image
+                source={{ uri: expandedImage }}
+                style={styles.expandedImage}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </Modal>
 
         {/* Login Modal */}
         <Modal
@@ -126,31 +225,112 @@ const styles = StyleSheet.create({
   scrollContentWithTabBar: {
     paddingBottom: 100,
   },
-  placeholderContainer: {
+  introText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    lineHeight: 24,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  categoryTabs: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  categoryTab: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  categoryTabActive: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  categoryTabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  categoryTabTextActive: {
+    color: '#FFFFFF',
+  },
+  loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
   },
-  placeholderTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
+  loadingText: {
     marginTop: 16,
-    marginBottom: 8,
-  },
-  placeholderText: {
     fontSize: 16,
     color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 24,
-    paddingHorizontal: 32,
-    marginBottom: 16,
   },
-  comingSoon: {
-    fontSize: 14,
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 18,
     fontWeight: '600',
-    color: colors.accent,
-    textTransform: 'uppercase',
+    color: colors.text,
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 8,
+  },
+  galleryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  galleryItem: {
+    width: '31.5%',
+    aspectRatio: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: colors.card,
+    position: 'relative',
+  },
+  galleryImage: {
+    width: '100%',
+    height: '100%',
+  },
+  captionOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 8,
+  },
+  captionText: {
+    fontSize: 10,
+    color: '#FFFFFF',
+    lineHeight: 14,
+  },
+  expandedModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    padding: 8,
+  },
+  expandedImage: {
+    width: '100%',
+    height: '100%',
   },
   modalOverlay: {
     flex: 1,

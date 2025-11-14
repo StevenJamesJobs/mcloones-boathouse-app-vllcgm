@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, Alert, ActivityIndicator, Platform, Image } from 'react-native';
 import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useEventsEditor, Event } from '@/hooks/useEvents';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
+import { supabase } from '@/app/integrations/supabase/client';
 
 export default function EventsEditorScreen() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -19,6 +21,9 @@ export default function EventsEditorScreen() {
   const [displayOrder, setDisplayOrder] = useState('0');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [infoBubbleTextEdit, setInfoBubbleTextEdit] = useState('');
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   const { events, infoBubbleText, loading, refetch, addEvent, updateEvent, deleteEvent, updateInfoBubble } = useEventsEditor();
 
@@ -30,6 +35,7 @@ export default function EventsEditorScreen() {
     setEventTime('');
     setRsvpLink('');
     setDisplayOrder('0');
+    setImageUrl(null);
     setModalVisible(true);
   };
 
@@ -41,12 +47,113 @@ export default function EventsEditorScreen() {
     setEventTime(event.event_time);
     setRsvpLink(event.rsvp_link || '');
     setDisplayOrder(event.display_order.toString());
+    setImageUrl(event.image_url || null);
     setModalVisible(true);
   };
 
   const openInfoBubbleModal = () => {
     setInfoBubbleTextEdit(infoBubbleText || 'For private events and bookings, please contact us at (732) 555-0123 or email events@mcloones.com');
     setInfoBubbleModalVisible(true);
+  };
+
+  const pickImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant permission to access your photo library');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await uploadImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image');
+    }
+  };
+
+  const uploadImage = async (uri: string) => {
+    try {
+      setUploadingImage(true);
+      console.log('Starting image upload for URI:', uri);
+
+      const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      console.log('Generated filename:', fileName);
+
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      
+      console.log('Blob created, size:', blob.size, 'type:', blob.type);
+
+      const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (reader.result instanceof ArrayBuffer) {
+            resolve(reader.result);
+          } else {
+            reject(new Error('Failed to convert blob to ArrayBuffer'));
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(blob);
+      });
+
+      console.log('ArrayBuffer created, size:', arrayBuffer.byteLength);
+
+      const { data, error } = await supabase.storage
+        .from('event-thumbnails')
+        .upload(filePath, arrayBuffer, {
+          contentType: blob.type || `image/${fileExt}`,
+          upsert: false,
+        });
+
+      if (error) {
+        console.error('Supabase upload error:', error);
+        throw error;
+      }
+
+      console.log('Upload successful, data:', data);
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('event-thumbnails')
+        .getPublicUrl(filePath);
+
+      console.log('Public URL:', publicUrl);
+
+      setImageUrl(publicUrl);
+      Alert.alert('Success', 'Image uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      Alert.alert('Error', `Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeImage = () => {
+    Alert.alert(
+      'Remove Image',
+      'Are you sure you want to remove this image?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => setImageUrl(null),
+        },
+      ]
+    );
   };
 
   const handleSave = async () => {
@@ -61,7 +168,7 @@ export default function EventsEditorScreen() {
       event_date: eventDate.toISOString().split('T')[0],
       event_time: eventTime.trim(),
       rsvp_link: rsvpLink.trim() || null,
-      image_url: null,
+      image_url: imageUrl || null,
       is_active: true,
       display_order: parseInt(displayOrder) || 0,
       info_bubble_text: infoBubbleText || 'For private events and bookings, please contact us at (732) 555-0123 or email events@mcloones.com',
@@ -197,6 +304,15 @@ export default function EventsEditorScreen() {
             ) : (
               events.map((event) => (
                 <View key={event.id} style={styles.eventCard}>
+                  {event.image_url && (
+                    <Pressable onPress={() => setExpandedImage(event.image_url)}>
+                      <Image
+                        source={{ uri: event.image_url }}
+                        style={styles.eventThumbnail}
+                        resizeMode="cover"
+                      />
+                    </Pressable>
+                  )}
                   <View style={styles.eventHeader}>
                     <View style={styles.eventTitleContainer}>
                       <Text style={styles.eventTitle}>{event.title}</Text>
@@ -295,6 +411,52 @@ export default function EventsEditorScreen() {
                   multiline
                   numberOfLines={4}
                 />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Thumbnail Image (Optional)</Text>
+                {imageUrl ? (
+                  <View style={styles.imagePreviewContainer}>
+                    <Image
+                      source={{ uri: imageUrl }}
+                      style={styles.imagePreview}
+                      resizeMode="cover"
+                    />
+                    <View style={styles.imageActions}>
+                      <Pressable
+                        style={styles.changeImageButton}
+                        onPress={pickImage}
+                        disabled={uploadingImage}
+                      >
+                        <IconSymbol name="photo" color="#FFFFFF" size={16} />
+                        <Text style={styles.changeImageButtonText}>Change</Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.removeImageButton}
+                        onPress={removeImage}
+                        disabled={uploadingImage}
+                      >
+                        <IconSymbol name="trash" color="#FFFFFF" size={16} />
+                        <Text style={styles.removeImageButtonText}>Remove</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                ) : (
+                  <Pressable
+                    style={styles.uploadButton}
+                    onPress={pickImage}
+                    disabled={uploadingImage}
+                  >
+                    {uploadingImage ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <>
+                        <IconSymbol name="photo.badge.plus" color="#FFFFFF" size={24} />
+                        <Text style={styles.uploadButtonText}>Upload Thumbnail</Text>
+                      </>
+                    )}
+                  </Pressable>
+                )}
               </View>
 
               <View style={styles.inputContainer}>
@@ -406,6 +568,30 @@ export default function EventsEditorScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Expanded Image Modal */}
+      <Modal
+        visible={expandedImage !== null}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setExpandedImage(null)}
+      >
+        <View style={styles.expandedModalOverlay}>
+          <Pressable
+            style={styles.closeButton}
+            onPress={() => setExpandedImage(null)}
+          >
+            <IconSymbol name="xmark.circle.fill" color="#FFFFFF" size={36} />
+          </Pressable>
+          {expandedImage && (
+            <Image
+              source={{ uri: expandedImage }}
+              style={styles.expandedImage}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      </Modal>
     </>
   );
 }
@@ -508,6 +694,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  eventThumbnail: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: colors.border,
   },
   eventHeader: {
     flexDirection: 'row',
@@ -648,6 +841,66 @@ const styles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: 'top',
   },
+  uploadButton: {
+    backgroundColor: colors.managerAccent,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  uploadButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  imagePreviewContainer: {
+    gap: 12,
+  },
+  imagePreview: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    backgroundColor: colors.border,
+  },
+  imageActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  changeImageButton: {
+    flex: 1,
+    backgroundColor: colors.managerAccent,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  changeImageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  removeImageButton: {
+    flex: 1,
+    backgroundColor: colors.error,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  removeImageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   dateButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -673,5 +926,22 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  expandedModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    padding: 8,
+  },
+  expandedImage: {
+    width: '100%',
+    height: '100%',
   },
 });

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Linking, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Linking, ActivityIndicator, Modal, TextInput, Alert, Image } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import CustomerBanner from '@/components/CustomerBanner';
@@ -13,6 +13,7 @@ export default function EventsScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const { events, infoBubbleText, loading } = useEvents();
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
@@ -81,6 +82,15 @@ export default function EventsScreen() {
           ) : (
             events.map((event) => (
               <View key={event.id} style={styles.eventCard}>
+                {event.image_url && (
+                  <Pressable onPress={() => setExpandedImage(event.image_url)}>
+                    <Image
+                      source={{ uri: event.image_url }}
+                      style={styles.eventThumbnail}
+                      resizeMode="cover"
+                    />
+                  </Pressable>
+                )}
                 <View style={styles.eventHeader}>
                   <IconSymbol name="calendar" color={colors.accent} size={24} />
                   <View style={styles.eventHeaderText}>
@@ -123,6 +133,30 @@ export default function EventsScreen() {
             </Text>
           </View>
         </ScrollView>
+
+        {/* Expanded Image Modal */}
+        <Modal
+          visible={expandedImage !== null}
+          animationType="fade"
+          transparent={true}
+          onRequestClose={() => setExpandedImage(null)}
+        >
+          <View style={styles.expandedModalOverlay}>
+            <Pressable
+              style={styles.closeButton}
+              onPress={() => setExpandedImage(null)}
+            >
+              <IconSymbol name="xmark.circle.fill" color="#FFFFFF" size={36} />
+            </Pressable>
+            {expandedImage && (
+              <Image
+                source={{ uri: expandedImage }}
+                style={styles.expandedImage}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </Modal>
 
         {/* Login Modal */}
         <Modal
@@ -226,6 +260,13 @@ const styles = StyleSheet.create({
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
   },
+  eventThumbnail: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: colors.border,
+  },
   eventHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -291,6 +332,23 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 20,
     marginLeft: 12,
+  },
+  expandedModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    padding: 8,
+  },
+  expandedImage: {
+    width: '100%',
+    height: '100%',
   },
   modalOverlay: {
     flex: 1,
