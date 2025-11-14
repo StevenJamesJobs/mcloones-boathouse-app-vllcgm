@@ -128,6 +128,13 @@ export default function MenuScreen() {
 
   const bannerHeight = insets.top + 60;
 
+  // Determine if we should show category filters
+  const showCategoryFilters = selectedTab !== 'specials' && (
+    (selectedTab === 'wine' || selectedTab === 'libations') 
+      ? subcategories.length > 0 
+      : availableCategories.length > 0
+  );
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -150,7 +157,7 @@ export default function MenuScreen() {
         </View>
 
         {/* Content with top padding */}
-        <View style={[styles.content, { paddingTop: 8 }]}>
+        <View style={styles.content}>
           {/* Tab Selector - Reordered: Weekly Specials, Lunch, Dinner, Libations, Wine */}
           <ScrollView 
             horizontal 
@@ -260,8 +267,8 @@ export default function MenuScreen() {
             </Pressable>
           </ScrollView>
 
-          {/* Subcategory Filter - Only show for Wine/Libations (NOT for Weekly Specials or Lunch/Dinner) */}
-          {selectedTab !== 'specials' && (selectedTab === 'wine' || selectedTab === 'libations') && subcategories.length > 0 && (
+          {/* Category Filter - Only show when needed (NOT for Weekly Specials) */}
+          {showCategoryFilters && (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -285,74 +292,51 @@ export default function MenuScreen() {
                   All
                 </Text>
               </Pressable>
-              {subcategories.map((subcategory) => (
-                <Pressable
-                  key={subcategory}
-                  style={[
-                    styles.categoryBox,
-                    selectedCategory === subcategory && styles.categoryBoxActive,
-                  ]}
-                  onPress={() => setSelectedCategory(subcategory as string)}
-                >
-                  <Text
+              {selectedTab === 'wine' || selectedTab === 'libations' ? (
+                // Subcategories for Wine/Libations
+                subcategories.map((subcategory) => (
+                  <Pressable
+                    key={subcategory}
                     style={[
-                      styles.categoryBoxText,
-                      selectedCategory === subcategory && styles.categoryBoxTextActive,
+                      styles.categoryBox,
+                      selectedCategory === subcategory && styles.categoryBoxActive,
                     ]}
-                    numberOfLines={1}
+                    onPress={() => setSelectedCategory(subcategory as string)}
                   >
-                    {subcategory}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          )}
-
-          {/* Category Filter - Only show for Lunch/Dinner (NOT for Weekly Specials, Wine, or Libations) */}
-          {selectedTab !== 'specials' && selectedTab !== 'wine' && selectedTab !== 'libations' && availableCategories.length > 0 && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.categoryScroll}
-              contentContainerStyle={styles.categoryScrollContent}
-            >
-              <Pressable
-                style={[
-                  styles.categoryBox,
-                  selectedCategory === 'all' && styles.categoryBoxActive,
-                ]}
-                onPress={() => setSelectedCategory('all')}
-              >
-                <Text
-                  style={[
-                    styles.categoryBoxText,
-                    selectedCategory === 'all' && styles.categoryBoxTextActive,
-                  ]}
-                  numberOfLines={1}
-                >
-                  All
-                </Text>
-              </Pressable>
-              {availableCategories.map((category) => (
-                <Pressable
-                  key={category.id}
-                  style={[
-                    styles.categoryBox,
-                    selectedCategory === category.id && styles.categoryBoxActive,
-                  ]}
-                  onPress={() => setSelectedCategory(category.id)}
-                >
-                  <Text
+                    <Text
+                      style={[
+                        styles.categoryBoxText,
+                        selectedCategory === subcategory && styles.categoryBoxTextActive,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {subcategory}
+                    </Text>
+                  </Pressable>
+                ))
+              ) : (
+                // Categories for Lunch/Dinner
+                availableCategories.map((category) => (
+                  <Pressable
+                    key={category.id}
                     style={[
-                      styles.categoryBoxText,
-                      selectedCategory === category.id && styles.categoryBoxTextActive,
+                      styles.categoryBox,
+                      selectedCategory === category.id && styles.categoryBoxActive,
                     ]}
-                    numberOfLines={1}
+                    onPress={() => setSelectedCategory(category.id)}
                   >
-                    {category.name || 'Unnamed'}
-                  </Text>
-                </Pressable>
-              ))}
+                    <Text
+                      style={[
+                        styles.categoryBoxText,
+                        selectedCategory === category.id && styles.categoryBoxTextActive,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {category.name || 'Unnamed'}
+                    </Text>
+                  </Pressable>
+                ))
+              )}
             </ScrollView>
           )}
 
@@ -487,7 +471,12 @@ export default function MenuScreen() {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Employee Login</Text>
                 <Pressable onPress={() => setLoginModalVisible(false)}>
-                  <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
+                  <IconSymbol 
+                    ios_icon_name="xmark.circle.fill" 
+                    android_material_icon_name="cancel" 
+                    color={colors.textSecondary} 
+                    size={28} 
+                  />
                 </Pressable>
               </View>
 
@@ -608,7 +597,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   categoryScroll: {
-    maxHeight: 80,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     backgroundColor: colors.background,

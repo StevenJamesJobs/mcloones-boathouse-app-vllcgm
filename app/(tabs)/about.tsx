@@ -41,7 +41,7 @@ export default function AboutScreen() {
 
   const handleGalleryPress = () => {
     console.log('Gallery button pressed - navigating to gallery');
-    router.push('/(tabs)/gallery');
+    router.push('/gallery');
   };
 
   const bannerHeight = insets.top + 60;
@@ -57,7 +57,12 @@ export default function AboutScreen() {
         <View style={commonStyles.card}>
           {features.map((feature: string, index: number) => (
             <View key={index} style={styles.featureItem}>
-              <IconSymbol name="checkmark.circle.fill" color={colors.accent} size={20} />
+              <IconSymbol 
+                ios_icon_name="checkmark.circle.fill" 
+                android_material_icon_name="check_circle" 
+                color={colors.accent} 
+                size={20} 
+              />
               <Text style={styles.featureText}>{feature.trim()}</Text>
             </View>
           ))}
@@ -72,19 +77,28 @@ export default function AboutScreen() {
         <View style={commonStyles.card}>
           {lines.map((line: string, index: number) => {
             const trimmedLine = line.trim();
-            let icon = 'info.circle.fill';
+            let iosIcon = 'info.circle.fill';
+            let androidIcon = 'info';
             
             if (trimmedLine.toLowerCase().includes('ocean') || trimmedLine.toLowerCase().includes('avenue')) {
-              icon = 'mappin.circle.fill';
+              iosIcon = 'mappin.circle.fill';
+              androidIcon = 'location_on';
             } else if (trimmedLine.match(/\(\d{3}\)/)) {
-              icon = 'phone.fill';
+              iosIcon = 'phone.fill';
+              androidIcon = 'phone';
             } else if (trimmedLine.toLowerCase().includes('hours') || trimmedLine.toLowerCase().includes('monday')) {
-              icon = 'clock.fill';
+              iosIcon = 'clock.fill';
+              androidIcon = 'schedule';
             }
             
             return (
               <View key={index} style={styles.contactRow}>
-                <IconSymbol name={icon} color={colors.accent} size={20} />
+                <IconSymbol 
+                  ios_icon_name={iosIcon} 
+                  android_material_icon_name={androidIcon} 
+                  color={colors.accent} 
+                  size={20} 
+                />
                 <Text style={styles.contactText}>{trimmedLine}</Text>
               </View>
             );
@@ -104,12 +118,12 @@ export default function AboutScreen() {
   // Helper function to get icon for section
   const getSectionIcon = (title: string) => {
     const lowerTitle = title.toLowerCase();
-    if (lowerTitle.includes('story') || lowerTitle.includes('history')) return 'book.fill';
-    if (lowerTitle.includes('offer')) return 'star.fill';
-    if (lowerTitle.includes('experience')) return 'sparkles';
-    if (lowerTitle.includes('event') || lowerTitle.includes('private')) return 'gift.fill';
-    if (lowerTitle.includes('visit') || lowerTitle.includes('contact')) return 'mappin.circle.fill';
-    return 'info.circle.fill';
+    if (lowerTitle.includes('story') || lowerTitle.includes('history')) return { ios: 'book.fill', android: 'menu_book' };
+    if (lowerTitle.includes('offer')) return { ios: 'star.fill', android: 'star' };
+    if (lowerTitle.includes('experience')) return { ios: 'sparkles', android: 'auto_awesome' };
+    if (lowerTitle.includes('event') || lowerTitle.includes('private')) return { ios: 'gift.fill', android: 'card_giftcard' };
+    if (lowerTitle.includes('visit') || lowerTitle.includes('contact')) return { ios: 'mappin.circle.fill', android: 'location_on' };
+    return { ios: 'info.circle.fill', android: 'info' };
   };
 
   return (
@@ -153,6 +167,7 @@ export default function AboutScreen() {
               
               // Add Gallery Button before "What We Offer" section (index 1)
               if (index === 1) {
+                const sectionIcon = getSectionIcon(section.title);
                 return (
                   <React.Fragment key={`section-${section.id}`}>
                     {/* Gallery Action Banner */}
@@ -162,7 +177,6 @@ export default function AboutScreen() {
                         pressed && styles.galleryBannerPressed
                       ]}
                       onPress={handleGalleryPress}
-                      android_ripple={{ color: 'rgba(255, 255, 255, 0.3)' }}
                     >
                       <View style={styles.galleryBannerContent}>
                         <View style={styles.galleryBannerLeft}>
@@ -191,7 +205,12 @@ export default function AboutScreen() {
                     {/* Regular Section */}
                     <View style={styles.section}>
                       <View style={styles.sectionHeader}>
-                        <IconSymbol name={getSectionIcon(section.title)} color={colors.accent} size={24} />
+                        <IconSymbol 
+                          ios_icon_name={sectionIcon.ios} 
+                          android_material_icon_name={sectionIcon.android} 
+                          color={colors.accent} 
+                          size={24} 
+                        />
                         <Text style={styles.sectionTitle}>{section.title}</Text>
                       </View>
                       {renderSectionContent(section)}
@@ -201,10 +220,16 @@ export default function AboutScreen() {
               }
               
               // Other sections
+              const sectionIcon = getSectionIcon(section.title);
               return (
                 <View key={section.id} style={styles.section}>
                   <View style={styles.sectionHeader}>
-                    <IconSymbol name={getSectionIcon(section.title)} color={colors.accent} size={24} />
+                    <IconSymbol 
+                      ios_icon_name={sectionIcon.ios} 
+                      android_material_icon_name={sectionIcon.android} 
+                      color={colors.accent} 
+                      size={24} 
+                    />
                     <Text style={styles.sectionTitle}>{section.title}</Text>
                   </View>
                   {renderSectionContent(section)}
@@ -226,7 +251,12 @@ export default function AboutScreen() {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Employee Login</Text>
                 <Pressable onPress={() => setLoginModalVisible(false)}>
-                  <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
+                  <IconSymbol 
+                    ios_icon_name="xmark.circle.fill" 
+                    android_material_icon_name="cancel" 
+                    color={colors.textSecondary} 
+                    size={28} 
+                  />
                 </Pressable>
               </View>
 
