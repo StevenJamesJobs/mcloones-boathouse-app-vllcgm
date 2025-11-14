@@ -146,6 +146,51 @@ export default function AboutScreen() {
                 );
               }
               
+              // Add Gallery Button before "What We Offer" section (index 1)
+              if (index === 1) {
+                return (
+                  <React.Fragment key={`section-${section.id}`}>
+                    {/* Gallery Action Banner */}
+                    <Pressable 
+                      style={styles.galleryBanner}
+                      onPress={() => router.push('/(tabs)/gallery')}
+                    >
+                      <View style={styles.galleryBannerContent}>
+                        <View style={styles.galleryBannerLeft}>
+                          <IconSymbol 
+                            ios_icon_name="photo.fill" 
+                            android_material_icon_name="photo_library" 
+                            color="#FFFFFF" 
+                            size={32} 
+                          />
+                          <View style={styles.galleryBannerTextContainer}>
+                            <Text style={styles.galleryBannerTitle}>View Our Gallery</Text>
+                            <Text style={styles.galleryBannerSubtitle}>
+                              Explore beautiful photos of our waterfront dining
+                            </Text>
+                          </View>
+                        </View>
+                        <IconSymbol 
+                          ios_icon_name="chevron.right" 
+                          android_material_icon_name="chevron_right" 
+                          color="#FFFFFF" 
+                          size={24} 
+                        />
+                      </View>
+                    </Pressable>
+
+                    {/* Regular Section */}
+                    <View style={styles.section}>
+                      <View style={styles.sectionHeader}>
+                        <IconSymbol name={getSectionIcon(section.title)} color={colors.accent} size={24} />
+                        <Text style={styles.sectionTitle}>{section.title}</Text>
+                      </View>
+                      {renderSectionContent(section)}
+                    </View>
+                  </React.Fragment>
+                );
+              }
+              
               // Other sections
               return (
                 <View key={section.id} style={styles.section}>
@@ -259,6 +304,48 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  galleryBanner: {
+    marginHorizontal: 16,
+    marginBottom: 24,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: colors.accent,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  galleryBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+  },
+  galleryBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 16,
+  },
+  galleryBannerTextContainer: {
+    flex: 1,
+  },
+  galleryBannerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  galleryBannerSubtitle: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    opacity: 0.9,
+    lineHeight: 20,
   },
   section: {
     paddingHorizontal: 16,
