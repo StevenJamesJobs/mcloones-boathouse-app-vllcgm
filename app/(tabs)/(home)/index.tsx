@@ -180,6 +180,13 @@ export default function HomeScreen() {
             ) : (
               specials.map((special) => (
                 <View key={special.id} style={commonStyles.card}>
+                  {special.image_url && (
+                    <Image
+                      source={{ uri: special.image_url }}
+                      style={styles.specialThumbnail}
+                      resizeMode="cover"
+                    />
+                  )}
                   <Text style={styles.specialTitle}>{special.title}</Text>
                   <Text style={styles.specialDescription}>{special.description}</Text>
                   {special.price && (
@@ -447,6 +454,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  specialThumbnail: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: colors.border,
   },
   specialTitle: {
     fontSize: 18,

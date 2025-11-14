@@ -10,6 +10,7 @@ export interface WeeklySpecial {
   valid_until: string | null;
   is_active: boolean;
   display_order: number;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
