@@ -11,36 +11,54 @@ import { useAuth } from '@/contexts/AuthContext';
 import { IconSymbol } from '@/components/IconSymbol';
 
 export default function MenuScreen() {
-  const [selectedTab, setSelectedTab] = useState<'lunch' | 'dinner' | 'specials'>('lunch');
+  const [selectedTab, setSelectedTab] = useState<'wine' | 'libations' | 'lunch' | 'dinner' | 'specials'>('wine');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loginModalVisible, setLoginModalVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const { items, categories, loading, error } = useMenu(selectedTab === 'specials' ? 'lunch' : selectedTab);
+  const { items, categories, loading, error } = useMenu(selectedTab === 'specials' ? 'lunch' : selectedTab === 'wine' || selectedTab === 'libations' ? 'both' : selectedTab);
   const { specials, loading: specialsLoading } = useWeeklySpecials();
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
 
   // Get unique categories for the selected meal type
-  const availableCategories = categories.filter(cat => 
-    cat.meal_type === selectedTab || cat.meal_type === 'both'
-  );
+  const availableCategories = categories.filter(cat => {
+    if (selectedTab === 'wine') return cat.name === 'Wine';
+    if (selectedTab === 'libations') return cat.name === 'Libations';
+    return cat.meal_type === selectedTab || cat.meal_type === 'both';
+  });
 
   // Filter items by category
-  const filteredItems = selectedCategory === 'all' 
-    ? items 
-    : items.filter(item => item.category_id === selectedCategory);
+  const filteredItems = selectedTab === 'wine' || selectedTab === 'libations'
+    ? items.filter(item => {
+        const categoryMatch = availableCategories.some(cat => cat.id === item.category_id);
+        return categoryMatch && (selectedCategory === 'all' || item.subcategory === selectedCategory);
+      })
+    : selectedCategory === 'all' 
+      ? items 
+      : items.filter(item => item.category_id === selectedCategory);
 
-  // Group items by category
+  // Group items by subcategory for Wine/Libations, or by category for others
   const groupedItems = filteredItems.reduce((acc, item) => {
-    const categoryName = item.category?.name || 'Uncategorized';
-    if (!acc[categoryName]) {
-      acc[categoryName] = [];
+    let groupName = '';
+    if (selectedTab === 'wine' || selectedTab === 'libations') {
+      groupName = item.subcategory || 'Other';
+    } else {
+      groupName = item.category?.name || 'Uncategorized';
     }
-    acc[categoryName].push(item);
+    
+    if (!acc[groupName]) {
+      acc[groupName] = [];
+    }
+    acc[groupName].push(item);
     return acc;
   }, {} as Record<string, MenuItemWithCategory[]>);
+
+  // Get unique subcategories for Wine/Libations
+  const subcategories = selectedTab === 'wine' || selectedTab === 'libations'
+    ? Array.from(new Set(filteredItems.map(item => item.subcategory).filter(Boolean)))
+    : [];
 
   const getDietaryBadge = (dietaryInfo: string[] | null) => {
     if (!dietaryInfo || dietaryInfo.length === 0) return null;
@@ -95,26 +113,69 @@ export default function MenuScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       
       <View style={[commonStyles.container, styles.container]}>
-        {/* Hovering Header */}
-        <CustomerBanner onLoginPress={() => setLoginModalVisible(true)} />
-
-        {/* Content with top padding */}
-        <View style={[styles.content, { paddingTop: bannerHeight + 16 }]}>
-          {/* DoorDash Button */}
-          <View style={styles.doorDashContainer}>
-            <Pressable style={styles.doorDashButton} onPress={handleDoorDashPress}>
+        {/* Custom Header with DoorDash Button */}
+        <View style={[styles.customHeader, { paddingTop: insets.top }]}>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Menu</Text>
+            <Pressable style={styles.doorDashHeaderButton} onPress={handleDoorDashPress}>
               <IconSymbol 
                 ios_icon_name="bag.fill" 
                 android_material_icon_name="shopping_bag" 
-                size={24} 
+                size={20} 
                 color="#FFFFFF" 
               />
-              <Text style={styles.doorDashButtonText}>Order on DoorDash</Text>
+              <Text style={styles.doorDashHeaderButtonText}>Order on DoorDash</Text>
             </Pressable>
           </View>
+        </View>
 
-          {/* Tab Selector - Lunch, Dinner, Weekly Specials */}
-          <View style={styles.tabSelector}>
+        {/* Content with top padding */}
+        <View style={[styles.content, { paddingTop: 8 }]}>
+          {/* Tab Selector - Wine, Libations, Lunch, Dinner, Weekly Specials */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.tabScrollView}
+            contentContainerStyle={styles.tabSelector}
+          >
+            <Pressable
+              style={[
+                styles.tabButton,
+                selectedTab === 'wine' && styles.tabButtonActive,
+              ]}
+              onPress={() => {
+                setSelectedTab('wine');
+                setSelectedCategory('all');
+              }}
+            >
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  selectedTab === 'wine' && styles.tabButtonTextActive,
+                ]}
+              >
+                Wine
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.tabButton,
+                selectedTab === 'libations' && styles.tabButtonActive,
+              ]}
+              onPress={() => {
+                setSelectedTab('libations');
+                setSelectedCategory('all');
+              }}
+            >
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  selectedTab === 'libations' && styles.tabButtonTextActive,
+                ]}
+              >
+                Libations
+              </Text>
+            </Pressable>
             <Pressable
               style={[
                 styles.tabButton,
@@ -169,13 +230,59 @@ export default function MenuScreen() {
                   selectedTab === 'specials' && styles.tabButtonTextActive,
                 ]}
               >
-                Weekly Specials
+                Specials
               </Text>
             </Pressable>
-          </View>
+          </ScrollView>
+
+          {/* Subcategory Filter - Only show for Wine/Libations */}
+          {(selectedTab === 'wine' || selectedTab === 'libations') && subcategories.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.categoryScroll}
+              contentContainerStyle={styles.categoryScrollContent}
+            >
+              <Pressable
+                style={[
+                  styles.categoryBox,
+                  selectedCategory === 'all' && styles.categoryBoxActive,
+                ]}
+                onPress={() => setSelectedCategory('all')}
+              >
+                <Text
+                  style={[
+                    styles.categoryBoxText,
+                    selectedCategory === 'all' && styles.categoryBoxTextActive,
+                  ]}
+                >
+                  All
+                </Text>
+              </Pressable>
+              {subcategories.map((subcategory) => (
+                <Pressable
+                  key={subcategory}
+                  style={[
+                    styles.categoryBox,
+                    selectedCategory === subcategory && styles.categoryBoxActive,
+                  ]}
+                  onPress={() => setSelectedCategory(subcategory as string)}
+                >
+                  <Text
+                    style={[
+                      styles.categoryBoxText,
+                      selectedCategory === subcategory && styles.categoryBoxTextActive,
+                    ]}
+                  >
+                    {subcategory}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          )}
 
           {/* Category Filter - Only show for Lunch/Dinner */}
-          {selectedTab !== 'specials' && (
+          {selectedTab !== 'specials' && selectedTab !== 'wine' && selectedTab !== 'libations' && (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -297,10 +404,10 @@ export default function MenuScreen() {
                     <Text style={styles.emptyText}>No menu items available</Text>
                   </View>
                 ) : (
-                  Object.entries(groupedItems).map(([categoryName, categoryItems]) => (
-                    <View key={categoryName} style={styles.categorySection}>
-                      <Text style={styles.categoryTitle}>{categoryName}</Text>
-                      {categoryItems.map((item) => (
+                  Object.entries(groupedItems).map(([groupName, groupItems]) => (
+                    <View key={groupName} style={styles.categorySection}>
+                      <Text style={styles.categoryTitle}>{groupName}</Text>
+                      {groupItems.map((item) => (
                         <View key={item.id} style={commonStyles.card}>
                           <View style={styles.menuItemContent}>
                             {item.image_url && (
@@ -393,59 +500,75 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background,
   },
-  content: {
-    flex: 1,
+  customHeader: {
+    backgroundColor: colors.primary,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 4,
   },
-  doorDashContainer: {
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingVertical: 12,
   },
-  doorDashButton: {
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  doorDashHeaderButton: {
     backgroundColor: '#FF3008',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    gap: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 6,
   },
-  doorDashButtonText: {
+  doorDashHeaderButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 13,
     fontWeight: '700',
-    letterSpacing: 0.5,
+  },
+  content: {
+    flex: 1,
+  },
+  tabScrollView: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.background,
   },
   tabSelector: {
-    flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 6,
   },
   tabButton: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     borderRadius: 8,
     backgroundColor: colors.card,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
+    minWidth: 80,
   },
   tabButtonActive: {
     backgroundColor: colors.accent,
     borderColor: colors.accent,
   },
   tabButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: colors.text,
   },
@@ -465,10 +588,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categoryBox: {
-    minWidth: 120,
+    minWidth: 100,
     height: 50,
     paddingVertical: 14,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     borderRadius: 10,
     backgroundColor: colors.card,
     borderWidth: 2,
@@ -492,7 +615,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   categoryBoxText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
     color: colors.text,
     textAlign: 'center',

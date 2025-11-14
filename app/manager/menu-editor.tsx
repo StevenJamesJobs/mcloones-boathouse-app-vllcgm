@@ -29,6 +29,7 @@ export default function MenuEditorScreen() {
   const [itemDietaryInfo, setItemDietaryInfo] = useState<string[]>([]);
   const [itemDisplayOrder, setItemDisplayOrder] = useState('0');
   const [itemImageUrl, setItemImageUrl] = useState<string | null>(null);
+  const [itemSubcategory, setItemSubcategory] = useState('');
   
   // Form states for category
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
@@ -61,6 +62,7 @@ export default function MenuEditorScreen() {
     setItemDietaryInfo([]);
     setItemDisplayOrder('0');
     setItemImageUrl(null);
+    setItemSubcategory('');
     setEditMode('item');
     setModalVisible(true);
   };
@@ -75,6 +77,7 @@ export default function MenuEditorScreen() {
     setItemDietaryInfo(item.dietary_info || []);
     setItemDisplayOrder(item.display_order.toString());
     setItemImageUrl(item.image_url || null);
+    setItemSubcategory((item as any).subcategory || '');
     setEditMode('item');
     setModalVisible(true);
   };
@@ -220,6 +223,7 @@ export default function MenuEditorScreen() {
       display_order: parseInt(itemDisplayOrder) || 0,
       is_available: true,
       image_url: itemImageUrl || null,
+      subcategory: itemSubcategory.trim() || null,
     };
 
     console.log('Saving item with data:', itemData);
@@ -325,6 +329,10 @@ export default function MenuEditorScreen() {
       setItemDietaryInfo([...itemDietaryInfo, info]);
     }
   };
+
+  // Check if selected category is Wine or Libations
+  const selectedCategory = categories.find(cat => cat.id === itemCategoryId);
+  const isWineOrLibations = selectedCategory?.name === 'Wine' || selectedCategory?.name === 'Libations';
 
   return (
     <>
@@ -446,6 +454,11 @@ export default function MenuEditorScreen() {
                         {item.description && (
                           <Text style={styles.menuItemDescription} numberOfLines={2}>
                             {item.description}
+                          </Text>
+                        )}
+                        {(item as any).subcategory && (
+                          <Text style={styles.menuItemSubcategory}>
+                            {(item as any).subcategory}
                           </Text>
                         )}
                         <View style={styles.menuItemFooter}>
@@ -589,6 +602,19 @@ export default function MenuEditorScreen() {
                         </Pressable>
                       ))}
                     </View>
+
+                    {isWineOrLibations && (
+                      <>
+                        <Text style={styles.label}>Subcategory (for Wine/Libations)</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={itemSubcategory}
+                          onChangeText={setItemSubcategory}
+                          placeholder="e.g., Sparkling, Chardonnay, Signature Cocktails"
+                          placeholderTextColor={colors.textSecondary}
+                        />
+                      </>
+                    )}
 
                     <Text style={styles.label}>Meal Type</Text>
                     <View style={styles.mealTypeSelector}>
@@ -866,6 +892,12 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: 8,
+  },
+  menuItemSubcategory: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.managerAccent,
+    marginBottom: 4,
   },
   menuItemFooter: {
     flexDirection: 'row',

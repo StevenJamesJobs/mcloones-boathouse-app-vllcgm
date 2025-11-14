@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 16,
-    color: colors.textSecondary,
+    color: colors.accent,
     lineHeight: 24,
   },
   section: {
@@ -236,14 +236,6 @@ export default function ReviewsScreen() {
               backgroundColor: colors.background,
             },
             headerTintColor: colors.text,
-            headerRight: () => (
-              <Pressable
-                onPress={() => setLoginModalVisible(true)}
-                style={styles.headerButton}
-              >
-                <IconSymbol name="person.circle.fill" color={colors.accent} size={28} />
-              </Pressable>
-            ),
           }}
         />
       )}

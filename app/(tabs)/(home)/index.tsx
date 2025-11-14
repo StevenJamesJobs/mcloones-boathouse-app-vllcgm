@@ -122,7 +122,7 @@ export default function HomeScreen() {
           {/* Upcoming Events */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={commonStyles.subtitle}>Upcoming Events</Text>
+              <Text style={styles.sectionTitle}>Upcoming Events</Text>
               <Link href="/(tabs)/events" asChild>
                 <Pressable>
                   <Text style={styles.viewAllText}>View All</Text>
@@ -167,7 +167,7 @@ export default function HomeScreen() {
 
           {/* Weekly Specials */}
           <View style={styles.section}>
-            <Text style={commonStyles.subtitle}>Weekly Specials</Text>
+            <Text style={styles.sectionTitle}>Weekly Specials</Text>
             {specialsLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color={colors.accent} />
@@ -214,7 +214,7 @@ export default function HomeScreen() {
 
           {/* Customer Reviews */}
           <View style={styles.section}>
-            <Text style={commonStyles.subtitle}>What Our Customers Say</Text>
+            <Text style={styles.sectionTitle}>What Our Customers Say</Text>
             {reviewsLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color={colors.accent} />
@@ -252,7 +252,7 @@ export default function HomeScreen() {
 
           {/* Contact Information */}
           <View style={styles.section}>
-            <Text style={commonStyles.subtitle}>Contact Us</Text>
+            <Text style={styles.sectionTitle}>Contact Us</Text>
             {contactLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color={colors.accent} />
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: 16,
-    color: colors.textSecondary,
+    color: colors.accent,
     lineHeight: 24,
   },
   taglineLoadingContainer: {
@@ -415,6 +415,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.accent,
     marginBottom: 12,
   },
   viewAllText: {
