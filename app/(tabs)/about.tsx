@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Platform, Modal, TextInput, Pressable, Alert, ActivityIndicator } from 'react-native';
-import { Stack, router } from 'expo-router';
+import { Stack, router, Link } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
@@ -36,16 +36,6 @@ export default function AboutScreen() {
       }
     } else {
       Alert.alert('Login Failed', result.error || 'Invalid credentials');
-    }
-  };
-
-  const handleGalleryPress = () => {
-    console.log('Gallery button pressed - navigating to gallery');
-    try {
-      router.push('/(tabs)/gallery');
-    } catch (error) {
-      console.error('Navigation error:', error);
-      Alert.alert('Error', 'Could not navigate to gallery');
     }
   };
 
@@ -175,38 +165,38 @@ export default function AboutScreen() {
                 const sectionIcon = getSectionIcon(section.title);
                 return (
                   <React.Fragment key={`section-${section.id}`}>
-                    {/* Gallery Action Banner */}
-                    <Pressable 
-                      style={({ pressed }) => [
-                        styles.galleryBanner,
-                        pressed && styles.galleryBannerPressed
-                      ]}
-                      onPress={handleGalleryPress}
-                      activeOpacity={0.8}
-                    >
-                      <View style={styles.galleryBannerContent}>
-                        <View style={styles.galleryBannerLeft}>
-                          <IconSymbol 
-                            ios_icon_name="photo.fill" 
-                            android_material_icon_name="photo_library" 
-                            color="#FFFFFF" 
-                            size={32} 
-                          />
-                          <View style={styles.galleryBannerTextContainer}>
-                            <Text style={styles.galleryBannerTitle}>View Our Gallery</Text>
-                            <Text style={styles.galleryBannerSubtitle}>
-                              Explore beautiful photos of our waterfront dining
-                            </Text>
+                    {/* Gallery Action Banner using Link */}
+                    <Link href="/(tabs)/gallery" asChild>
+                      <Pressable 
+                        style={({ pressed }) => [
+                          styles.galleryBanner,
+                          pressed && styles.galleryBannerPressed
+                        ]}
+                      >
+                        <View style={styles.galleryBannerContent}>
+                          <View style={styles.galleryBannerLeft}>
+                            <IconSymbol 
+                              ios_icon_name="photo.fill" 
+                              android_material_icon_name="photo_library" 
+                              color="#FFFFFF" 
+                              size={32} 
+                            />
+                            <View style={styles.galleryBannerTextContainer}>
+                              <Text style={styles.galleryBannerTitle}>View Our Gallery</Text>
+                              <Text style={styles.galleryBannerSubtitle}>
+                                Explore beautiful photos of our waterfront dining
+                              </Text>
+                            </View>
                           </View>
+                          <IconSymbol 
+                            ios_icon_name="chevron.right" 
+                            android_material_icon_name="chevron_right" 
+                            color="#FFFFFF" 
+                            size={24} 
+                          />
                         </View>
-                        <IconSymbol 
-                          ios_icon_name="chevron.right" 
-                          android_material_icon_name="chevron_right" 
-                          color="#FFFFFF" 
-                          size={24} 
-                        />
-                      </View>
-                    </Pressable>
+                      </Pressable>
+                    </Link>
 
                     {/* Regular Section */}
                     <View style={styles.section}>
@@ -366,8 +356,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   galleryBannerPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
+    opacity: 0.85,
   },
   galleryBannerContent: {
     flexDirection: 'row',

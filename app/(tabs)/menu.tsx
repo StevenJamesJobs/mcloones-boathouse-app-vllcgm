@@ -128,7 +128,7 @@ export default function MenuScreen() {
 
   const bannerHeight = insets.top + 60;
 
-  // Determine if we should show category filters
+  // Determine if we should show category filters - ONLY show for non-specials tabs
   const showCategoryFilters = selectedTab !== 'specials' && (
     (selectedTab === 'wine' || selectedTab === 'libations') 
       ? subcategories.length > 0 
@@ -267,7 +267,7 @@ export default function MenuScreen() {
             </Pressable>
           </ScrollView>
 
-          {/* Category Filter - Only show when needed (NOT for Weekly Specials) */}
+          {/* Category Filter - ONLY render when showCategoryFilters is true */}
           {showCategoryFilters && (
             <ScrollView
               horizontal
