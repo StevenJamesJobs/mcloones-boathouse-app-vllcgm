@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Platform, Modal, TextInput, Pressable, Alert, Image, ActivityIndicator } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
-import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
@@ -59,24 +58,37 @@ export default function GalleryScreen() {
   const isLoading = diningLoading || banquetsLoading || eventsLoading;
   const currentImages = getCurrentImages();
 
-  const bannerHeight = insets.top + 60;
-
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       
       <View style={[commonStyles.container, styles.container]}>
-        {/* Hovering Header */}
-        <CustomerBanner onLoginPress={() => setLoginModalVisible(true)} />
+        {/* Custom Header with Back Button */}
+        <View style={[styles.customHeader, { paddingTop: insets.top }]}>
+          <View style={styles.headerContent}>
+            <Pressable 
+              style={styles.backButton}
+              onPress={() => router.push('/(tabs)/about')}
+            >
+              <IconSymbol 
+                ios_icon_name="chevron.left" 
+                android_material_icon_name="arrow_back" 
+                size={24} 
+                color={colors.text} 
+              />
+              <Text style={styles.backButtonText}>Back to About Us</Text>
+            </Pressable>
+          </View>
+        </View>
 
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingTop: bannerHeight + 16 },
             Platform.OS !== 'ios' && styles.scrollContentWithTabBar,
           ]}
           showsVerticalScrollIndicator={false}
         >
+          <Text style={styles.pageTitle}>Gallery</Text>
           <Text style={styles.introText}>
             Browse our collection of beautiful waterfront views, delicious dishes, and memorable moments at McLoone&apos;s Boathouse.
           </Text>
@@ -218,6 +230,33 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background,
   },
+  customHeader: {
+    backgroundColor: colors.primary,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  headerContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
   scrollContent: {
     paddingHorizontal: 16,
     paddingVertical: 20,
@@ -225,12 +264,17 @@ const styles = StyleSheet.create({
   scrollContentWithTabBar: {
     paddingBottom: 100,
   },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+  },
   introText: {
     fontSize: 16,
     color: colors.textSecondary,
     lineHeight: 24,
     marginBottom: 24,
-    textAlign: 'center',
   },
   categoryTabs: {
     flexDirection: 'row',

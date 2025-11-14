@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Platform, Modal, TextInput, Pressable, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform, Modal, TextInput, Pressable, Alert, ActivityIndicator, Image } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import CustomerBanner from '@/components/CustomerBanner';
@@ -8,6 +8,7 @@ import { colors, commonStyles } from '@/styles/commonStyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAboutUs } from '@/hooks/useAboutUs';
+import { useGallery } from '@/hooks/useGallery';
 
 export default function AboutScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
@@ -16,6 +17,11 @@ export default function AboutScreen() {
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
   const { sections, loading } = useAboutUs();
+  
+  // Fetch first image from each gallery category
+  const { images: diningImages } = useGallery('dining');
+  const { images: banquetsImages } = useGallery('banquets');
+  const { images: eventsImages } = useGallery('events');
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -107,6 +113,16 @@ export default function AboutScreen() {
     return 'info.circle.fill';
   };
 
+  // Get first image from each category (sorted by display_order)
+  const diningThumbnail = diningImages.find(img => img.display_order === 1) || diningImages[0];
+  const banquetsThumbnail = banquetsImages.find(img => img.display_order === 1) || banquetsImages[0];
+  const eventsThumbnail = eventsImages.find(img => img.display_order === 1) || eventsImages[0];
+
+  // Find the index of "What we offer" section
+  const whatWeOfferIndex = sections.findIndex(section => 
+    section.title.toLowerCase().includes('what we offer') || section.title.toLowerCase().includes('offer')
+  );
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -143,6 +159,85 @@ export default function AboutScreen() {
                       <Text style={styles.heroText}>{section.content}</Text>
                     )}
                   </View>
+                );
+              }
+              
+              // Insert Gallery Preview Section before "What we offer"
+              if (index === whatWeOfferIndex && whatWeOfferIndex !== -1) {
+                return (
+                  <React.Fragment key={`gallery-${section.id}`}>
+                    {/* Gallery Preview Section */}
+                    <View style={styles.section}>
+                      <View style={styles.galleryHeader}>
+                        <View style={styles.gallerySectionHeader}>
+                          <IconSymbol name="photo.fill" color={colors.accent} size={24} />
+                          <Text style={styles.sectionTitle}>McLoone&apos;s Boathouse Gallery</Text>
+                        </View>
+                        <Pressable onPress={() => router.push('/(tabs)/gallery')}>
+                          <Text style={styles.viewAllLink}>View our Full Gallery</Text>
+                        </Pressable>
+                      </View>
+                      
+                      <View style={styles.galleryThumbnails}>
+                        {diningThumbnail && (
+                          <Pressable 
+                            style={styles.galleryThumbnail}
+                            onPress={() => router.push('/(tabs)/gallery')}
+                          >
+                            <Image
+                              source={{ uri: diningThumbnail.image_url }}
+                              style={styles.thumbnailImage}
+                              resizeMode="cover"
+                            />
+                            <View style={styles.thumbnailOverlay}>
+                              <Text style={styles.thumbnailLabel}>Dining</Text>
+                            </View>
+                          </Pressable>
+                        )}
+                        
+                        {banquetsThumbnail && (
+                          <Pressable 
+                            style={styles.galleryThumbnail}
+                            onPress={() => router.push('/(tabs)/gallery')}
+                          >
+                            <Image
+                              source={{ uri: banquetsThumbnail.image_url }}
+                              style={styles.thumbnailImage}
+                              resizeMode="cover"
+                            />
+                            <View style={styles.thumbnailOverlay}>
+                              <Text style={styles.thumbnailLabel}>Banquets</Text>
+                            </View>
+                          </Pressable>
+                        )}
+                        
+                        {eventsThumbnail && (
+                          <Pressable 
+                            style={styles.galleryThumbnail}
+                            onPress={() => router.push('/(tabs)/gallery')}
+                          >
+                            <Image
+                              source={{ uri: eventsThumbnail.image_url }}
+                              style={styles.thumbnailImage}
+                              resizeMode="cover"
+                            />
+                            <View style={styles.thumbnailOverlay}>
+                              <Text style={styles.thumbnailLabel}>Events</Text>
+                            </View>
+                          </Pressable>
+                        )}
+                      </View>
+                    </View>
+
+                    {/* Original "What we offer" section */}
+                    <View style={styles.section}>
+                      <View style={styles.sectionHeader}>
+                        <IconSymbol name={getSectionIcon(section.title)} color={colors.accent} size={24} />
+                        <Text style={styles.sectionTitle}>{section.title}</Text>
+                      </View>
+                      {renderSectionContent(section)}
+                    </View>
+                  </React.Fragment>
                 );
               }
               
@@ -302,6 +397,59 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     flex: 1,
     lineHeight: 22,
+  },
+  galleryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  gallerySectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewAllLink: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.accent,
+  },
+  galleryThumbnails: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  galleryThumbnail: {
+    flex: 1,
+    aspectRatio: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: colors.card,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  thumbnailImage: {
+    width: '100%',
+    height: '100%',
+  },
+  thumbnailOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  thumbnailLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,
