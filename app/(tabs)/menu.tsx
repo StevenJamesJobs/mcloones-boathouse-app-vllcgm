@@ -11,7 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { IconSymbol } from '@/components/IconSymbol';
 
 export default function MenuScreen() {
-  const [selectedTab, setSelectedTab] = useState<'wine' | 'libations' | 'lunch' | 'dinner' | 'specials'>('wine');
+  // Set default to 'specials' (Weekly Specials)
+  const [selectedTab, setSelectedTab] = useState<'specials' | 'lunch' | 'dinner' | 'libations' | 'wine'>('specials');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loginModalVisible, setLoginModalVisible] = useState(false);
   const [email, setEmail] = useState('');
@@ -22,22 +23,41 @@ export default function MenuScreen() {
   const insets = useSafeAreaInsets();
   const { login } = useAuth();
 
-  // Get unique categories for the selected meal type
+  // Get unique categories for the selected meal type, excluding Wine and Libations from Lunch/Dinner
   const availableCategories = categories.filter(cat => {
     if (selectedTab === 'wine') return cat.name === 'Wine';
     if (selectedTab === 'libations') return cat.name === 'Libations';
+    // Exclude Wine and Libations from Lunch/Dinner tabs
+    if (selectedTab === 'lunch' || selectedTab === 'dinner') {
+      return cat.name !== 'Wine' && cat.name !== 'Libations' && (cat.meal_type === selectedTab || cat.meal_type === 'both');
+    }
     return cat.meal_type === selectedTab || cat.meal_type === 'both';
   });
 
-  // Filter items by category
+  // Filter items by category, excluding Wine and Libations from Lunch/Dinner
   const filteredItems = selectedTab === 'wine' || selectedTab === 'libations'
     ? items.filter(item => {
         const categoryMatch = availableCategories.some(cat => cat.id === item.category_id);
         return categoryMatch && (selectedCategory === 'all' || item.subcategory === selectedCategory);
       })
     : selectedCategory === 'all' 
-      ? items 
-      : items.filter(item => item.category_id === selectedCategory);
+      ? items.filter(item => {
+          // Exclude Wine and Libations items from Lunch/Dinner tabs
+          if (selectedTab === 'lunch' || selectedTab === 'dinner') {
+            const itemCategory = categories.find(cat => cat.id === item.category_id);
+            return itemCategory?.name !== 'Wine' && itemCategory?.name !== 'Libations';
+          }
+          return true;
+        })
+      : items.filter(item => {
+          const categoryMatch = item.category_id === selectedCategory;
+          // Exclude Wine and Libations items from Lunch/Dinner tabs
+          if (selectedTab === 'lunch' || selectedTab === 'dinner') {
+            const itemCategory = categories.find(cat => cat.id === item.category_id);
+            return categoryMatch && itemCategory?.name !== 'Wine' && itemCategory?.name !== 'Libations';
+          }
+          return categoryMatch;
+        });
 
   // Group items by subcategory for Wine/Libations, or by category for others
   const groupedItems = filteredItems.reduce((acc, item) => {
@@ -131,7 +151,7 @@ export default function MenuScreen() {
 
         {/* Content with top padding */}
         <View style={[styles.content, { paddingTop: 8 }]}>
-          {/* Tab Selector - Wine, Libations, Lunch, Dinner, Weekly Specials */}
+          {/* Tab Selector - Reordered: Weekly Specials, Lunch, Dinner, Libations, Wine */}
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
@@ -141,39 +161,21 @@ export default function MenuScreen() {
             <Pressable
               style={[
                 styles.tabButton,
-                selectedTab === 'wine' && styles.tabButtonActive,
+                selectedTab === 'specials' && styles.tabButtonActive,
               ]}
               onPress={() => {
-                setSelectedTab('wine');
+                setSelectedTab('specials');
                 setSelectedCategory('all');
               }}
             >
               <Text
                 style={[
                   styles.tabButtonText,
-                  selectedTab === 'wine' && styles.tabButtonTextActive,
+                  selectedTab === 'specials' && styles.tabButtonTextActive,
                 ]}
+                numberOfLines={1}
               >
-                Wine
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.tabButton,
-                selectedTab === 'libations' && styles.tabButtonActive,
-              ]}
-              onPress={() => {
-                setSelectedTab('libations');
-                setSelectedCategory('all');
-              }}
-            >
-              <Text
-                style={[
-                  styles.tabButtonText,
-                  selectedTab === 'libations' && styles.tabButtonTextActive,
-                ]}
-              >
-                Libations
+                Weekly Specials
               </Text>
             </Pressable>
             <Pressable
@@ -191,6 +193,7 @@ export default function MenuScreen() {
                   styles.tabButtonText,
                   selectedTab === 'lunch' && styles.tabButtonTextActive,
                 ]}
+                numberOfLines={1}
               >
                 Lunch
               </Text>
@@ -210,6 +213,7 @@ export default function MenuScreen() {
                   styles.tabButtonText,
                   selectedTab === 'dinner' && styles.tabButtonTextActive,
                 ]}
+                numberOfLines={1}
               >
                 Dinner
               </Text>
@@ -217,20 +221,41 @@ export default function MenuScreen() {
             <Pressable
               style={[
                 styles.tabButton,
-                selectedTab === 'specials' && styles.tabButtonActive,
+                selectedTab === 'libations' && styles.tabButtonActive,
               ]}
               onPress={() => {
-                setSelectedTab('specials');
+                setSelectedTab('libations');
                 setSelectedCategory('all');
               }}
             >
               <Text
                 style={[
                   styles.tabButtonText,
-                  selectedTab === 'specials' && styles.tabButtonTextActive,
+                  selectedTab === 'libations' && styles.tabButtonTextActive,
                 ]}
+                numberOfLines={1}
               >
-                Specials
+                Libations
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.tabButton,
+                selectedTab === 'wine' && styles.tabButtonActive,
+              ]}
+              onPress={() => {
+                setSelectedTab('wine');
+                setSelectedCategory('all');
+              }}
+            >
+              <Text
+                style={[
+                  styles.tabButtonText,
+                  selectedTab === 'wine' && styles.tabButtonTextActive,
+                ]}
+                numberOfLines={1}
+              >
+                Wine
               </Text>
             </Pressable>
           </ScrollView>
@@ -255,6 +280,7 @@ export default function MenuScreen() {
                     styles.categoryBoxText,
                     selectedCategory === 'all' && styles.categoryBoxTextActive,
                   ]}
+                  numberOfLines={1}
                 >
                   All
                 </Text>
@@ -273,6 +299,7 @@ export default function MenuScreen() {
                       styles.categoryBoxText,
                       selectedCategory === subcategory && styles.categoryBoxTextActive,
                     ]}
+                    numberOfLines={1}
                   >
                     {subcategory}
                   </Text>
@@ -301,6 +328,7 @@ export default function MenuScreen() {
                     styles.categoryBoxText,
                     selectedCategory === 'all' && styles.categoryBoxTextActive,
                   ]}
+                  numberOfLines={1}
                 >
                   All
                 </Text>
@@ -319,6 +347,7 @@ export default function MenuScreen() {
                       styles.categoryBoxText,
                       selectedCategory === category.id && styles.categoryBoxTextActive,
                     ]}
+                    numberOfLines={1}
                   >
                     {category.name || 'Unnamed'}
                   </Text>
@@ -551,17 +580,19 @@ const styles = StyleSheet.create({
   tabSelector: {
     paddingHorizontal: 12,
     paddingVertical: 10,
-    gap: 6,
+    gap: 8,
   },
   tabButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderRadius: 8,
     backgroundColor: colors.card,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    minWidth: 80,
+    minWidth: 90,
+    height: 44,
   },
   tabButtonActive: {
     backgroundColor: colors.accent,
@@ -571,6 +602,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: colors.text,
+    textAlign: 'center',
   },
   tabButtonTextActive: {
     color: '#FFFFFF',

@@ -213,6 +213,30 @@ export default function MenuEditorScreen() {
       return;
     }
 
+    // Check if selected category is Wine or Libations
+    const selectedCategory = categories.find(cat => cat.id === itemCategoryId);
+    const isWineOrLibations = selectedCategory?.name === 'Wine' || selectedCategory?.name === 'Libations';
+
+    // Prevent adding Wine/Libations items to Lunch or Dinner meal types
+    if (isWineOrLibations && (itemMealType === 'lunch' || itemMealType === 'dinner')) {
+      Alert.alert(
+        'Invalid Configuration',
+        'Wine and Libations items cannot be assigned to Lunch or Dinner meal types. They must be set to "Both" to appear in their own dedicated categories.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Prevent adding Lunch/Dinner items to Wine/Libations categories
+    if (isWineOrLibations && itemMealType !== 'both') {
+      Alert.alert(
+        'Invalid Configuration',
+        'Wine and Libations items must have meal type set to "Both".',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     const itemData = {
       name: itemName.trim(),
       description: itemDescription.trim() || null,
@@ -333,6 +357,15 @@ export default function MenuEditorScreen() {
   // Check if selected category is Wine or Libations
   const selectedCategory = categories.find(cat => cat.id === itemCategoryId);
   const isWineOrLibations = selectedCategory?.name === 'Wine' || selectedCategory?.name === 'Libations';
+
+  // Get available categories - filter out Wine/Libations when meal type is lunch or dinner
+  const availableCategories = categories.filter(cat => {
+    // If meal type is lunch or dinner, exclude Wine and Libations
+    if (itemMealType === 'lunch' || itemMealType === 'dinner') {
+      return cat.name !== 'Wine' && cat.name !== 'Libations';
+    }
+    return true;
+  });
 
   return (
     <>
@@ -582,41 +615,7 @@ export default function MenuEditorScreen() {
                       </Pressable>
                     )}
 
-                    <Text style={styles.label}>Category</Text>
-                    <View style={styles.pickerContainer}>
-                      {categories.map(cat => (
-                        <Pressable
-                          key={cat.id}
-                          style={[
-                            styles.pickerOption,
-                            itemCategoryId === cat.id && styles.pickerOptionActive
-                          ]}
-                          onPress={() => setItemCategoryId(cat.id)}
-                        >
-                          <Text style={[
-                            styles.pickerOptionText,
-                            itemCategoryId === cat.id && styles.pickerOptionTextActive
-                          ]}>
-                            {cat.name}
-                          </Text>
-                        </Pressable>
-                      ))}
-                    </View>
-
-                    {isWineOrLibations && (
-                      <>
-                        <Text style={styles.label}>Subcategory (for Wine/Libations)</Text>
-                        <TextInput
-                          style={styles.input}
-                          value={itemSubcategory}
-                          onChangeText={setItemSubcategory}
-                          placeholder="e.g., Sparkling, Chardonnay, Signature Cocktails"
-                          placeholderTextColor={colors.textSecondary}
-                        />
-                      </>
-                    )}
-
-                    <Text style={styles.label}>Meal Type</Text>
+                    <Text style={styles.label}>Meal Type *</Text>
                     <View style={styles.mealTypeSelector}>
                       {(['lunch', 'dinner', 'both'] as const).map(type => (
                         <Pressable
@@ -636,6 +635,56 @@ export default function MenuEditorScreen() {
                         </Pressable>
                       ))}
                     </View>
+
+                    <Text style={styles.label}>Category *</Text>
+                    {availableCategories.length === 0 ? (
+                      <View style={styles.warningBox}>
+                        <IconSymbol name="exclamationmark.triangle.fill" color={colors.warning} size={20} />
+                        <Text style={styles.warningText}>
+                          No categories available for {itemMealType === 'both' ? 'this meal type' : itemMealType}. 
+                          {itemMealType !== 'both' && ' Wine and Libations can only be added with meal type "Both".'}
+                        </Text>
+                      </View>
+                    ) : (
+                      <View style={styles.pickerContainer}>
+                        {availableCategories.map(cat => (
+                          <Pressable
+                            key={cat.id}
+                            style={[
+                              styles.pickerOption,
+                              itemCategoryId === cat.id && styles.pickerOptionActive
+                            ]}
+                            onPress={() => setItemCategoryId(cat.id)}
+                          >
+                            <Text style={[
+                              styles.pickerOptionText,
+                              itemCategoryId === cat.id && styles.pickerOptionTextActive
+                            ]}>
+                              {cat.name}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    )}
+
+                    {isWineOrLibations && (
+                      <>
+                        <Text style={styles.label}>Subcategory (for Wine/Libations)</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={itemSubcategory}
+                          onChangeText={setItemSubcategory}
+                          placeholder="e.g., Sparkling, Chardonnay, Signature Cocktails"
+                          placeholderTextColor={colors.textSecondary}
+                        />
+                        <View style={styles.infoBox}>
+                          <IconSymbol name="info.circle.fill" color={colors.accent} size={20} />
+                          <Text style={styles.infoText}>
+                            Wine and Libations items must have meal type set to "Both" to appear in their dedicated categories.
+                          </Text>
+                        </View>
+                      </>
+                    )}
 
                     <Text style={styles.label}>Dietary Info</Text>
                     <View style={styles.dietarySelector}>
@@ -1139,6 +1188,39 @@ const styles = StyleSheet.create({
   },
   dietaryButtonTextActive: {
     color: '#FFFFFF',
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: colors.card,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    gap: 12,
+    marginTop: 8,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.text,
+    lineHeight: 18,
+  },
+  warningBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: colors.card,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.warning || '#FFA500',
+    gap: 12,
+  },
+  warningText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.text,
+    lineHeight: 18,
   },
   modalActions: {
     flexDirection: 'row',
