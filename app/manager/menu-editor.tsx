@@ -1,212 +1,277 @@
 
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, Alert, ActivityIndicator, Platform, Image } from 'react-native';
-import { colors, commonStyles } from '@/styles/commonStyles';
 import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
-import * as ImagePicker from 'expo-image-picker';
+import { colors, commonStyles } from '@/styles/commonStyles';
 import { useMenuEditor, MenuItem, MenuCategory } from '@/hooks/useMenu';
+import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/app/integrations/supabase/client';
 
-type EditMode = 'add' | 'edit';
+type EditMode = 'item' | 'category' | null;
 
 export default function MenuEditorScreen() {
+  const { categories, items, loading, error, addMenuItem, updateMenuItem, deleteMenuItem, addCategory, updateCategory, deleteCategory } = useMenuEditor();
+  
   const [modalVisible, setModalVisible] = useState(false);
-  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
-  const [editMode, setEditMode] = useState<EditMode>('add');
-  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<MenuCategory | null>(null);
-
-  // Item form state
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [mealType, setMealType] = useState<'lunch' | 'dinner' | 'both'>('both');
-  const [subcategory, setSubcategory] = useState('');
-  const [imageUri, setImageUri] = useState<string | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [isAvailable, setIsAvailable] = useState(true);
-  const [displayOrder, setDisplayOrder] = useState('0');
-  const [dietaryInfo, setDietaryInfo] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
-
-  // Category form state
+  const [editMode, setEditMode] = useState<EditMode>(null);
+  const [selectedMealType, setSelectedMealType] = useState<'lunch' | 'dinner' | 'both'>('both');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  
+  // Form states for menu item
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [itemName, setItemName] = useState('');
+  const [itemDescription, setItemDescription] = useState('');
+  const [itemPrice, setItemPrice] = useState('');
+  const [itemCategoryId, setItemCategoryId] = useState('');
+  const [itemMealType, setItemMealType] = useState<'lunch' | 'dinner' | 'both'>('both');
+  const [itemDietaryInfo, setItemDietaryInfo] = useState<string[]>([]);
+  const [itemDisplayOrder, setItemDisplayOrder] = useState('0');
+  const [itemImageUrl, setItemImageUrl] = useState<string | null>(null);
+  const [itemSubcategory, setItemSubcategory] = useState('');
+  
+  // Form states for category
+  const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
   const [categoryName, setCategoryName] = useState('');
   const [categoryMealType, setCategoryMealType] = useState<'lunch' | 'dinner' | 'both'>('both');
   const [categoryDisplayOrder, setCategoryDisplayOrder] = useState('0');
 
-  const { categories, items, loading, addMenuItem, updateMenuItem, deleteMenuItem, addCategory, updateCategory, deleteCategory } = useMenuEditor();
+  const filteredItems = items.filter(item => {
+    const mealTypeMatch = selectedMealType === 'both' || item.meal_type === selectedMealType || item.meal_type === 'both';
+    const categoryMatch = selectedCategoryFilter === 'all' || item.category_id === selectedCategoryFilter;
+    return mealTypeMatch && categoryMatch;
+  });
+
+  const groupedItems = filteredItems.reduce((acc, item) => {
+    const categoryName = item.category?.name || 'Uncategorized';
+    if (!acc[categoryName]) {
+      acc[categoryName] = [];
+    }
+    acc[categoryName].push(item);
+    return acc;
+  }, {} as Record<string, MenuItem[]>);
 
   const openAddItemModal = () => {
-    setEditMode('add');
-    setSelectedItem(null);
-    setName('');
-    setDescription('');
-    setPrice('');
-    setCategoryId('');
-    setMealType('both');
-    setSubcategory('');
-    setImageUri(null);
-    setImageUrl(null);
-    setIsAvailable(true);
-    setDisplayOrder('0');
-    setDietaryInfo([]);
+    setEditingItem(null);
+    setItemName('');
+    setItemDescription('');
+    setItemPrice('');
+    setItemCategoryId(categories[0]?.id || '');
+    setItemMealType('both');
+    setItemDietaryInfo([]);
+    setItemDisplayOrder('0');
+    setItemImageUrl(null);
+    setItemSubcategory('');
+    setEditMode('item');
     setModalVisible(true);
   };
 
   const openEditItemModal = (item: MenuItem) => {
-    setEditMode('edit');
-    setSelectedItem(item);
-    setName(item.name);
-    setDescription(item.description || '');
-    setPrice(item.price?.toString() || '');
-    setCategoryId(item.category_id || '');
-    setMealType(item.meal_type);
-    setSubcategory(item.subcategory || '');
-    setImageUri(null);
-    setImageUrl(item.image_url || null);
-    setIsAvailable(item.is_available);
-    setDisplayOrder(item.display_order?.toString() || '0');
-    setDietaryInfo(item.dietary_info || []);
+    setEditingItem(item);
+    setItemName(item.name);
+    setItemDescription(item.description || '');
+    setItemPrice(item.price?.toString() || '');
+    setItemCategoryId(item.category_id || '');
+    setItemMealType(item.meal_type as 'lunch' | 'dinner' | 'both');
+    setItemDietaryInfo(item.dietary_info || []);
+    setItemDisplayOrder(item.display_order.toString());
+    setItemImageUrl(item.image_url || null);
+    setItemSubcategory((item as any).subcategory || '');
+    setEditMode('item');
     setModalVisible(true);
   };
 
   const openAddCategoryModal = () => {
-    setEditMode('add');
-    setSelectedCategory(null);
+    setEditingCategory(null);
     setCategoryName('');
     setCategoryMealType('both');
     setCategoryDisplayOrder('0');
-    setCategoryModalVisible(true);
+    setEditMode('category');
+    setModalVisible(true);
   };
 
   const openEditCategoryModal = (category: MenuCategory) => {
-    setEditMode('edit');
-    setSelectedCategory(category);
+    setEditingCategory(category);
     setCategoryName(category.name);
-    setCategoryMealType(category.meal_type);
-    setCategoryDisplayOrder(category.display_order?.toString() || '0');
-    setCategoryModalVisible(true);
+    setCategoryMealType(category.meal_type as 'lunch' | 'dinner' | 'both');
+    setCategoryDisplayOrder(category.display_order.toString());
+    setEditMode('category');
+    setModalVisible(true);
   };
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
+    try {
+      // Request permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant permission to access your photo library');
+        return;
+      }
 
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await uploadImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image');
     }
   };
 
-  const uploadImage = async (uri: string): Promise<string | null> => {
+  const uploadImage = async (uri: string) => {
     try {
-      setUploading(true);
+      setUploadingImage(true);
+      console.log('Starting image upload for URI:', uri);
+
+      // Generate unique filename
+      const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      console.log('Generated filename:', fileName);
+
+      // Fetch the image as a blob
       const response = await fetch(uri);
       const blob = await response.blob();
-      const arrayBuffer = await new Response(blob).arrayBuffer();
-      const fileExt = uri.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = fileName;
+      
+      console.log('Blob created, size:', blob.size, 'type:', blob.type);
 
-      const { error: uploadError } = await supabase.storage
+      // Convert blob to ArrayBuffer for upload
+      const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (reader.result instanceof ArrayBuffer) {
+            resolve(reader.result);
+          } else {
+            reject(new Error('Failed to convert blob to ArrayBuffer'));
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(blob);
+      });
+
+      console.log('ArrayBuffer created, size:', arrayBuffer.byteLength);
+
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
         .from('menu-thumbnails')
         .upload(filePath, arrayBuffer, {
-          contentType: `image/${fileExt}`,
+          contentType: blob.type || `image/${fileExt}`,
           upsert: false,
         });
 
-      if (uploadError) {
-        throw uploadError;
+      if (error) {
+        console.error('Supabase upload error:', error);
+        throw error;
       }
 
+      console.log('Upload successful, data:', data);
+
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('menu-thumbnails')
         .getPublicUrl(filePath);
 
-      return publicUrl;
+      console.log('Public URL:', publicUrl);
+
+      setItemImageUrl(publicUrl);
+      Alert.alert('Success', 'Image uploaded successfully');
     } catch (error) {
       console.error('Error uploading image:', error);
-      Alert.alert('Error', 'Failed to upload image');
-      return null;
+      Alert.alert('Error', `Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
-      setUploading(false);
+      setUploadingImage(false);
     }
   };
 
   const removeImage = () => {
-    setImageUri(null);
-    setImageUrl(null);
+    Alert.alert(
+      'Remove Image',
+      'Are you sure you want to remove this image?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: () => setItemImageUrl(null),
+        },
+      ]
+    );
   };
 
   const handleSaveItem = async () => {
-    if (!name.trim()) {
+    if (!itemName.trim()) {
       Alert.alert('Error', 'Please enter an item name');
       return;
     }
 
-    if (!categoryId) {
-      Alert.alert('Error', 'Please select a category');
+    // Check if selected category is Wine or Libations
+    const selectedCategory = categories.find(cat => cat.id === itemCategoryId);
+    const isWineOrLibations = selectedCategory?.name === 'Wine' || selectedCategory?.name === 'Libations';
+
+    // Prevent adding Wine/Libations items to Lunch or Dinner meal types
+    if (isWineOrLibations && (itemMealType === 'lunch' || itemMealType === 'dinner')) {
+      Alert.alert(
+        'Invalid Configuration',
+        'Wine and Libations items cannot be assigned to Lunch or Dinner meal types. They must be set to "Both" to appear in their own dedicated categories.',
+        [{ text: 'OK' }]
+      );
       return;
     }
 
-    // Validation: Prevent Wine, Libations, or Happy Hour from being added to Lunch or Dinner
-    const selectedCategoryObj = categories.find(cat => cat.id === categoryId);
-    if (selectedCategoryObj && (mealType === 'lunch' || mealType === 'dinner')) {
-      if (selectedCategoryObj.name === 'Wine' || selectedCategoryObj.name === 'Libations' || selectedCategoryObj.name === 'Happy Hour') {
-        Alert.alert(
-          'Invalid Category',
-          `${selectedCategoryObj.name} items cannot be added to ${mealType.charAt(0).toUpperCase() + mealType.slice(1)} menu. Please select "Both" as the meal type or choose a different category.`
-        );
-        return;
-      }
-    }
-
-    let finalImageUrl = imageUrl;
-    if (imageUri) {
-      const uploadedUrl = await uploadImage(imageUri);
-      if (uploadedUrl) {
-        finalImageUrl = uploadedUrl;
-      }
+    // Prevent adding Lunch/Dinner items to Wine/Libations categories
+    if (isWineOrLibations && itemMealType !== 'both') {
+      Alert.alert(
+        'Invalid Configuration',
+        'Wine and Libations items must have meal type set to "Both".',
+        [{ text: 'OK' }]
+      );
+      return;
     }
 
     const itemData = {
-      name: name.trim(),
-      description: description.trim() || null,
-      price: price ? parseFloat(price) : null,
-      category_id: categoryId,
-      meal_type: mealType,
-      subcategory: subcategory.trim() || null,
-      image_url: finalImageUrl,
-      is_available: isAvailable,
-      display_order: parseInt(displayOrder) || 0,
-      dietary_info: dietaryInfo.length > 0 ? dietaryInfo : null,
+      name: itemName.trim(),
+      description: itemDescription.trim() || null,
+      price: itemPrice ? parseFloat(itemPrice) : null,
+      category_id: itemCategoryId || null,
+      meal_type: itemMealType,
+      dietary_info: itemDietaryInfo.length > 0 ? itemDietaryInfo : null,
+      display_order: parseInt(itemDisplayOrder) || 0,
+      is_available: true,
+      image_url: itemImageUrl || null,
+      subcategory: itemSubcategory.trim() || null,
     };
 
-    if (editMode === 'add') {
-      const result = await addMenuItem(itemData);
-      if (result.error) {
-        Alert.alert('Error', result.error);
-      } else {
-        Alert.alert('Success', 'Menu item added successfully');
-        setModalVisible(false);
+    console.log('Saving item with data:', itemData);
+
+    if (editingItem) {
+      const { error } = await updateMenuItem(editingItem.id, itemData);
+      if (error) {
+        Alert.alert('Error', error);
+        return;
       }
-    } else if (selectedItem) {
-      const result = await updateMenuItem(selectedItem.id, itemData);
-      if (result.error) {
-        Alert.alert('Error', result.error);
-      } else {
-        Alert.alert('Success', 'Menu item updated successfully');
-        setModalVisible(false);
+      Alert.alert('Success', 'Menu item updated successfully');
+    } else {
+      const { error } = await addMenuItem(itemData as any);
+      if (error) {
+        Alert.alert('Error', error);
+        return;
       }
+      Alert.alert('Success', 'Menu item added successfully');
     }
+
+    setModalVisible(false);
   };
 
-  const handleDeleteItem = async (item: MenuItem) => {
+  const handleDeleteItem = (item: MenuItem) => {
     Alert.alert(
       'Delete Item',
       `Are you sure you want to delete "${item.name}"?`,
@@ -216,9 +281,9 @@ export default function MenuEditorScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            const result = await deleteMenuItem(item.id);
-            if (result.error) {
-              Alert.alert('Error', result.error);
+            const { error } = await deleteMenuItem(item.id);
+            if (error) {
+              Alert.alert('Error', error);
             } else {
               Alert.alert('Success', 'Menu item deleted successfully');
             }
@@ -240,26 +305,26 @@ export default function MenuEditorScreen() {
       display_order: parseInt(categoryDisplayOrder) || 0,
     };
 
-    if (editMode === 'add') {
-      const result = await addCategory(categoryData);
-      if (result.error) {
-        Alert.alert('Error', result.error);
-      } else {
-        Alert.alert('Success', 'Category added successfully');
-        setCategoryModalVisible(false);
+    if (editingCategory) {
+      const { error } = await updateCategory(editingCategory.id, categoryData);
+      if (error) {
+        Alert.alert('Error', error);
+        return;
       }
-    } else if (selectedCategory) {
-      const result = await updateCategory(selectedCategory.id, categoryData);
-      if (result.error) {
-        Alert.alert('Error', result.error);
-      } else {
-        Alert.alert('Success', 'Category updated successfully');
-        setCategoryModalVisible(false);
+      Alert.alert('Success', 'Category updated successfully');
+    } else {
+      const { error } = await addCategory(categoryData as any);
+      if (error) {
+        Alert.alert('Error', error);
+        return;
       }
+      Alert.alert('Success', 'Category added successfully');
     }
+
+    setModalVisible(false);
   };
 
-  const handleDeleteCategory = async (category: MenuCategory) => {
+  const handleDeleteCategory = (category: MenuCategory) => {
     Alert.alert(
       'Delete Category',
       `Are you sure you want to delete "${category.name}"? This will also delete all items in this category.`,
@@ -269,9 +334,9 @@ export default function MenuEditorScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            const result = await deleteCategory(category.id);
-            if (result.error) {
-              Alert.alert('Error', result.error);
+            const { error } = await deleteCategory(category.id);
+            if (error) {
+              Alert.alert('Error', error);
             } else {
               Alert.alert('Success', 'Category deleted successfully');
             }
@@ -282,12 +347,25 @@ export default function MenuEditorScreen() {
   };
 
   const toggleDietaryInfo = (info: string) => {
-    if (dietaryInfo.includes(info)) {
-      setDietaryInfo(dietaryInfo.filter(i => i !== info));
+    if (itemDietaryInfo.includes(info)) {
+      setItemDietaryInfo(itemDietaryInfo.filter(i => i !== info));
     } else {
-      setDietaryInfo([...dietaryInfo, info]);
+      setItemDietaryInfo([...itemDietaryInfo, info]);
     }
   };
+
+  // Check if selected category is Wine or Libations
+  const selectedCategory = categories.find(cat => cat.id === itemCategoryId);
+  const isWineOrLibations = selectedCategory?.name === 'Wine' || selectedCategory?.name === 'Libations';
+
+  // Get available categories - filter out Wine/Libations when meal type is lunch or dinner
+  const availableCategories = categories.filter(cat => {
+    // If meal type is lunch or dinner, exclude Wine and Libations
+    if (itemMealType === 'lunch' || itemMealType === 'dinner') {
+      return cat.name !== 'Wine' && cat.name !== 'Libations';
+    }
+    return true;
+  });
 
   return (
     <>
@@ -295,116 +373,151 @@ export default function MenuEditorScreen() {
         options={{
           title: 'Menu Editor',
           headerStyle: {
-            backgroundColor: colors.primary,
+            backgroundColor: colors.managerPrimary,
           },
-          headerTintColor: colors.text,
+          headerTintColor: '#FFFFFF',
         }}
       />
+      
+      <View style={[commonStyles.employeeContainer, styles.container]}>
+        {/* Action Buttons */}
+        <View style={styles.actionButtons}>
+          <Pressable style={styles.addButton} onPress={openAddItemModal}>
+            <IconSymbol name="plus.circle.fill" color="#FFFFFF" size={20} />
+            <Text style={styles.addButtonText}>Add Item</Text>
+          </Pressable>
+          <Pressable style={[styles.addButton, styles.addCategoryButton]} onPress={openAddCategoryModal}>
+            <IconSymbol name="folder.badge.plus" color="#FFFFFF" size={20} />
+            <Text style={styles.addButtonText}>Add Category</Text>
+          </Pressable>
+        </View>
 
-      <View style={[commonStyles.container, styles.container]}>
+        {/* Filters */}
+        <View style={styles.filters}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+            <Pressable
+              style={[styles.filterButton, selectedMealType === 'both' && styles.filterButtonActive]}
+              onPress={() => setSelectedMealType('both')}
+            >
+              <Text style={[styles.filterButtonText, selectedMealType === 'both' && styles.filterButtonTextActive]}>
+                All
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.filterButton, selectedMealType === 'lunch' && styles.filterButtonActive]}
+              onPress={() => setSelectedMealType('lunch')}
+            >
+              <Text style={[styles.filterButtonText, selectedMealType === 'lunch' && styles.filterButtonTextActive]}>
+                Lunch
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.filterButton, selectedMealType === 'dinner' && styles.filterButtonActive]}
+              onPress={() => setSelectedMealType('dinner')}
+            >
+              <Text style={[styles.filterButtonText, selectedMealType === 'dinner' && styles.filterButtonTextActive]}>
+                Dinner
+              </Text>
+            </Pressable>
+          </ScrollView>
+        </View>
+
+        {/* Categories List */}
+        <View style={styles.categoriesHeader}>
+          <Text style={styles.sectionTitle}>Categories</Text>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesScroll}>
+          {categories.map(category => (
+            <Pressable
+              key={category.id}
+              style={styles.categoryCard}
+              onLongPress={() => openEditCategoryModal(category)}
+            >
+              <Text style={styles.categoryCardName}>{category.name}</Text>
+              <Text style={styles.categoryCardMealType}>{category.meal_type}</Text>
+              <Pressable
+                style={styles.categoryDeleteButton}
+                onPress={() => handleDeleteCategory(category)}
+              >
+                <IconSymbol name="trash" color={colors.error} size={16} />
+              </Pressable>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        {/* Menu Items */}
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.accent} />
+            <ActivityIndicator size="large" color={colors.managerAccent} />
             <Text style={styles.loadingText}>Loading menu...</Text>
           </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Error: {error}</Text>
+          </View>
         ) : (
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            {/* Categories Section */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Categories</Text>
-                <Pressable style={styles.addButton} onPress={openAddCategoryModal}>
-                  <IconSymbol name="plus.circle.fill" color="#FFFFFF" size={20} />
-                  <Text style={styles.addButtonText}>Add Category</Text>
-                </Pressable>
-              </View>
-
-              {categories.map((category) => (
-                <View key={category.id} style={commonStyles.card}>
-                  <View style={styles.itemRow}>
-                    <View style={styles.itemInfo}>
-                      <Text style={styles.itemName}>{category.name}</Text>
-                      <Text style={styles.itemDetail}>
-                        Meal Type: {category.meal_type} • Order: {category.display_order}
-                      </Text>
-                    </View>
-                    <View style={styles.itemActions}>
-                      <Pressable
-                        style={styles.actionButton}
-                        onPress={() => openEditCategoryModal(category)}
-                      >
-                        <IconSymbol name="pencil" color={colors.accent} size={20} />
-                      </Pressable>
-                      <Pressable
-                        style={styles.actionButton}
-                        onPress={() => handleDeleteCategory(category)}
-                      >
-                        <IconSymbol name="trash" color={colors.error} size={20} />
-                      </Pressable>
-                    </View>
-                  </View>
-                </View>
-              ))}
-            </View>
-
-            {/* Menu Items Section */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Menu Items</Text>
-                <Pressable style={styles.addButton} onPress={openAddItemModal}>
-                  <IconSymbol name="plus.circle.fill" color="#FFFFFF" size={20} />
-                  <Text style={styles.addButtonText}>Add Item</Text>
-                </Pressable>
-              </View>
-
-              {items.map((item) => {
-                const category = categories.find(cat => cat.id === item.category_id);
-                return (
-                  <View key={item.id} style={commonStyles.card}>
-                    <View style={styles.itemRow}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {Object.entries(groupedItems).map(([categoryName, categoryItems]) => (
+              <View key={categoryName} style={styles.categorySection}>
+                <Text style={styles.categoryTitle}>{categoryName}</Text>
+                {categoryItems.map(item => (
+                  <Pressable
+                    key={item.id}
+                    style={styles.menuItemCard}
+                    onPress={() => openEditItemModal(item)}
+                  >
+                    <View style={styles.menuItemContent}>
                       {item.image_url && (
                         <Image
                           source={{ uri: item.image_url }}
-                          style={styles.itemThumbnail}
+                          style={styles.menuItemThumbnail}
                           resizeMode="cover"
                         />
                       )}
-                      <View style={styles.itemInfo}>
-                        <Text style={styles.itemName}>{item.name}</Text>
-                        <Text style={styles.itemDetail}>
-                          {category?.name} • {item.meal_type}
-                          {item.subcategory && ` • ${item.subcategory}`}
-                        </Text>
-                        {item.price && (
-                          <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+                      <View style={styles.menuItemDetails}>
+                        <View style={styles.menuItemHeader}>
+                          <Text style={styles.menuItemName}>{item.name}</Text>
+                          <Text style={styles.menuItemPrice}>
+                            {item.price ? `$${item.price.toFixed(2)}` : 'N/A'}
+                          </Text>
+                        </View>
+                        {item.description && (
+                          <Text style={styles.menuItemDescription} numberOfLines={2}>
+                            {item.description}
+                          </Text>
                         )}
-                        <Text style={[styles.itemStatus, !item.is_available && styles.itemStatusInactive]}>
-                          {item.is_available ? 'Available' : 'Unavailable'}
-                        </Text>
-                      </View>
-                      <View style={styles.itemActions}>
-                        <Pressable
-                          style={styles.actionButton}
-                          onPress={() => openEditItemModal(item)}
-                        >
-                          <IconSymbol name="pencil" color={colors.accent} size={20} />
-                        </Pressable>
-                        <Pressable
-                          style={styles.actionButton}
-                          onPress={() => handleDeleteItem(item)}
-                        >
-                          <IconSymbol name="trash" color={colors.error} size={20} />
-                        </Pressable>
+                        {(item as any).subcategory && (
+                          <Text style={styles.menuItemSubcategory}>
+                            {(item as any).subcategory}
+                          </Text>
+                        )}
+                        <View style={styles.menuItemFooter}>
+                          <Text style={styles.menuItemMealType}>{item.meal_type}</Text>
+                          {item.dietary_info && item.dietary_info.length > 0 && (
+                            <Text style={styles.menuItemDietary}>
+                              {item.dietary_info.join(', ').toUpperCase()}
+                            </Text>
+                          )}
+                          <Pressable
+                            style={styles.deleteButton}
+                            onPress={() => handleDeleteItem(item)}
+                          >
+                            <IconSymbol name="trash" color={colors.error} size={18} />
+                          </Pressable>
+                        </View>
                       </View>
                     </View>
-                  </View>
-                );
-              })}
-            </View>
+                  </Pressable>
+                ))}
+              </View>
+            ))}
           </ScrollView>
         )}
 
-        {/* Item Modal */}
+        {/* Edit Modal */}
         <Modal
           visible={modalVisible}
           animationType="slide"
@@ -415,237 +528,252 @@ export default function MenuEditorScreen() {
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>
-                  {editMode === 'add' ? 'Add Menu Item' : 'Edit Menu Item'}
+                  {editMode === 'item' 
+                    ? (editingItem ? 'Edit Menu Item' : 'Add Menu Item')
+                    : (editingCategory ? 'Edit Category' : 'Add Category')
+                  }
                 </Text>
                 <Pressable onPress={() => setModalVisible(false)}>
                   <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
                 </Pressable>
               </View>
 
-              <ScrollView style={styles.modalBody}>
-                <Text style={styles.label}>Name *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Item name"
-                  placeholderTextColor={colors.textSecondary}
-                />
-
-                <Text style={styles.label}>Description</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={description}
-                  onChangeText={setDescription}
-                  placeholder="Item description"
-                  placeholderTextColor={colors.textSecondary}
-                  multiline
-                  numberOfLines={3}
-                />
-
-                <Text style={styles.label}>Price</Text>
-                <TextInput
-                  style={styles.input}
-                  value={price}
-                  onChangeText={setPrice}
-                  placeholder="0.00"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="decimal-pad"
-                />
-
-                <Text style={styles.label}>Category *</Text>
-                <View style={styles.pickerContainer}>
-                  {categories.map((cat) => (
-                    <Pressable
-                      key={cat.id}
-                      style={[
-                        styles.pickerOption,
-                        categoryId === cat.id && styles.pickerOptionActive,
-                      ]}
-                      onPress={() => setCategoryId(cat.id)}
-                    >
-                      <Text
-                        style={[
-                          styles.pickerOptionText,
-                          categoryId === cat.id && styles.pickerOptionTextActive,
-                        ]}
-                      >
-                        {cat.name}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-
-                <Text style={styles.label}>Meal Type *</Text>
-                <View style={styles.pickerContainer}>
-                  {(['lunch', 'dinner', 'both'] as const).map((type) => (
-                    <Pressable
-                      key={type}
-                      style={[
-                        styles.pickerOption,
-                        mealType === type && styles.pickerOptionActive,
-                      ]}
-                      onPress={() => setMealType(type)}
-                    >
-                      <Text
-                        style={[
-                          styles.pickerOptionText,
-                          mealType === type && styles.pickerOptionTextActive,
-                        ]}
-                      >
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-
-                <Text style={styles.label}>Subcategory (for Wine/Libations/Happy Hour)</Text>
-                <TextInput
-                  style={styles.input}
-                  value={subcategory}
-                  onChangeText={setSubcategory}
-                  placeholder="e.g., Red Wine, Cocktails, Appetizers"
-                  placeholderTextColor={colors.textSecondary}
-                />
-
-                <Text style={styles.label}>Display Order</Text>
-                <TextInput
-                  style={styles.input}
-                  value={displayOrder}
-                  onChangeText={setDisplayOrder}
-                  placeholder="0"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="number-pad"
-                />
-
-                <Text style={styles.label}>Dietary Information</Text>
-                <View style={styles.dietaryContainer}>
-                  {['gf', 'gfa', 'v', 'va'].map((info) => (
-                    <Pressable
-                      key={info}
-                      style={[
-                        styles.dietaryButton,
-                        dietaryInfo.includes(info) && styles.dietaryButtonActive,
-                      ]}
-                      onPress={() => toggleDietaryInfo(info)}
-                    >
-                      <Text
-                        style={[
-                          styles.dietaryButtonText,
-                          dietaryInfo.includes(info) && styles.dietaryButtonTextActive,
-                        ]}
-                      >
-                        {info.toUpperCase()}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-
-                <Text style={styles.label}>Image</Text>
-                {(imageUri || imageUrl) && (
-                  <View style={styles.imagePreviewContainer}>
-                    <Image
-                      source={{ uri: imageUri || imageUrl || '' }}
-                      style={styles.imagePreview}
-                      resizeMode="cover"
+              <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
+                {editMode === 'item' ? (
+                  <>
+                    <Text style={styles.label}>Name *</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={itemName}
+                      onChangeText={setItemName}
+                      placeholder="Enter item name"
+                      placeholderTextColor={colors.textSecondary}
                     />
-                    <Pressable style={styles.removeImageButton} onPress={removeImage}>
-                      <IconSymbol name="xmark.circle.fill" color={colors.error} size={24} />
-                    </Pressable>
-                  </View>
-                )}
-                <Pressable style={styles.uploadButton} onPress={pickImage} disabled={uploading}>
-                  <IconSymbol name="photo" color={colors.accent} size={20} />
-                  <Text style={styles.uploadButtonText}>
-                    {uploading ? 'Uploading...' : 'Upload Thumbnail'}
-                  </Text>
-                </Pressable>
 
-                <View style={styles.switchContainer}>
-                  <Text style={styles.label}>Available</Text>
-                  <Pressable
-                    style={[styles.switch, isAvailable && styles.switchActive]}
-                    onPress={() => setIsAvailable(!isAvailable)}
-                  >
-                    <View style={[styles.switchThumb, isAvailable && styles.switchThumbActive]} />
-                  </Pressable>
-                </View>
+                    <Text style={styles.label}>Description</Text>
+                    <TextInput
+                      style={[styles.input, styles.textArea]}
+                      value={itemDescription}
+                      onChangeText={setItemDescription}
+                      placeholder="Enter description"
+                      placeholderTextColor={colors.textSecondary}
+                      multiline
+                      numberOfLines={3}
+                    />
 
-                <Pressable style={styles.saveButton} onPress={handleSaveItem} disabled={uploading}>
-                  <Text style={styles.saveButtonText}>
-                    {uploading ? 'Uploading...' : editMode === 'add' ? 'Add Item' : 'Save Changes'}
-                  </Text>
-                </Pressable>
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
+                    <Text style={styles.label}>Price</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={itemPrice}
+                      onChangeText={setItemPrice}
+                      placeholder="0.00"
+                      placeholderTextColor={colors.textSecondary}
+                      keyboardType="decimal-pad"
+                    />
 
-        {/* Category Modal */}
-        <Modal
-          visible={categoryModalVisible}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setCategoryModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
-                  {editMode === 'add' ? 'Add Category' : 'Edit Category'}
-                </Text>
-                <Pressable onPress={() => setCategoryModalVisible(false)}>
-                  <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
-                </Pressable>
-              </View>
-
-              <View style={styles.modalBody}>
-                <Text style={styles.label}>Name *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={categoryName}
-                  onChangeText={setCategoryName}
-                  placeholder="Category name"
-                  placeholderTextColor={colors.textSecondary}
-                />
-
-                <Text style={styles.label}>Meal Type *</Text>
-                <View style={styles.pickerContainer}>
-                  {(['lunch', 'dinner', 'both'] as const).map((type) => (
-                    <Pressable
-                      key={type}
-                      style={[
-                        styles.pickerOption,
-                        categoryMealType === type && styles.pickerOptionActive,
-                      ]}
-                      onPress={() => setCategoryMealType(type)}
-                    >
-                      <Text
-                        style={[
-                          styles.pickerOptionText,
-                          categoryMealType === type && styles.pickerOptionTextActive,
-                        ]}
+                    <Text style={styles.label}>Thumbnail Image (Optional)</Text>
+                    {itemImageUrl ? (
+                      <View style={styles.imagePreviewContainer}>
+                        <Image
+                          source={{ uri: itemImageUrl }}
+                          style={styles.imagePreview}
+                          resizeMode="cover"
+                        />
+                        <View style={styles.imageActions}>
+                          <Pressable
+                            style={styles.changeImageButton}
+                            onPress={pickImage}
+                            disabled={uploadingImage}
+                          >
+                            <IconSymbol name="photo" color="#FFFFFF" size={16} />
+                            <Text style={styles.changeImageButtonText}>Change</Text>
+                          </Pressable>
+                          <Pressable
+                            style={styles.removeImageButton}
+                            onPress={removeImage}
+                            disabled={uploadingImage}
+                          >
+                            <IconSymbol name="trash" color="#FFFFFF" size={16} />
+                            <Text style={styles.removeImageButtonText}>Remove</Text>
+                          </Pressable>
+                        </View>
+                      </View>
+                    ) : (
+                      <Pressable
+                        style={styles.uploadButton}
+                        onPress={pickImage}
+                        disabled={uploadingImage}
                       >
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
+                        {uploadingImage ? (
+                          <ActivityIndicator color="#FFFFFF" />
+                        ) : (
+                          <>
+                            <IconSymbol name="photo.badge.plus" color="#FFFFFF" size={24} />
+                            <Text style={styles.uploadButtonText}>Upload Thumbnail</Text>
+                          </>
+                        )}
+                      </Pressable>
+                    )}
 
-                <Text style={styles.label}>Display Order</Text>
-                <TextInput
-                  style={styles.input}
-                  value={categoryDisplayOrder}
-                  onChangeText={setCategoryDisplayOrder}
-                  placeholder="0"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="number-pad"
-                />
+                    <Text style={styles.label}>Meal Type *</Text>
+                    <View style={styles.mealTypeSelector}>
+                      {(['lunch', 'dinner', 'both'] as const).map(type => (
+                        <Pressable
+                          key={type}
+                          style={[
+                            styles.mealTypeButton,
+                            itemMealType === type && styles.mealTypeButtonActive
+                          ]}
+                          onPress={() => setItemMealType(type)}
+                        >
+                          <Text style={[
+                            styles.mealTypeButtonText,
+                            itemMealType === type && styles.mealTypeButtonTextActive
+                          ]}>
+                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
 
-                <Pressable style={styles.saveButton} onPress={handleSaveCategory}>
-                  <Text style={styles.saveButtonText}>
-                    {editMode === 'add' ? 'Add Category' : 'Save Changes'}
-                  </Text>
+                    <Text style={styles.label}>Category *</Text>
+                    {availableCategories.length === 0 ? (
+                      <View style={styles.warningBox}>
+                        <IconSymbol name="exclamationmark.triangle.fill" color={colors.warning} size={20} />
+                        <Text style={styles.warningText}>
+                          No categories available for {itemMealType === 'both' ? 'this meal type' : itemMealType}. 
+                          {itemMealType !== 'both' && ' Wine and Libations can only be added with meal type "Both".'}
+                        </Text>
+                      </View>
+                    ) : (
+                      <View style={styles.pickerContainer}>
+                        {availableCategories.map(cat => (
+                          <Pressable
+                            key={cat.id}
+                            style={[
+                              styles.pickerOption,
+                              itemCategoryId === cat.id && styles.pickerOptionActive
+                            ]}
+                            onPress={() => setItemCategoryId(cat.id)}
+                          >
+                            <Text style={[
+                              styles.pickerOptionText,
+                              itemCategoryId === cat.id && styles.pickerOptionTextActive
+                            ]}>
+                              {cat.name}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    )}
+
+                    {isWineOrLibations && (
+                      <>
+                        <Text style={styles.label}>Subcategory (for Wine/Libations)</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={itemSubcategory}
+                          onChangeText={setItemSubcategory}
+                          placeholder="e.g., Sparkling, Chardonnay, Signature Cocktails"
+                          placeholderTextColor={colors.textSecondary}
+                        />
+                        <View style={styles.infoBox}>
+                          <IconSymbol name="info.circle.fill" color={colors.accent} size={20} />
+                          <Text style={styles.infoText}>
+                            Wine and Libations items must have meal type set to "Both" to appear in their dedicated categories.
+                          </Text>
+                        </View>
+                      </>
+                    )}
+
+                    <Text style={styles.label}>Dietary Info</Text>
+                    <View style={styles.dietarySelector}>
+                      {['gf', 'gfa', 'v', 'va'].map(info => (
+                        <Pressable
+                          key={info}
+                          style={[
+                            styles.dietaryButton,
+                            itemDietaryInfo.includes(info) && styles.dietaryButtonActive
+                          ]}
+                          onPress={() => toggleDietaryInfo(info)}
+                        >
+                          <Text style={[
+                            styles.dietaryButtonText,
+                            itemDietaryInfo.includes(info) && styles.dietaryButtonTextActive
+                          ]}>
+                            {info.toUpperCase()}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+
+                    <Text style={styles.label}>Display Order</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={itemDisplayOrder}
+                      onChangeText={setItemDisplayOrder}
+                      placeholder="0"
+                      placeholderTextColor={colors.textSecondary}
+                      keyboardType="number-pad"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.label}>Category Name *</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={categoryName}
+                      onChangeText={setCategoryName}
+                      placeholder="Enter category name"
+                      placeholderTextColor={colors.textSecondary}
+                    />
+
+                    <Text style={styles.label}>Meal Type</Text>
+                    <View style={styles.mealTypeSelector}>
+                      {(['lunch', 'dinner', 'both'] as const).map(type => (
+                        <Pressable
+                          key={type}
+                          style={[
+                            styles.mealTypeButton,
+                            categoryMealType === type && styles.mealTypeButtonActive
+                          ]}
+                          onPress={() => setCategoryMealType(type)}
+                        >
+                          <Text style={[
+                            styles.mealTypeButtonText,
+                            categoryMealType === type && styles.mealTypeButtonTextActive
+                          ]}>
+                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+
+                    <Text style={styles.label}>Display Order</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={categoryDisplayOrder}
+                      onChangeText={setCategoryDisplayOrder}
+                      placeholder="0"
+                      placeholderTextColor={colors.textSecondary}
+                      keyboardType="number-pad"
+                    />
+                  </>
+                )}
+              </ScrollView>
+
+              <View style={styles.modalActions}>
+                <Pressable
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.modalButton, styles.saveButton]}
+                  onPress={editMode === 'item' ? handleSaveItem : handleSaveCategory}
+                >
+                  <Text style={styles.saveButtonText}>Save</Text>
                 </Pressable>
               </View>
             </View>
@@ -658,110 +786,224 @@ export default function MenuEditorScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.background,
+    backgroundColor: colors.employeeBackground,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  addButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.managerAccent,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    gap: 8,
+  },
+  addCategoryButton: {
+    backgroundColor: colors.managerSecondary,
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  filters: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  filterScroll: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  filterButtonActive: {
+    backgroundColor: colors.managerAccent,
+    borderColor: colors.managerAccent,
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  filterButtonTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  categoriesHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  categoriesScroll: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    gap: 12,
+  },
+  categoryCard: {
+    backgroundColor: colors.card,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minWidth: 120,
+  },
+  categoryCardName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  categoryCardMealType: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textTransform: 'capitalize',
+  },
+  categoryDeleteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingBottom: 100,
+  },
+  categorySection: {
+    marginBottom: 24,
+  },
+  categoryTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  menuItemCard: {
+    backgroundColor: colors.card,
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  menuItemContent: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  menuItemThumbnail: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    backgroundColor: colors.border,
+  },
+  menuItemDetails: {
+    flex: 1,
+  },
+  menuItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  menuItemName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    flex: 1,
+  },
+  menuItemPrice: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.managerAccent,
+    marginLeft: 12,
+  },
+  menuItemDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  menuItemSubcategory: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.managerAccent,
+    marginBottom: 4,
+  },
+  menuItemFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  menuItemMealType: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.managerAccent,
+    textTransform: 'capitalize',
+  },
+  menuItemDietary: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  deleteButton: {
+    marginLeft: 'auto',
+    padding: 4,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 60,
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
     color: colors.textSecondary,
   },
-  scrollContent: {
-    padding: 16,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.accent,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    gap: 8,
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  itemRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  itemThumbnail: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    backgroundColor: colors.border,
-  },
-  itemInfo: {
+  errorContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 60,
   },
-  itemName: {
+  errorText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  itemDetail: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 4,
-  },
-  itemPrice: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.accent,
-    marginBottom: 4,
-  },
-  itemStatus: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.success,
-  },
-  itemStatusInactive: {
     color: colors.error,
-  },
-  itemActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButton: {
-    padding: 8,
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: colors.background,
-    borderRadius: 20,
-    width: '90%',
-    maxWidth: 500,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     maxHeight: '90%',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.25,
         shadowRadius: 10,
       },
@@ -784,9 +1026,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
   },
-  modalBody: {
+  modalScroll: {
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 16,
   },
   label: {
     fontSize: 14,
@@ -809,47 +1051,135 @@ const styles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: 'top',
   },
+  uploadButton: {
+    backgroundColor: colors.managerAccent,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  uploadButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  imagePreviewContainer: {
+    gap: 12,
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    backgroundColor: colors.border,
+  },
+  imageActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  changeImageButton: {
+    flex: 1,
+    backgroundColor: colors.managerAccent,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  changeImageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  removeImageButton: {
+    flex: 1,
+    backgroundColor: colors.error,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  removeImageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   pickerContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
   pickerOption: {
+    paddingVertical: 8,
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: 20,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
   },
   pickerOptionActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
+    backgroundColor: colors.managerAccent,
+    borderColor: colors.managerAccent,
   },
   pickerOptionText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
     color: colors.text,
   },
   pickerOptionTextActive: {
     color: '#FFFFFF',
+    fontWeight: '600',
   },
-  dietaryContainer: {
+  mealTypeSelector: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  mealTypeButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  mealTypeButtonActive: {
+    backgroundColor: colors.managerAccent,
+    borderColor: colors.managerAccent,
+  },
+  mealTypeButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text,
+  },
+  mealTypeButtonTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  dietarySelector: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
   },
   dietaryButton: {
-    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
   },
   dietaryButtonActive: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
+    backgroundColor: colors.managerAccent,
+    borderColor: colors.managerAccent,
   },
   dietaryButtonText: {
     fontSize: 12,
@@ -859,74 +1189,69 @@ const styles = StyleSheet.create({
   dietaryButtonTextActive: {
     color: '#FFFFFF',
   },
-  imagePreviewContainer: {
-    position: 'relative',
-    marginBottom: 12,
-  },
-  imagePreview: {
-    width: '100%',
-    height: 200,
-    borderRadius: 8,
-    backgroundColor: colors.border,
-  },
-  removeImageButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 12,
-  },
-  uploadButton: {
+  infoBox: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'flex-start',
     backgroundColor: colors.card,
+    padding: 12,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.accent,
-    borderRadius: 8,
-    paddingVertical: 12,
-    gap: 8,
+    gap: 12,
+    marginTop: 8,
   },
-  uploadButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.accent,
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.text,
+    lineHeight: 18,
   },
-  switchContainer: {
+  warningBox: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  switch: {
-    width: 50,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: colors.border,
-    padding: 2,
-  },
-  switchActive: {
-    backgroundColor: colors.accent,
-  },
-  switchThumb: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: '#FFFFFF',
-  },
-  switchThumbActive: {
-    transform: [{ translateX: 20 }],
-  },
-  saveButton: {
-    backgroundColor: colors.accent,
+    alignItems: 'flex-start',
+    backgroundColor: colors.card,
+    padding: 12,
     borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 24,
+    borderWidth: 1,
+    borderColor: colors.warning || '#FFA500',
+    gap: 12,
   },
-  saveButtonText: {
-    color: '#FFFFFF',
+  warningText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.text,
+    lineHeight: 18,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
+    color: colors.text,
+  },
+  saveButton: {
+    backgroundColor: colors.managerAccent,
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
