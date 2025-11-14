@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Platform, Modal, TextInput, Pressable, Alert, ActivityIndicator, Image } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
-import CustomerBanner from '@/components/CustomerBanner';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
@@ -139,8 +138,14 @@ export default function AboutScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       
       <View style={[commonStyles.container, styles.container]}>
-        {/* Hovering Header */}
-        <CustomerBanner onLoginPress={() => setLoginModalVisible(true)} />
+        {/* Floating Header Banner - No Login Icon */}
+        <View style={[styles.banner, { paddingTop: insets.top + 8 }]}>
+          <Image 
+            source={require('@/assets/images/c85af548-2321-40fa-ba5b-9fd0e298be4d.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
 
         <ScrollView
           contentContainerStyle={[
@@ -352,11 +357,44 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background,
   },
+  banner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    zIndex: 1000,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+      },
+    }),
+  },
+  logo: {
+    height: 40,
+    width: 200,
+  },
   scrollContent: {
-    paddingBottom: 20,
+    paddingBottom: 40,
   },
   scrollContentWithTabBar: {
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   loadingContainer: {
     flex: 1,

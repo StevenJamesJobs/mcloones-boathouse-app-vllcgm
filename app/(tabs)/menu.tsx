@@ -152,26 +152,29 @@ export default function MenuScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       
       <View style={[commonStyles.container, styles.container]}>
-        {/* Custom Header with DoorDash Button */}
-        <View style={[styles.customHeader, { paddingTop: insets.top }]}>
-          <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>Menu</Text>
-            <Pressable style={styles.doorDashHeaderButton} onPress={handleDoorDashPress}>
-              <IconSymbol 
-                ios_icon_name="bag.fill" 
-                android_material_icon_name="shopping_bag" 
-                size={20} 
-                color="#FFFFFF" 
-              />
-              <Text style={styles.doorDashHeaderButtonText}>Order on DoorDash</Text>
-            </Pressable>
-          </View>
+        {/* Floating Header Banner - No Login Icon */}
+        <View style={[styles.banner, { paddingTop: insets.top + 8 }]}>
+          <Image 
+            source={require('@/assets/images/c85af548-2321-40fa-ba5b-9fd0e298be4d.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Pressable style={styles.doorDashButton} onPress={handleDoorDashPress}>
+            <IconSymbol 
+              ios_icon_name="bag.fill" 
+              android_material_icon_name="shopping_bag" 
+              size={18} 
+              color="#FFFFFF" 
+            />
+            <Text style={styles.doorDashButtonText}>Order on DoorDash</Text>
+          </Pressable>
         </View>
 
         {/* Content with top padding */}
-        <View style={[styles.content, { paddingTop: 8 }]}>
+        <View style={[styles.content, { paddingTop: bannerHeight + 8 }]}>
           {/* Category Dropdown Selector */}
           <View style={styles.dropdownContainer}>
+            <Text style={styles.selectMenuText}>Select a menu</Text>
             <Pressable
               style={styles.dropdownButton}
               onPress={() => setDropdownVisible(!dropdownVisible)}
@@ -550,32 +553,40 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background,
   },
-  customHeader: {
-    backgroundColor: colors.primary,
+  banner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 4,
+    zIndex: 1000,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+      },
+    }),
   },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  logo: {
+    height: 40,
+    width: 200,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  doorDashHeaderButton: {
+  doorDashButton: {
     backgroundColor: '#FF3008',
     flexDirection: 'row',
     alignItems: 'center',
@@ -585,9 +596,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 6,
   },
-  doorDashHeaderButtonText: {
+  doorDashButtonText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
   },
   content: {
@@ -600,6 +611,12 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
     backgroundColor: colors.background,
     zIndex: 1000,
+  },
+  selectMenuText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 8,
   },
   dropdownButton: {
     flexDirection: 'row',
@@ -709,9 +726,10 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingVertical: 16,
+    paddingBottom: 40,
   },
   scrollContentWithTabBar: {
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   categorySection: {
     marginBottom: 24,
