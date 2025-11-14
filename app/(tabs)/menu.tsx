@@ -242,16 +242,33 @@ export default function MenuScreen() {
               ) : (
                 specials.map((special) => (
                   <View key={special.id} style={commonStyles.card}>
-                    <Text style={styles.specialTitle}>{special.title}</Text>
-                    <Text style={styles.specialDescription}>{special.description}</Text>
-                    {special.price && (
-                      <Text style={styles.specialPrice}>${special.price.toFixed(2)}</Text>
-                    )}
-                    {special.valid_until && (
-                      <Text style={styles.specialValidUntil}>
-                        Valid until {new Date(special.valid_until).toLocaleDateString()}
-                      </Text>
-                    )}
+                    <View style={styles.menuItemContent}>
+                      {special.image_url && (
+                        <Image
+                          source={{ uri: special.image_url }}
+                          style={styles.menuItemThumbnail}
+                          resizeMode="cover"
+                        />
+                      )}
+                      <View style={styles.menuItemDetails}>
+                        <View style={styles.menuItemHeader}>
+                          <View style={styles.menuItemTitleContainer}>
+                            <Text style={styles.menuItemName}>{special.title}</Text>
+                          </View>
+                          {special.price && (
+                            <Text style={styles.menuItemPrice}>${special.price.toFixed(2)}</Text>
+                          )}
+                        </View>
+                        {special.description && (
+                          <Text style={styles.menuItemDescription}>{special.description}</Text>
+                        )}
+                        {special.valid_until && (
+                          <Text style={styles.specialValidUntil}>
+                            Valid until {new Date(special.valid_until).toLocaleDateString()}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
                   </View>
                 ))
               )}
@@ -546,28 +563,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 20,
   },
-  specialTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  specialDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  specialPrice: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.accent,
-    marginBottom: 4,
-  },
   specialValidUntil: {
     fontSize: 12,
     color: colors.textSecondary,
     fontStyle: 'italic',
+    marginTop: 4,
   },
   loadingContainer: {
     flex: 1,

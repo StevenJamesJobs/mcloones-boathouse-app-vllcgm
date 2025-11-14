@@ -180,23 +180,33 @@ export default function HomeScreen() {
             ) : (
               specials.map((special) => (
                 <View key={special.id} style={commonStyles.card}>
-                  {special.image_url && (
-                    <Image
-                      source={{ uri: special.image_url }}
-                      style={styles.specialThumbnail}
-                      resizeMode="cover"
-                    />
-                  )}
-                  <Text style={styles.specialTitle}>{special.title}</Text>
-                  <Text style={styles.specialDescription}>{special.description}</Text>
-                  {special.price && (
-                    <Text style={styles.specialPrice}>${special.price.toFixed(2)}</Text>
-                  )}
-                  {special.valid_until && (
-                    <Text style={styles.specialValidUntil}>
-                      Valid until {new Date(special.valid_until).toLocaleDateString()}
-                    </Text>
-                  )}
+                  <View style={styles.specialContent}>
+                    {special.image_url && (
+                      <Image
+                        source={{ uri: special.image_url }}
+                        style={styles.specialThumbnail}
+                        resizeMode="cover"
+                      />
+                    )}
+                    <View style={styles.specialDetails}>
+                      <View style={styles.specialHeader}>
+                        <View style={styles.specialTitleContainer}>
+                          <Text style={styles.specialTitle}>{special.title}</Text>
+                        </View>
+                        {special.price && (
+                          <Text style={styles.specialPrice}>${special.price.toFixed(2)}</Text>
+                        )}
+                      </View>
+                      {special.description && (
+                        <Text style={styles.specialDescription}>{special.description}</Text>
+                      )}
+                      {special.valid_until && (
+                        <Text style={styles.specialValidUntil}>
+                          Valid until {new Date(special.valid_until).toLocaleDateString()}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
                 </View>
               ))
             )}
@@ -455,12 +465,28 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
   },
+  specialContent: {
+    flexDirection: 'row',
+    gap: 12,
+  },
   specialThumbnail: {
-    width: '100%',
-    height: 150,
+    width: 100,
+    height: 100,
     borderRadius: 8,
-    marginBottom: 12,
     backgroundColor: colors.border,
+  },
+  specialDetails: {
+    flex: 1,
+  },
+  specialHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  specialTitleContainer: {
+    flex: 1,
+    marginRight: 12,
   },
   specialTitle: {
     fontSize: 18,
@@ -471,13 +497,13 @@ const styles = StyleSheet.create({
   specialDescription: {
     fontSize: 14,
     color: colors.textSecondary,
-    marginBottom: 8,
+    lineHeight: 20,
+    marginBottom: 4,
   },
   specialPrice: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     color: colors.accent,
-    marginBottom: 4,
   },
   specialValidUntil: {
     fontSize: 12,
