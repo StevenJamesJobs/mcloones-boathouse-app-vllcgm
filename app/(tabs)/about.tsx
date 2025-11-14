@@ -41,7 +41,12 @@ export default function AboutScreen() {
 
   const handleGalleryPress = () => {
     console.log('Gallery button pressed - navigating to gallery');
-    router.push('/gallery');
+    try {
+      router.push('/(tabs)/gallery');
+    } catch (error) {
+      console.error('Navigation error:', error);
+      Alert.alert('Error', 'Could not navigate to gallery');
+    }
   };
 
   const bannerHeight = insets.top + 60;
@@ -177,6 +182,7 @@ export default function AboutScreen() {
                         pressed && styles.galleryBannerPressed
                       ]}
                       onPress={handleGalleryPress}
+                      activeOpacity={0.8}
                     >
                       <View style={styles.galleryBannerContent}>
                         <View style={styles.galleryBannerLeft}>
