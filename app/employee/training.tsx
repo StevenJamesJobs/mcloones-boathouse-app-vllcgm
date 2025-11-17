@@ -44,7 +44,7 @@ export default function GuidesTrainingScreen() {
       // For mobile, download and share
       const fileExtension = fileType.toLowerCase();
       const fileName = `${title.replace(/[^a-z0-9]/gi, '_')}.${fileExtension}`;
-      const fileUri = FileSystem.documentDirectory + fileName;
+      const fileUri = `${FileSystem.documentDirectory}${fileName}`;
 
       Alert.alert('Downloading', 'Please wait while we download the file...');
 
@@ -98,7 +98,7 @@ export default function GuidesTrainingScreen() {
     }
     acc[guide.category].push(guide);
     return acc;
-  }, {} as Record<string, typeof guides>);
+  }, {} as Record<string, (typeof guides)>);
 
   const categories: CategoryType[] = [
     'Employee HandBooks',
