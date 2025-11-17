@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Platform, Alert, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -8,8 +8,11 @@ import { useGuides } from '@/hooks/useGuides';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
+type CategoryType = 'Employee HandBooks' | 'Full Menus' | 'Cheat Sheets' | 'Events Flyers';
+
 export default function GuidesTrainingScreen() {
   const { guides, loading, error } = useGuides();
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType>('Employee HandBooks');
 
   const getIconForType = (type: string) => {
     switch (type.toLowerCase()) {
@@ -97,12 +100,15 @@ export default function GuidesTrainingScreen() {
     return acc;
   }, {} as Record<string, typeof guides>);
 
-  const categories: ('Employee HandBooks' | 'Full Menus' | 'Cheat Sheets' | 'Events Flyers')[] = [
+  const categories: CategoryType[] = [
     'Employee HandBooks',
     'Full Menus',
     'Cheat Sheets',
     'Events Flyers',
   ];
+
+  // Get guides for selected category
+  const selectedGuides = groupedGuides[selectedCategory] || [];
 
   return (
     <>
@@ -133,30 +139,59 @@ export default function GuidesTrainingScreen() {
             <Text style={styles.errorText}>{error}</Text>
           </View>
         ) : (
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <Text style={styles.introText}>
-              Access all training materials, guides, handbooks, and resources here.
-            </Text>
+          <>
+            {/* Tab Navigation */}
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.tabContainer}
+              contentContainerStyle={styles.tabContentContainer}
+            >
+              {categories.map((category) => {
+                const isSelected = selectedCategory === category;
+                const categoryCount = (groupedGuides[category] || []).length;
+                
+                return (
+                  <Pressable
+                    key={category}
+                    style={[
+                      styles.tab,
+                      isSelected && styles.tabSelected,
+                    ]}
+                    onPress={() => setSelectedCategory(category)}
+                  >
+                    <Text style={[
+                      styles.tabText,
+                      isSelected && styles.tabTextSelected,
+                    ]}>
+                      {category}
+                    </Text>
+                    {categoryCount > 0 && (
+                      <View style={[
+                        styles.badge,
+                        isSelected && styles.badgeSelected,
+                      ]}>
+                        <Text style={[
+                          styles.badgeText,
+                          isSelected && styles.badgeTextSelected,
+                        ]}>
+                          {categoryCount}
+                        </Text>
+                      </View>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
 
-            {categories.map((category) => {
-              const categoryGuides = groupedGuides[category] || [];
-              if (categoryGuides.length === 0) return null;
-
-              return (
-                <View key={category} style={styles.categorySection}>
-                  <View style={styles.categoryHeader}>
-                    <IconSymbol 
-                      ios_icon_name="folder.fill" 
-                      android_material_icon_name="folder" 
-                      color={colors.employeeAccent} 
-                      size={24} 
-                    />
-                    <Text style={styles.categoryTitle}>{category}</Text>
-                  </View>
-                  {categoryGuides.map((guide) => {
+            {/* Content Area */}
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {selectedGuides.length > 0 ? (
+                <>
+                  {selectedGuides.map((guide) => {
                     const icon = getIconForType(guide.file_type);
                     return (
                       <Pressable
@@ -197,37 +232,39 @@ export default function GuidesTrainingScreen() {
                       </Pressable>
                     );
                   })}
+                </>
+              ) : (
+                <View style={styles.emptyState}>
+                  <IconSymbol 
+                    ios_icon_name="doc.text.magnifyingglass" 
+                    android_material_icon_name="search" 
+                    color={colors.textSecondary} 
+                    size={64} 
+                  />
+                  <Text style={styles.emptyStateText}>
+                    No {selectedCategory.toLowerCase()} available yet
+                  </Text>
+                  <Text style={styles.emptyStateSubtext}>
+                    Check back later for materials in this category
+                  </Text>
                 </View>
-              );
-            })}
+              )}
 
-            {guides.length === 0 && (
-              <View style={styles.emptyState}>
-                <IconSymbol 
-                  ios_icon_name="doc.text.magnifyingglass" 
-                  android_material_icon_name="search" 
-                  color={colors.textSecondary} 
-                  size={64} 
-                />
-                <Text style={styles.emptyStateText}>No guides available yet</Text>
-                <Text style={styles.emptyStateSubtext}>
-                  Check back later for training materials and resources
-                </Text>
-              </View>
-            )}
-
-            <View style={styles.helpCard}>
-              <IconSymbol 
-                ios_icon_name="questionmark.circle.fill" 
-                android_material_icon_name="help" 
-                color={colors.employeeAccent} 
-                size={24} 
-              />
-              <Text style={styles.helpText}>
-                Need help or have questions? Contact your manager or the training department.
-              </Text>
-            </View>
-          </ScrollView>
+              {selectedGuides.length > 0 && (
+                <View style={styles.helpCard}>
+                  <IconSymbol 
+                    ios_icon_name="questionmark.circle.fill" 
+                    android_material_icon_name="help" 
+                    color={colors.employeeAccent} 
+                    size={24} 
+                  />
+                  <Text style={styles.helpText}>
+                    Need help or have questions? Contact your manager or the training department.
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+          </>
         )}
       </View>
     </>
@@ -237,11 +274,6 @@ export default function GuidesTrainingScreen() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.employeeBackground,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    paddingBottom: 100,
   },
   loadingContainer: {
     flex: 1,
@@ -267,26 +299,64 @@ const styles = StyleSheet.create({
     color: colors.error,
     textAlign: 'center',
   },
-  introText: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    lineHeight: 24,
-    marginBottom: 24,
-    textAlign: 'center',
+  tabContainer: {
+    maxHeight: 60,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.employeeCard,
   },
-  categorySection: {
-    marginBottom: 24,
+  tabContentContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 8,
   },
-  categoryHeader: {
+  tab: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: colors.employeeBackground,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 8,
   },
-  categoryTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+  tabSelected: {
+    backgroundColor: colors.employeeAccent,
+    borderColor: colors.employeeAccent,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
     color: colors.text,
-    marginLeft: 8,
+  },
+  tabTextSelected: {
+    color: '#FFFFFF',
+  },
+  badge: {
+    backgroundColor: colors.employeeAccent,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  badgeSelected: {
+    backgroundColor: '#FFFFFF',
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  badgeTextSelected: {
+    color: colors.employeeAccent,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 20,
+    paddingBottom: 100,
   },
   guideHeader: {
     flexDirection: 'row',
