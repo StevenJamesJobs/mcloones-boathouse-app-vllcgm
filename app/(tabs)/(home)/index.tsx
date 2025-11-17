@@ -16,10 +16,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loggingIn, setLoggingIn] = useState(false);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
-  const { login, user } = useAuth();
+  const { login, employee } = useAuth();
   const { specials, loading: specialsLoading } = useWeeklySpecials();
   const { events, loading: eventsLoading } = useEvents();
   const { contactInfo, loading: contactLoading } = useContactUs();
@@ -27,20 +28,32 @@ export default function HomeScreen() {
   const { tagline, loading: taglineLoading } = useTagline();
   const insets = useSafeAreaInsets();
 
-  const handleLogin = () => {
-    if (login(email, password)) {
+  const handleLogin = async () => {
+    if (!username || !password) {
+      Alert.alert('Error', 'Please enter username and password');
+      return;
+    }
+
+    setLoggingIn(true);
+    const success = await login(username, password);
+    setLoggingIn(false);
+
+    if (success && employee) {
       setLoginModalVisible(false);
-      setEmail('');
+      setUsername('');
       setPassword('');
       
-      // Navigate based on role
-      if (user?.role === 'manager') {
-        router.push('/manager/home');
-      } else if (user?.role === 'employee') {
-        router.push('/employee/home');
+      // Check if password change is required
+      if (employee.must_change_password) {
+        router.push('/employee/profile');
+      } else {
+        // Navigate based on role
+        if (employee.role === 'owner_manager' || employee.role === 'manager') {
+          router.push('/manager/home');
+        } else {
+          router.push('/employee/home');
+        }
       }
-    } else {
-      Alert.alert('Login Failed', 'Invalid email or password');
     }
   };
 
@@ -50,7 +63,8 @@ export default function HomeScreen() {
         {[1, 2, 3, 4, 5].map((star) => (
           <IconSymbol
             key={star}
-            name="star.fill"
+            ios_icon_name="star.fill"
+            android_material_icon_name="star"
             size={14}
             color={star <= rating ? '#FFD700' : '#ccc'}
           />
@@ -91,7 +105,7 @@ export default function HomeScreen() {
             resizeMode="contain"
           />
           <Pressable onPress={() => setLoginModalVisible(true)} style={styles.loginButton}>
-            <IconSymbol name="person.circle.fill" color={colors.accent} size={32} />
+            <IconSymbol ios_icon_name="person.circle.fill" android_material_icon_name="account_circle" color={colors.accent} size={32} />
           </Pressable>
         </View>
 
@@ -243,7 +257,7 @@ export default function HomeScreen() {
                   </View>
                 ))}
                 <Pressable style={styles.leaveReviewButton} onPress={handleLeaveReview}>
-                  <IconSymbol name="star.fill" size={20} color="#fff" />
+                  <IconSymbol ios_icon_name="star.fill" android_material_icon_name="star" size={20} color="#fff" />
                   <Text style={styles.leaveReviewText}>Leave a Review on Google</Text>
                 </Pressable>
               </>
@@ -261,15 +275,15 @@ export default function HomeScreen() {
             ) : contactInfo ? (
               <View style={commonStyles.card}>
                 <View style={styles.contactRow}>
-                  <IconSymbol name="phone.fill" color={colors.accent} size={20} />
+                  <IconSymbol ios_icon_name="phone.fill" android_material_icon_name="phone" color={colors.accent} size={20} />
                   <Text style={styles.contactText}>{contactInfo.phone}</Text>
                 </View>
                 <View style={styles.contactRow}>
-                  <IconSymbol name="envelope.fill" color={colors.accent} size={20} />
+                  <IconSymbol ios_icon_name="envelope.fill" android_material_icon_name="email" color={colors.accent} size={20} />
                   <Text style={styles.contactText}>{contactInfo.email}</Text>
                 </View>
                 <View style={styles.contactRow}>
-                  <IconSymbol name="mappin.circle.fill" color={colors.accent} size={20} />
+                  <IconSymbol ios_icon_name="mappin.circle.fill" android_material_icon_name="location_on" color={colors.accent} size={20} />
                   <Text style={styles.contactText}>{contactInfo.address}</Text>
                 </View>
                 {(contactInfo.hours_weekday || contactInfo.hours_weekend) && (
@@ -309,7 +323,7 @@ export default function HomeScreen() {
             style={styles.closeButton}
             onPress={() => setExpandedImage(null)}
           >
-            <IconSymbol name="xmark.circle.fill" color="#FFFFFF" size={36} />
+            <IconSymbol ios_icon_name="xmark.circle.fill" android_material_icon_name="cancel" color="#FFFFFF" size={36} />
           </Pressable>
           {expandedImage && (
             <Image
@@ -333,19 +347,18 @@ export default function HomeScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Employee Login</Text>
               <Pressable onPress={() => setLoginModalVisible(false)}>
-                <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
+                <IconSymbol ios_icon_name="xmark.circle.fill" android_material_icon_name="cancel" color={colors.textSecondary} size={28} />
               </Pressable>
             </View>
             
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Email</Text>
+              <Text style={styles.inputLabel}>Username</Text>
               <TextInput
                 style={styles.input}
-                placeholder="employee@mcloones.com"
-                value={email}
-                onChangeText={setEmail}
+                placeholder="Enter username"
+                value={username}
+                onChangeText={setUsername}
                 autoCapitalize="none"
-                keyboardType="email-address"
               />
             </View>
 
@@ -360,15 +373,22 @@ export default function HomeScreen() {
               />
             </View>
 
-            <Pressable style={styles.loginButton} onPress={handleLogin}>
-              <Text style={styles.loginButtonText}>Login</Text>
+            <Pressable 
+              style={[styles.loginButtonStyle, loggingIn && styles.loginButtonDisabled]} 
+              onPress={handleLogin}
+              disabled={loggingIn}
+            >
+              {loggingIn ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.loginButtonText}>Login</Text>
+              )}
             </Pressable>
 
             <Text style={styles.helpText}>
-              Demo credentials:{'\n'}
-              Manager: manager@mcloones.com{'\n'}
-              Employee: employee@mcloones.com{'\n'}
-              Password: any
+              Enter your username and password to access the employee portal.
+              {'\n\n'}
+              Default password for new accounts: mcloones1
             </Text>
           </View>
         </View>
@@ -690,6 +710,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     backgroundColor: colors.background,
+  },
+  loginButtonStyle: {
+    backgroundColor: colors.accent,
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  loginButtonDisabled: {
+    opacity: 0.6,
   },
   loginButtonText: {
     color: '#FFFFFF',
