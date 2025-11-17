@@ -6,6 +6,7 @@ import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
+import { WeatherDisplay } from '@/components/WeatherDisplay';
 import { upcomingShifts } from '@/data/mockData';
 
 export default function EmployeeHomeScreen() {
@@ -21,12 +22,6 @@ export default function EmployeeHomeScreen() {
   const handleLogout = () => {
     logout();
     router.replace('/(tabs)/(home)/');
-  };
-
-  // Mock weather data
-  const weather = {
-    temperature: 72,
-    condition: 'Partly Cloudy',
   };
 
   const getPriorityColor = (priority: string) => {
@@ -53,7 +48,12 @@ export default function EmployeeHomeScreen() {
           headerTintColor: colors.text,
           headerRight: () => (
             <Pressable onPress={handleLogout} style={styles.logoutButton}>
-              <IconSymbol name="rectangle.portrait.and.arrow.right" color={colors.accent} size={24} />
+              <IconSymbol 
+                ios_icon_name="rectangle.portrait.and.arrow.right" 
+                android_material_icon_name="logout" 
+                color={colors.accent} 
+                size={24} 
+              />
             </Pressable>
           ),
         }}
@@ -71,19 +71,17 @@ export default function EmployeeHomeScreen() {
           </View>
 
           {/* Weather Card */}
-          <View style={commonStyles.employeeCard}>
-            <View style={styles.cardHeader}>
-              <IconSymbol name="cloud.sun.fill" color={colors.employeeAccent} size={24} />
-              <Text style={styles.cardTitle}>Today&apos;s Weather</Text>
-            </View>
-            <Text style={styles.weatherTemp}>{weather.temperature}°F</Text>
-            <Text style={styles.weatherCondition}>{weather.condition}</Text>
-          </View>
+          <WeatherDisplay variant="employee" />
 
           {/* Upcoming Shifts */}
           <View style={commonStyles.employeeCard}>
             <View style={styles.cardHeader}>
-              <IconSymbol name="calendar" color={colors.employeeAccent} size={24} />
+              <IconSymbol 
+                ios_icon_name="calendar" 
+                android_material_icon_name="calendar_today" 
+                color={colors.employeeAccent} 
+                size={24} 
+              />
               <Text style={styles.cardTitle}>Your Upcoming Shifts</Text>
             </View>
             {upcomingShifts.map((shift) => (
@@ -108,7 +106,12 @@ export default function EmployeeHomeScreen() {
           {/* Announcements */}
           <View style={commonStyles.employeeCard}>
             <View style={styles.cardHeader}>
-              <IconSymbol name="megaphone.fill" color={colors.employeeAccent} size={24} />
+              <IconSymbol 
+                ios_icon_name="megaphone.fill" 
+                android_material_icon_name="campaign" 
+                color={colors.employeeAccent} 
+                size={24} 
+              />
               <Text style={styles.cardTitle}>Announcements</Text>
             </View>
             {announcements.length === 0 ? (
@@ -140,14 +143,24 @@ export default function EmployeeHomeScreen() {
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/training')}
             >
-              <IconSymbol name="book.fill" color={colors.employeeAccent} size={32} />
+              <IconSymbol 
+                ios_icon_name="book.fill" 
+                android_material_icon_name="menu_book" 
+                color={colors.employeeAccent} 
+                size={32} 
+              />
               <Text style={styles.quickLinkText}>Training</Text>
             </Pressable>
             <Pressable
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/rewards')}
             >
-              <IconSymbol name="star.fill" color={colors.employeeAccent} size={32} />
+              <IconSymbol 
+                ios_icon_name="star.fill" 
+                android_material_icon_name="star" 
+                color={colors.employeeAccent} 
+                size={32} 
+              />
               <Text style={styles.quickLinkText}>Rewards</Text>
             </Pressable>
           </View>
@@ -164,6 +177,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingVertical: 20,
+    paddingBottom: 100,
   },
   logoutButton: {
     padding: 8,
@@ -195,15 +209,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     marginLeft: 8,
-  },
-  weatherTemp: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  weatherCondition: {
-    fontSize: 18,
-    color: colors.textSecondary,
   },
   shiftItem: {
     flexDirection: 'row',

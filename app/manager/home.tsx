@@ -6,6 +6,7 @@ import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { MenuDataSeeder } from '@/components/MenuDataSeeder';
+import { WeatherDisplay } from '@/components/WeatherDisplay';
 import { upcomingShifts } from '@/data/mockData';
 
 export default function ManagerHomeScreen() {
@@ -22,25 +23,19 @@ export default function ManagerHomeScreen() {
     router.replace('/(tabs)/(home)/');
   };
 
-  // Mock weather data
-  const weather = {
-    temperature: 72,
-    condition: 'Partly Cloudy',
-  };
-
   const managerTools = [
-    { id: 1, title: 'Menu Editor', icon: 'fork.knife', route: '/manager/menu-editor', color: colors.managerAccent },
-    { id: 2, title: 'Weekly Specials', icon: 'star.fill', route: '/manager/weekly-specials-editor', color: colors.managerAccent },
-    { id: 3, title: 'Events Editor', icon: 'calendar', route: '/manager/events-editor', color: colors.managerAccent },
-    { id: 4, title: 'Gallery Editor', icon: 'photo.on.rectangle', route: '/manager/gallery-editor', color: colors.managerAccent },
-    { id: 5, title: 'Announcements', icon: 'megaphone.fill', route: '/manager/announcements-editor', color: colors.managerAccent },
-    { id: 6, title: 'About Us Editor', icon: 'info.circle.fill', route: '/manager/about-us-editor', color: colors.managerAccent },
-    { id: 7, title: 'Contact Us Editor', icon: 'phone.fill', route: '/manager/contact-us-editor', color: colors.managerAccent },
-    { id: 8, title: 'Tagline Editor', icon: 'text.quote', route: '/manager/tagline-editor', color: colors.managerAccent },
-    { id: 9, title: 'Reviews Editor', icon: 'star.fill', route: '/manager/reviews-editor', color: colors.managerAccent },
-    { id: 10, title: 'Employees', icon: 'person.3.fill', route: '/manager/employees', color: colors.managerSecondary },
-    { id: 11, title: 'Schedule', icon: 'calendar.badge.clock', route: '/manager/schedule', color: colors.managerSecondary },
-    { id: 12, title: 'Rewards', icon: 'dollarsign.circle.fill', route: '/manager/rewards', color: colors.managerSecondary },
+    { id: 1, title: 'Menu Editor', icon: 'fork.knife', androidIcon: 'restaurant', route: '/manager/menu-editor', color: colors.managerAccent },
+    { id: 2, title: 'Weekly Specials', icon: 'star.fill', androidIcon: 'star', route: '/manager/weekly-specials-editor', color: colors.managerAccent },
+    { id: 3, title: 'Events Editor', icon: 'calendar', androidIcon: 'event', route: '/manager/events-editor', color: colors.managerAccent },
+    { id: 4, title: 'Gallery Editor', icon: 'photo.on.rectangle', androidIcon: 'photo_library', route: '/manager/gallery-editor', color: colors.managerAccent },
+    { id: 5, title: 'Announcements', icon: 'megaphone.fill', androidIcon: 'campaign', route: '/manager/announcements-editor', color: colors.managerAccent },
+    { id: 6, title: 'About Us Editor', icon: 'info.circle.fill', androidIcon: 'info', route: '/manager/about-us-editor', color: colors.managerAccent },
+    { id: 7, title: 'Contact Us Editor', icon: 'phone.fill', androidIcon: 'phone', route: '/manager/contact-us-editor', color: colors.managerAccent },
+    { id: 8, title: 'Tagline Editor', icon: 'text.quote', androidIcon: 'format_quote', route: '/manager/tagline-editor', color: colors.managerAccent },
+    { id: 9, title: 'Reviews Editor', icon: 'star.fill', androidIcon: 'star', route: '/manager/reviews-editor', color: colors.managerAccent },
+    { id: 10, title: 'Employees', icon: 'person.3.fill', androidIcon: 'people', route: '/manager/employees', color: colors.managerSecondary },
+    { id: 11, title: 'Schedule', icon: 'calendar.badge.clock', androidIcon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
+    { id: 12, title: 'Rewards', icon: 'dollarsign.circle.fill', androidIcon: 'attach_money', route: '/manager/rewards', color: colors.managerSecondary },
   ];
 
   return (
@@ -54,7 +49,12 @@ export default function ManagerHomeScreen() {
           headerTintColor: '#FFFFFF',
           headerRight: () => (
             <Pressable onPress={handleLogout} style={styles.logoutButton}>
-              <IconSymbol name="rectangle.portrait.and.arrow.right" color="#FFFFFF" size={24} />
+              <IconSymbol 
+                ios_icon_name="rectangle.portrait.and.arrow.right" 
+                android_material_icon_name="logout" 
+                color="#FFFFFF" 
+                size={24} 
+              />
             </Pressable>
           ),
         }}
@@ -75,19 +75,17 @@ export default function ManagerHomeScreen() {
           <MenuDataSeeder />
 
           {/* Weather Card */}
-          <View style={commonStyles.employeeCard}>
-            <View style={styles.cardHeader}>
-              <IconSymbol name="cloud.sun.fill" color={colors.managerAccent} size={24} />
-              <Text style={styles.cardTitle}>Today&apos;s Weather</Text>
-            </View>
-            <Text style={styles.weatherTemp}>{weather.temperature}°F</Text>
-            <Text style={styles.weatherCondition}>{weather.condition}</Text>
-          </View>
+          <WeatherDisplay variant="manager" />
 
           {/* Upcoming Schedule */}
           <View style={commonStyles.employeeCard}>
             <View style={styles.cardHeader}>
-              <IconSymbol name="calendar" color={colors.managerAccent} size={24} />
+              <IconSymbol 
+                ios_icon_name="calendar" 
+                android_material_icon_name="calendar_today" 
+                color={colors.managerAccent} 
+                size={24} 
+              />
               <Text style={styles.cardTitle}>Upcoming Schedule</Text>
             </View>
             {upcomingShifts.slice(0, 3).map((shift) => (
@@ -119,7 +117,12 @@ export default function ManagerHomeScreen() {
                   style={[styles.toolCard, { backgroundColor: tool.color }]}
                   onPress={() => router.push(tool.route as any)}
                 >
-                  <IconSymbol name={tool.icon as any} color="#FFFFFF" size={32} />
+                  <IconSymbol 
+                    ios_icon_name={tool.icon as any} 
+                    android_material_icon_name={tool.androidIcon} 
+                    color="#FFFFFF" 
+                    size={32} 
+                  />
                   <Text style={styles.toolTitle}>{tool.title}</Text>
                 </Pressable>
               ))}
@@ -138,6 +141,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingVertical: 20,
+    paddingBottom: 100,
   },
   logoutButton: {
     padding: 8,
@@ -169,15 +173,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     marginLeft: 8,
-  },
-  weatherTemp: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  weatherCondition: {
-    fontSize: 18,
-    color: colors.textSecondary,
   },
   shiftItem: {
     flexDirection: 'row',

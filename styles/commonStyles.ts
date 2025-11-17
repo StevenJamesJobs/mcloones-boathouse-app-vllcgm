@@ -11,7 +11,7 @@ export const colors = {
   accent: '#3289a8',       // Steel blue // Buttons and Tagline
 	secondaryaccent: '#000000',    // Black
 	taglineaccent: '#000000',    //Black
-  card: '#F0F8FF',         // Alice blue
+  card: '#f0f8ff',         // Alice blue
   highlight: '#3289a8',     // Light sky blue
   border: '#FFFFFF',    // Thumbnail backgroud
   error: '#DC3545',  
