@@ -49,7 +49,7 @@ export function useWeather(): UseWeatherReturn {
       setError(null);
 
       const response = await fetch(
-        `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${encodeURIComponent(LOCATION)}&days=3&aqi=no&alerts=no`
+        `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${encodeURIComponent(LOCATION)}&days=4&aqi=no&alerts=no`
       );
 
       if (!response.ok) {

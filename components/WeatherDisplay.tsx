@@ -58,9 +58,10 @@ export function WeatherDisplay({ variant = 'employee' }: WeatherDisplayProps) {
   }
 
   const today = weatherData.forecast.forecastday[0];
-  // Extended forecast shows the NEXT two days (excluding today)
+  // Extended forecast shows the NEXT three days (excluding today)
   const tomorrow = weatherData.forecast.forecastday[1];
   const dayAfter = weatherData.forecast.forecastday[2];
+  const thirdDay = weatherData.forecast.forecastday[3];
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -122,7 +123,7 @@ export function WeatherDisplay({ variant = 'employee' }: WeatherDisplayProps) {
         </Text>
       </View>
 
-      {/* Extended Forecast - Next Two Days Only */}
+      {/* Extended Forecast - Next Three Days Only */}
       <View style={styles.extendedForecast}>
         <Text style={styles.extendedTitle}>Extended Forecast</Text>
         <View style={styles.forecastDays}>
@@ -154,6 +155,22 @@ export function WeatherDisplay({ variant = 'employee' }: WeatherDisplayProps) {
               <View style={styles.forecastTemps}>
                 <Text style={styles.forecastHigh}>{Math.round(dayAfter.day.maxtemp_f)}°</Text>
                 <Text style={styles.forecastLow}>{Math.round(dayAfter.day.mintemp_f)}°</Text>
+              </View>
+            </View>
+          )}
+
+          {/* Third Day (Day 3) */}
+          {thirdDay && (
+            <View style={[styles.forecastDay, { backgroundColor: primaryColor }]}>
+              <Text style={styles.forecastDayName}>{formatDate(thirdDay.date)}</Text>
+              <Image
+                source={{ uri: `https:${thirdDay.day.condition.icon}` }}
+                style={styles.forecastIcon}
+                resizeMode="contain"
+              />
+              <View style={styles.forecastTemps}>
+                <Text style={styles.forecastHigh}>{Math.round(thirdDay.day.maxtemp_f)}°</Text>
+                <Text style={styles.forecastLow}>{Math.round(thirdDay.day.mintemp_f)}°</Text>
               </View>
             </View>
           )}
