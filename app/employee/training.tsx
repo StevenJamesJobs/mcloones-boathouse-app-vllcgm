@@ -5,7 +5,7 @@ import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useGuides } from '@/hooks/useGuides';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 export default function GuidesTrainingScreen() {
@@ -97,7 +97,7 @@ export default function GuidesTrainingScreen() {
     return acc;
   }, {} as Record<string, typeof guides>);
 
-  const categories: Array<'Employee HandBooks' | 'Full Menus' | 'Cheat Sheets' | 'Events Flyers'> = [
+  const categories: ('Employee HandBooks' | 'Full Menus' | 'Cheat Sheets' | 'Events Flyers')[] = [
     'Employee HandBooks',
     'Full Menus',
     'Cheat Sheets',
