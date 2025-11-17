@@ -58,6 +58,7 @@ export function WeatherDisplay({ variant = 'employee' }: WeatherDisplayProps) {
   }
 
   const today = weatherData.forecast.forecastday[0];
+  // Extended forecast shows the NEXT two days (excluding today)
   const tomorrow = weatherData.forecast.forecastday[1];
   const dayAfter = weatherData.forecast.forecastday[2];
 
@@ -121,37 +122,41 @@ export function WeatherDisplay({ variant = 'employee' }: WeatherDisplayProps) {
         </Text>
       </View>
 
-      {/* Extended Forecast */}
+      {/* Extended Forecast - Next Two Days Only */}
       <View style={styles.extendedForecast}>
         <Text style={styles.extendedTitle}>Extended Forecast</Text>
         <View style={styles.forecastDays}>
-          {/* Tomorrow */}
-          <View style={[styles.forecastDay, { backgroundColor: primaryColor }]}>
-            <Text style={styles.forecastDayName}>{formatDate(tomorrow.date)}</Text>
-            <Image
-              source={{ uri: `https:${tomorrow.day.condition.icon}` }}
-              style={styles.forecastIcon}
-              resizeMode="contain"
-            />
-            <View style={styles.forecastTemps}>
-              <Text style={styles.forecastHigh}>{Math.round(tomorrow.day.maxtemp_f)}°</Text>
-              <Text style={styles.forecastLow}>{Math.round(tomorrow.day.mintemp_f)}°</Text>
+          {/* Tomorrow (Day 1) */}
+          {tomorrow && (
+            <View style={[styles.forecastDay, { backgroundColor: primaryColor }]}>
+              <Text style={styles.forecastDayName}>{formatDate(tomorrow.date)}</Text>
+              <Image
+                source={{ uri: `https:${tomorrow.day.condition.icon}` }}
+                style={styles.forecastIcon}
+                resizeMode="contain"
+              />
+              <View style={styles.forecastTemps}>
+                <Text style={styles.forecastHigh}>{Math.round(tomorrow.day.maxtemp_f)}°</Text>
+                <Text style={styles.forecastLow}>{Math.round(tomorrow.day.mintemp_f)}°</Text>
+              </View>
             </View>
-          </View>
+          )}
 
-          {/* Day After Tomorrow */}
-          <View style={[styles.forecastDay, { backgroundColor: primaryColor }]}>
-            <Text style={styles.forecastDayName}>{formatDate(dayAfter.date)}</Text>
-            <Image
-              source={{ uri: `https:${dayAfter.day.condition.icon}` }}
-              style={styles.forecastIcon}
-              resizeMode="contain"
-            />
-            <View style={styles.forecastTemps}>
-              <Text style={styles.forecastHigh}>{Math.round(dayAfter.day.maxtemp_f)}°</Text>
-              <Text style={styles.forecastLow}>{Math.round(dayAfter.day.mintemp_f)}°</Text>
+          {/* Day After Tomorrow (Day 2) */}
+          {dayAfter && (
+            <View style={[styles.forecastDay, { backgroundColor: primaryColor }]}>
+              <Text style={styles.forecastDayName}>{formatDate(dayAfter.date)}</Text>
+              <Image
+                source={{ uri: `https:${dayAfter.day.condition.icon}` }}
+                style={styles.forecastIcon}
+                resizeMode="contain"
+              />
+              <View style={styles.forecastTemps}>
+                <Text style={styles.forecastHigh}>{Math.round(dayAfter.day.maxtemp_f)}°</Text>
+                <Text style={styles.forecastLow}>{Math.round(dayAfter.day.mintemp_f)}°</Text>
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </View>
     </View>

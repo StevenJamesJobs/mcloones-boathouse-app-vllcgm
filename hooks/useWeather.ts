@@ -36,7 +36,7 @@ interface UseWeatherReturn {
 }
 
 const API_KEY = '6e3db8832cf34a5bbc5182329251711';
-const LOCATION = 'Long Branch, NJ'; // McLoone's Boathouse location
+const LOCATION = '9 Cherry Ln, West Orange, NJ 07052'; // McLoone's Boathouse exact address
 
 export function useWeather(): UseWeatherReturn {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
@@ -57,7 +57,7 @@ export function useWeather(): UseWeatherReturn {
       }
 
       const data = await response.json();
-      console.log('Weather data fetched successfully:', data);
+      console.log('Weather data fetched successfully for:', LOCATION);
       setWeatherData(data);
     } catch (err) {
       console.error('Error fetching weather:', err);
