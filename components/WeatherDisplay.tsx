@@ -25,7 +25,7 @@ export function WeatherDisplay({ variant = 'employee' }: WeatherDisplayProps) {
             color={accentColor} 
             size={24} 
           />
-          <Text style={styles.cardTitle}>Today&apos;s Weather</Text>
+          <Text style={styles.cardTitle}>Mcloone's Boathouse Weather</Text>
         </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={accentColor} />
@@ -45,7 +45,7 @@ export function WeatherDisplay({ variant = 'employee' }: WeatherDisplayProps) {
             color={accentColor} 
             size={24} 
           />
-          <Text style={styles.cardTitle}>Today&apos;s Weather</Text>
+          <Text style={styles.cardTitle}>Mcloone's Boathouse Weather</Text>
         </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Unable to load weather data</Text>
@@ -77,7 +77,7 @@ export function WeatherDisplay({ variant = 'employee' }: WeatherDisplayProps) {
           color={accentColor} 
           size={24} 
         />
-        <Text style={styles.cardTitle}>Today&apos;s Weather</Text>
+        <Text style={styles.cardTitle}>Mcloone's Boathouse Weather</Text>
       </View>
 
       {/* Current Weather */}

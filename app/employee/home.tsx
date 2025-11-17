@@ -66,8 +66,8 @@ export default function EmployeeHomeScreen() {
         >
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Welcome to McLoone&apos;s Boathouse Deck Team</Text>
-            <Text style={styles.welcomeSubtitle}>Let&apos;s get you ready for your next adventure!</Text>
+            <Text style={styles.welcomeTitle}>Boathouse Deck Team</Text>
+            <Text style={styles.welcomeSubtitle}>What is on the menu today for you?</Text>
           </View>
 
           {/* Weather Card */}
@@ -144,12 +144,12 @@ export default function EmployeeHomeScreen() {
               onPress={() => router.push('/employee/training')}
             >
               <IconSymbol 
-                ios_icon_name="book.fill" 
-                android_material_icon_name="menu_book" 
+                ios_icon_name="book.closed.fill" 
+                android_material_icon_name="import_contacts" 
                 color={colors.employeeAccent} 
                 size={32} 
               />
-              <Text style={styles.quickLinkText}>Training</Text>
+              <Text style={styles.quickLinkText}>Guides & Training</Text>
             </Pressable>
             <Pressable
               style={styles.quickLinkButton}

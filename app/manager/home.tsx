@@ -33,9 +33,10 @@ export default function ManagerHomeScreen() {
     { id: 7, title: 'Contact Us Editor', icon: 'phone.fill', androidIcon: 'phone', route: '/manager/contact-us-editor', color: colors.managerAccent },
     { id: 8, title: 'Tagline Editor', icon: 'text.quote', androidIcon: 'format_quote', route: '/manager/tagline-editor', color: colors.managerAccent },
     { id: 9, title: 'Reviews Editor', icon: 'star.fill', androidIcon: 'star', route: '/manager/reviews-editor', color: colors.managerAccent },
-    { id: 10, title: 'Employees', icon: 'person.3.fill', androidIcon: 'people', route: '/manager/employees', color: colors.managerSecondary },
-    { id: 11, title: 'Schedule', icon: 'calendar.badge.clock', androidIcon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
-    { id: 12, title: 'Rewards', icon: 'dollarsign.circle.fill', androidIcon: 'attach_money', route: '/manager/rewards', color: colors.managerSecondary },
+    { id: 10, title: 'Guides Editor', icon: 'book.closed.fill', androidIcon: 'import_contacts', route: '/manager/guides-editor', color: colors.managerAccent },
+    { id: 11, title: 'Employees', icon: 'person.3.fill', androidIcon: 'people', route: '/manager/employees', color: colors.managerSecondary },
+    { id: 12, title: 'Schedule', icon: 'calendar.badge.clock', androidIcon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
+    { id: 13, title: 'Rewards', icon: 'dollarsign.circle.fill', androidIcon: 'attach_money', route: '/manager/rewards', color: colors.managerSecondary },
   ];
 
   return (

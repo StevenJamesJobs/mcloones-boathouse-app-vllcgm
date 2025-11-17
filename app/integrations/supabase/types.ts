@@ -126,6 +126,48 @@ export type Database = {
         }
         Relationships: []
       }
+      guides: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          file_url: string
+          file_type: string
+          file_size: number | null
+          category: string
+          display_order: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          file_url: string
+          file_type: string
+          file_size?: number | null
+          category: string
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          file_url?: string
+          file_type?: string
+          file_size?: number | null
+          category?: string
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
