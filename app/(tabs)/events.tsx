@@ -55,7 +55,7 @@ export default function EventsScreen() {
         {/* Floating Header Banner - No Login Icon */}
         <View style={[styles.banner, { paddingTop: insets.top + 8 }]}>
           <Image 
-            source={require('@/assets/images/c85af548-2321-40fa-ba5b-9fd0e298be4d.png')}
+            source={require('@/assets/images/08405405-7ef4-4671-9758-a7220430497a.png')}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -137,6 +137,9 @@ export default function EventsScreen() {
               {infoBubbleText || 'For private events and bookings, please contact us at (732) 555-0123 or email events@mcloones.com'}
             </Text>
           </View>
+
+          {/* Bottom Padding */}
+          <View style={styles.bottomPadding} />
         </ScrollView>
 
         {/* Expanded Image Modal */}
@@ -371,6 +374,9 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 20,
     marginLeft: 12,
+  },
+  bottomPadding: {
+    height: 80,
   },
   expandedModalOverlay: {
     flex: 1,

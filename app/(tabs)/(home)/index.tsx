@@ -12,6 +12,7 @@ import { useContactUs } from '@/hooks/useContactUs';
 import { useReviews } from '@/hooks/useReviews';
 import { useTagline } from '@/hooks/useTagline';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
@@ -24,6 +25,7 @@ export default function HomeScreen() {
   const { contactInfo, loading: contactLoading } = useContactUs();
   const { reviews, loading: reviewsLoading } = useReviews();
   const { tagline, loading: taglineLoading } = useTagline();
+  const insets = useSafeAreaInsets();
 
   const handleLogin = () => {
     if (login(email, password)) {
@@ -41,15 +43,6 @@ export default function HomeScreen() {
       Alert.alert('Login Failed', 'Invalid email or password');
     }
   };
-
-  const renderHeaderRight = () => (
-    <Pressable
-      onPress={() => setLoginModalVisible(true)}
-      style={styles.headerButton}
-    >
-      <IconSymbol name="person.circle.fill" color={colors.accent} size={28} />
-    </Pressable>
-  );
 
   const renderStars = (rating: number) => {
     return (
@@ -77,30 +70,35 @@ export default function HomeScreen() {
   // Get next two upcoming events
   const nextTwoEvents = events.slice(0, 2);
 
+  const bannerHeight = insets.top + 60;
+
   return (
     <>
       {Platform.OS === 'ios' && (
         <Stack.Screen
           options={{
             title: "McLoone's Boathouse",
-            headerRight: renderHeaderRight,
-            headerStyle: {
-              backgroundColor: colors.background,
-            },
-            headerTintColor: colors.text,
+            headerShown: false,
           }}
         />
       )}
-      
       <View style={[commonStyles.container, styles.container]}>
-        {/* Banner for non-iOS */}
-        {Platform.OS !== 'ios' && (
-          <CustomerBanner onLoginPress={() => setLoginModalVisible(true)} />
-        )}
+        {/* Floating Header Banner with Logo and Login Icon */}
+        <View style={[styles.banner, { paddingTop: insets.top + 8 }]}>
+          <Image 
+            source={require('@/assets/images/08405405-7ef4-4671-9758-a7220430497a.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Pressable onPress={() => setLoginModalVisible(true)} style={styles.loginButton}>
+            <IconSymbol name="person.circle.fill" color={colors.accent} size={32} />
+          </Pressable>
+        </View>
 
         <ScrollView 
           contentContainerStyle={[
             styles.scrollContent,
+            { paddingTop: bannerHeight + 16 },
             Platform.OS !== 'ios' && styles.scrollContentWithTabBar
           ]}
           showsVerticalScrollIndicator={false}
@@ -110,7 +108,7 @@ export default function HomeScreen() {
             <Text style={styles.welcomeTitle}>McLoone&apos;s Boathouse</Text>
             {taglineLoading ? (
               <View style={styles.taglineLoadingContainer}>
-                <ActivityIndicator size="small" color={colors.textSecondary} />
+                <ActivityIndicator size="small" color={colors.seccondaryaccent} />
               </View>
             ) : (
               <Text style={styles.welcomeText}>
@@ -182,11 +180,13 @@ export default function HomeScreen() {
                 <View key={special.id} style={commonStyles.card}>
                   <View style={styles.specialContent}>
                     {special.image_url && (
-                      <Image
-                        source={{ uri: special.image_url }}
-                        style={styles.specialThumbnail}
-                        resizeMode="cover"
-                      />
+                      <Pressable onPress={() => setExpandedImage(special.image_url)}>
+                        <Image
+                          source={{ uri: special.image_url }}
+                          style={styles.specialThumbnail}
+                          resizeMode="cover"
+                        />
+                      </Pressable>
                     )}
                     <View style={styles.specialDetails}>
                       <View style={styles.specialHeader}>
@@ -291,6 +291,9 @@ export default function HomeScreen() {
               </View>
             )}
           </View>
+
+          {/* Bottom Padding/Footer */}
+          <View style={styles.bottomPadding} />
         </ScrollView>
       </View>
 
@@ -378,14 +381,47 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.background,
   },
+  banner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    zIndex: 1000,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+      },
+    }),
+  },
+  logo: {
+    height: 40,
+    width: 200,
+  },
+  loginButton: {
+    padding: 4,
+  },
   scrollContent: {
     paddingBottom: 20,
   },
   scrollContentWithTabBar: {
     paddingBottom: 100,
-  },
-  headerButton: {
-    padding: 4,
   },
   welcomeSection: {
     paddingHorizontal: 16,
@@ -401,7 +437,7 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: 16,
-    color: colors.accent,
+    color: '#000000',
     lineHeight: 24,
   },
   taglineLoadingContainer: {
@@ -593,6 +629,9 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
   },
+  bottomPadding: {
+    height: 80,
+  },
   expandedModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.95)',
@@ -651,13 +690,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     backgroundColor: colors.background,
-  },
-  loginButton: {
-    backgroundColor: colors.accent,
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 8,
   },
   loginButtonText: {
     color: '#FFFFFF',

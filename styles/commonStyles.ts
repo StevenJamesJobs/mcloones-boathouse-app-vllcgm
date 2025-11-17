@@ -4,15 +4,17 @@ import { StyleSheet } from 'react-native';
 export const colors = {
   // Customer side colors (light blue and white theme)
   background: '#FFFFFF',
-  text: '#333333',
-  textSecondary: '#666666',
-  primary: '#ADD8E6',      // Light blue
-  secondary: '#87CEEB',    // Sky blue
-  accent: '#4682B4',       // Steel blue
+  text: '#000000',
+  textSecondary: '#000000',
+  primary: '#3289a8',      // Light blue
+  secondary: '#000000',    // Sky blue
+  accent: '#3289a8',       // Steel blue // Buttons and Tagline
+	secondaryaccent: '#000000',    // Black
+	taglineaccent: '#000000',    //Black
   card: '#F0F8FF',         // Alice blue
-  highlight: '#B0E2FF',    // Light sky blue
-  border: '#E0E0E0',
-  error: '#DC3545',
+  highlight: '#3289a8',     // Light sky blue
+  border: '#FFFFFF',    // Thumbnail backgroud
+  error: '#DC3545',  
   success: '#28A745',
   warning: '#FFC107',
   

@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 16,
-    paddingTop: 32,
+    paddingTop: 20,
     paddingBottom: 24,
     backgroundColor: colors.primary,
     marginBottom: 20,
@@ -70,12 +70,12 @@ const styles = StyleSheet.create({
   },
   headerSubtitle: {
     fontSize: 16,
-    color: colors.accent,
+    color: colors.secondaryaccent,
     lineHeight: 24,
   },
   section: {
     paddingHorizontal: 16,
-    marginBottom: 24,
+    marginBottom: 10,
   },
   reviewCard: {
     backgroundColor: colors.card,
@@ -143,6 +143,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  bottomPadding: {
+    height: 80,
   },
   modalOverlay: {
     flex: 1,
@@ -265,7 +268,7 @@ export default function ReviewsScreen() {
         {/* Floating Header Banner - No Login Icon */}
         <View style={[styles.banner, { paddingTop: insets.top + 8 }]}>
           <Image 
-            source={require('@/assets/images/c85af548-2321-40fa-ba5b-9fd0e298be4d.png')}
+            source={require('@/assets/images/08405405-7ef4-4671-9758-a7220430497a.png')}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -326,6 +329,9 @@ export default function ReviewsScreen() {
               <Text style={styles.leaveReviewText}>Leave a Review on Google</Text>
             </Pressable>
           </View>
+
+          {/* Bottom Padding */}
+          <View style={styles.bottomPadding} />
         </ScrollView>
       </View>
 

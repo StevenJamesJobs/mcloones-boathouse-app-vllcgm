@@ -18,6 +18,7 @@ export default function MenuScreen() {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   const { items, categories, loading, error } = useMenu(
     selectedTab === 'specials' ? 'lunch' : 
@@ -155,7 +156,7 @@ export default function MenuScreen() {
         {/* Floating Header Banner - No Login Icon */}
         <View style={[styles.banner, { paddingTop: insets.top + 8 }]}>
           <Image 
-            source={require('@/assets/images/c85af548-2321-40fa-ba5b-9fd0e298be4d.png')}
+            source={require('@/assets/images/08405405-7ef4-4671-9758-a7220430497a.png')}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -404,11 +405,13 @@ export default function MenuScreen() {
                   <View key={special.id} style={commonStyles.card}>
                     <View style={styles.menuItemContent}>
                       {special.image_url && (
-                        <Image
-                          source={{ uri: special.image_url }}
-                          style={styles.menuItemThumbnail}
-                          resizeMode="cover"
-                        />
+                        <Pressable onPress={() => setExpandedImage(special.image_url)}>
+                          <Image
+                            source={{ uri: special.image_url }}
+                            style={styles.menuItemThumbnail}
+                            resizeMode="cover"
+                          />
+                        </Pressable>
                       )}
                       <View style={styles.menuItemDetails}>
                         <View style={styles.menuItemHeader}>
@@ -432,6 +435,8 @@ export default function MenuScreen() {
                   </View>
                 ))
               )}
+              {/* Bottom Padding */}
+              <View style={styles.bottomPadding} />
             </ScrollView>
           ) : (
             // Menu Items Content
@@ -464,11 +469,13 @@ export default function MenuScreen() {
                         <View key={item.id} style={commonStyles.card}>
                           <View style={styles.menuItemContent}>
                             {item.image_url && (
-                              <Image
-                                source={{ uri: item.image_url }}
-                                style={styles.menuItemThumbnail}
-                                resizeMode="cover"
-                              />
+                              <Pressable onPress={() => setExpandedImage(item.image_url)}>
+                                <Image
+                                  source={{ uri: item.image_url }}
+                                  style={styles.menuItemThumbnail}
+                                  resizeMode="cover"
+                                />
+                              </Pressable>
                             )}
                             <View style={styles.menuItemDetails}>
                               <View style={styles.menuItemHeader}>
@@ -494,10 +501,36 @@ export default function MenuScreen() {
                     </View>
                   ))
                 )}
+                {/* Bottom Padding */}
+                <View style={styles.bottomPadding} />
               </ScrollView>
             )
           )}
         </View>
+
+        {/* Expanded Image Modal */}
+        <Modal
+          visible={expandedImage !== null}
+          animationType="fade"
+          transparent={true}
+          onRequestClose={() => setExpandedImage(null)}
+        >
+          <View style={styles.expandedModalOverlay}>
+            <Pressable
+              style={styles.closeButton}
+              onPress={() => setExpandedImage(null)}
+            >
+              <IconSymbol name="xmark.circle.fill" color="#FFFFFF" size={36} />
+            </Pressable>
+            {expandedImage && (
+              <Image
+                source={{ uri: expandedImage }}
+                style={styles.expandedImage}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </Modal>
 
         {/* Login Modal */}
         <Modal
@@ -791,6 +824,9 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 4,
   },
+  bottomPadding: {
+    height: 80,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -821,6 +857,23 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: colors.textSecondary,
+  },
+  expandedModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    padding: 8,
+  },
+  expandedImage: {
+    width: '100%',
+    height: '100%',
   },
   modalOverlay: {
     flex: 1,

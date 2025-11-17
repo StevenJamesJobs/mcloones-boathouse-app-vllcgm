@@ -141,7 +141,7 @@ export default function AboutScreen() {
         {/* Floating Header Banner - No Login Icon */}
         <View style={[styles.banner, { paddingTop: insets.top + 8 }]}>
           <Image 
-            source={require('@/assets/images/c85af548-2321-40fa-ba5b-9fd0e298be4d.png')}
+            source={require('@/assets/images/08405405-7ef4-4671-9758-a7220430497a.png')}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -277,6 +277,9 @@ export default function AboutScreen() {
               })}
             </>
           )}
+
+          {/* Bottom Padding */}
+          <View style={styles.bottomPadding} />
         </ScrollView>
 
         {/* Expanded Image Modal */}
@@ -556,6 +559,9 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: '#FFFFFF',
     lineHeight: 12,
+  },
+  bottomPadding: {
+    height: 80,
   },
   expandedModalOverlay: {
     flex: 1,
