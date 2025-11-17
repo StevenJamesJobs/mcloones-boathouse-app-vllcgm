@@ -1,16 +1,6 @@
 
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  Pressable, 
-  Linking, 
-  Platform, 
-  Alert, 
-  ActivityIndicator 
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Linking, Platform, Alert, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';

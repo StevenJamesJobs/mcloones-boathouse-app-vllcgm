@@ -1,5 +1,5 @@
 
-// User types (legacy - for backward compatibility)
+// User types
 export type UserRole = 'customer' | 'employee' | 'manager';
 
 export interface User {
@@ -7,24 +7,6 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
-}
-
-// Employee types (new authentication system)
-export interface Employee {
-  id: string;
-  username: string;
-  full_name: string;
-  email: string;
-  phone_number: string | null;
-  address: string | null;
-  job_title: string;
-  role: 'owner_manager' | 'manager' | 'employee';
-  profile_picture_url: string | null;
-  tagline: string | null;
-  must_change_password: boolean;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
 }
 
 // Menu types

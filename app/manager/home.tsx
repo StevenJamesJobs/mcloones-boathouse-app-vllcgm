@@ -10,13 +10,13 @@ import { WeatherDisplay } from '@/components/WeatherDisplay';
 import { upcomingShifts } from '@/data/mockData';
 
 export default function ManagerHomeScreen() {
-  const { employee, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
-    if (!employee || (employee.role !== 'manager' && employee.role !== 'owner_manager')) {
+    if (!user || user.role !== 'manager') {
       router.replace('/(tabs)/(home)/');
     }
-  }, [employee]);
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -49,24 +49,14 @@ export default function ManagerHomeScreen() {
           },
           headerTintColor: '#FFFFFF',
           headerRight: () => (
-            <View style={styles.headerRight}>
-              <Pressable onPress={() => router.push('/manager/profile')} style={styles.headerButton}>
-                <IconSymbol 
-                  ios_icon_name="person.circle.fill" 
-                  android_material_icon_name="account_circle" 
-                  color="#FFFFFF" 
-                  size={24} 
-                />
-              </Pressable>
-              <Pressable onPress={handleLogout} style={styles.headerButton}>
-                <IconSymbol 
-                  ios_icon_name="rectangle.portrait.and.arrow.right" 
-                  android_material_icon_name="logout" 
-                  color="#FFFFFF" 
-                  size={24} 
-                />
-              </Pressable>
-            </View>
+            <Pressable onPress={handleLogout} style={styles.logoutButton}>
+              <IconSymbol 
+                ios_icon_name="rectangle.portrait.and.arrow.right" 
+                android_material_icon_name="logout" 
+                color="#FFFFFF" 
+                size={24} 
+              />
+            </Pressable>
           ),
         }}
       />
@@ -78,10 +68,8 @@ export default function ManagerHomeScreen() {
         >
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Welcome, {employee?.full_name}!</Text>
-            <Text style={styles.welcomeSubtitle}>
-              {employee?.role === 'owner_manager' ? 'Owner/Manager' : 'Manager'} Dashboard
-            </Text>
+            <Text style={styles.welcomeTitle}>Welcome, {user?.name}!</Text>
+            <Text style={styles.welcomeSubtitle}>Manager Dashboard</Text>
           </View>
 
           {/* Menu Data Seeder */}
@@ -156,13 +144,9 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingBottom: 100,
   },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerButton: {
+  logoutButton: {
     padding: 8,
+    marginRight: 8,
   },
   welcomeSection: {
     backgroundColor: colors.managerPrimary,

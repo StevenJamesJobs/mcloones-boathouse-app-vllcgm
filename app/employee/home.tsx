@@ -10,14 +10,14 @@ import { WeatherDisplay } from '@/components/WeatherDisplay';
 import { upcomingShifts } from '@/data/mockData';
 
 export default function EmployeeHomeScreen() {
-  const { employee, logout } = useAuth();
+  const { user, logout } = useAuth();
   const { announcements } = useAnnouncements();
 
   useEffect(() => {
-    if (!employee) {
+    if (!user || user.role === 'customer') {
       router.replace('/(tabs)/(home)/');
     }
-  }, [employee]);
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -47,24 +47,14 @@ export default function EmployeeHomeScreen() {
           },
           headerTintColor: colors.text,
           headerRight: () => (
-            <View style={styles.headerRight}>
-              <Pressable onPress={() => router.push('/employee/profile')} style={styles.headerButton}>
-                <IconSymbol 
-                  ios_icon_name="person.circle.fill" 
-                  android_material_icon_name="account_circle" 
-                  color={colors.accent} 
-                  size={24} 
-                />
-              </Pressable>
-              <Pressable onPress={handleLogout} style={styles.headerButton}>
-                <IconSymbol 
-                  ios_icon_name="rectangle.portrait.and.arrow.right" 
-                  android_material_icon_name="logout" 
-                  color={colors.accent} 
-                  size={24} 
-                />
-              </Pressable>
-            </View>
+            <Pressable onPress={handleLogout} style={styles.logoutButton}>
+              <IconSymbol 
+                ios_icon_name="rectangle.portrait.and.arrow.right" 
+                android_material_icon_name="logout" 
+                color={colors.accent} 
+                size={24} 
+              />
+            </Pressable>
           ),
         }}
       />
@@ -76,8 +66,8 @@ export default function EmployeeHomeScreen() {
         >
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Welcome, {employee?.full_name}!</Text>
-            <Text style={styles.welcomeSubtitle}>{employee?.job_title}</Text>
+            <Text style={styles.welcomeTitle}>Boathouse Deck Team</Text>
+            <Text style={styles.welcomeSubtitle}>What is on the menu today for you?</Text>
           </View>
 
           {/* Weather Card */}
@@ -189,13 +179,9 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingBottom: 100,
   },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerButton: {
+  logoutButton: {
     padding: 8,
+    marginRight: 8,
   },
   welcomeSection: {
     backgroundColor: colors.employeePrimary,
