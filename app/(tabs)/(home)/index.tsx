@@ -140,7 +140,7 @@ export default function HomeScreen() {
               <IconSymbol 
                 ios_icon_name="person.circle.fill" 
                 android_material_icon_name="account_circle" 
-                color={colors.accent} 
+                color="#3289a8" 
                 size={36} 
               />
             </Pressable>

@@ -128,7 +128,7 @@ export default function EmployeeHomeScreen() {
               <IconSymbol 
                 ios_icon_name="book.closed.fill" 
                 android_material_icon_name="import_contacts" 
-                color={colors.employeeAccent} 
+                color="#3289a8" 
                 size={48} 
               />
               <Text style={styles.quickLinkText}>Guides & Training</Text>
@@ -140,7 +140,7 @@ export default function EmployeeHomeScreen() {
               <IconSymbol 
                 ios_icon_name="star.fill" 
                 android_material_icon_name="star" 
-                color={colors.employeeAccent} 
+                color="#3289a8" 
                 size={48} 
               />
               <Text style={styles.quickLinkText}>Rewards</Text>
@@ -155,7 +155,7 @@ export default function EmployeeHomeScreen() {
             <IconSymbol 
               ios_icon_name="person.circle.fill" 
               android_material_icon_name="account_circle" 
-              color={colors.employeeAccent} 
+              color="#3289a8" 
               size={32} 
             />
             <Text style={styles.profileButtonText}>My Profile</Text>
