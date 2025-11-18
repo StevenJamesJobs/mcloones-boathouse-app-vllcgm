@@ -24,6 +24,7 @@ export type Database = {
           tagline: string | null
           is_active: boolean
           must_change_password: boolean
+          mcloones_bucks: number
           created_at: string
           updated_at: string
         }
@@ -40,6 +41,7 @@ export type Database = {
           tagline?: string | null
           is_active?: boolean
           must_change_password?: boolean
+          mcloones_bucks?: number
           created_at?: string
           updated_at?: string
         }
@@ -56,10 +58,59 @@ export type Database = {
           tagline?: string | null
           is_active?: boolean
           must_change_password?: boolean
+          mcloones_bucks?: number
           created_at?: string
           updated_at?: string
         }
         Relationships: []
+      }
+      rewards_transactions: {
+        Row: {
+          id: string
+          employee_id: string
+          amount: number
+          reason: string
+          awarded_by_id: string
+          awarded_by_name: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          amount: number
+          reason: string
+          awarded_by_id: string
+          awarded_by_name: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          amount?: number
+          reason?: string
+          awarded_by_id?: string
+          awarded_by_name?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rewards_transactions_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rewards_transactions_awarded_by_id_fkey"
+            columns: ["awarded_by_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       menu_categories: {
         Row: {

@@ -1,27 +1,30 @@
 
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
-import { mcLoonesBucks, topEmployees } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRewards } from '@/hooks/useRewards';
 
 export default function RewardsScreen() {
   const { user } = useAuth();
+  const { transactions, topEmployees, loading, getEmployeeTotalBucks } = useRewards();
+  const [userBucks, setUserBucks] = useState(0);
 
-  // Calculate user's total bucks
-  const userBucks = mcLoonesBucks
-    .filter(buck => buck.employeeId === user?.id)
-    .reduce((sum, buck) => sum + buck.amount, 0);
+  useEffect(() => {
+    if (user?.id) {
+      getEmployeeTotalBucks(user.id).then(setUserBucks);
+    }
+  }, [user?.id, transactions]);
 
-  // Get user's recent bucks
-  const userRecentBucks = mcLoonesBucks
-    .filter(buck => buck.employeeId === user?.id)
-    .slice(0, 5);
+  // Get user's recent transactions
+  const userRecentTransactions = transactions
+    .filter(t => t.employee_id === user?.id)
+    .slice(0, 10);
 
-  // Get latest bucks across all employees
-  const latestBucks = mcLoonesBucks.slice(0, 5);
+  // Get latest transactions across all employees
+  const latestTransactions = transactions.slice(0, 10);
 
   return (
     <>
@@ -34,7 +37,7 @@ export default function RewardsScreen() {
           headerTintColor: colors.text,
         }}
       />
-      
+
       <View style={[commonStyles.employeeContainer, styles.container]}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -42,58 +45,127 @@ export default function RewardsScreen() {
         >
           {/* User's Total */}
           <View style={styles.totalCard}>
-            <IconSymbol name="dollarsign.circle.fill" color={colors.employeeAccent} size={48} />
-            <Text style={styles.totalAmount}>{userBucks}</Text>
+            <IconSymbol
+              ios_icon_name="dollarsign.circle.fill"
+              android_material_icon_name="monetization_on"
+              color={colors.employeeAccent}
+              size={48}
+            />
+            <Text style={styles.totalAmount}>{user?.mcloones_bucks || 0}</Text>
             <Text style={styles.totalLabel}>Your McLoone&apos;s Bucks</Text>
           </View>
 
           {/* Top 5 Employees */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Top Employees</Text>
-            {topEmployees.map((employee, index) => (
-              <View key={employee.employeeId} style={styles.leaderboardItem}>
-                <View style={[
-                  styles.rankBadge,
-                  index === 0 && styles.rankBadgeGold,
-                  index === 1 && styles.rankBadgeSilver,
-                  index === 2 && styles.rankBadgeBronze,
-                ]}>
-                  <Text style={styles.rankText}>{index + 1}</Text>
-                </View>
-                <View style={styles.employeeInfo}>
-                  <Text style={styles.employeeName}>{employee.employeeName}</Text>
-                  <Text style={styles.employeeBucks}>{employee.totalBucks} Bucks</Text>
-                </View>
-                {index < 3 && (
-                  <IconSymbol 
-                    name="trophy.fill" 
-                    color={
-                      index === 0 ? '#FFD700' : 
-                      index === 1 ? '#C0C0C0' : 
-                      '#CD7F32'
-                    } 
-                    size={24} 
-                  />
-                )}
+            {loading ? (
+              <ActivityIndicator size="large" color={colors.employeeAccent} />
+            ) : topEmployees.length === 0 ? (
+              <View style={commonStyles.employeeCard}>
+                <Text style={styles.emptyText}>No employees with bucks yet</Text>
               </View>
-            ))}
+            ) : (
+              topEmployees.map((employee, index) => (
+                <View key={employee.id} style={styles.leaderboardItem}>
+                  <View
+                    style={[
+                      styles.rankBadge,
+                      index === 0 && styles.rankBadgeGold,
+                      index === 1 && styles.rankBadgeSilver,
+                      index === 2 && styles.rankBadgeBronze,
+                    ]}
+                  >
+                    <Text style={styles.rankText}>{index + 1}</Text>
+                  </View>
+                  <View style={styles.employeeInfo}>
+                    <Text style={styles.employeeName}>{employee.full_name}</Text>
+                    <Text style={styles.employeeBucks}>
+                      {employee.mcloones_bucks || 0} Bucks
+                    </Text>
+                  </View>
+                  {index < 3 && (
+                    <IconSymbol
+                      ios_icon_name="trophy.fill"
+                      android_material_icon_name="emoji_events"
+                      color={
+                        index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32'
+                      }
+                      size={24}
+                    />
+                  )}
+                </View>
+              ))
+            )}
           </View>
 
-          {/* Latest Awards */}
+          {/* My Recent Awards */}
+          {userRecentTransactions.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>My Recent Awards</Text>
+              {userRecentTransactions.map(transaction => (
+                <View key={transaction.id} style={commonStyles.employeeCard}>
+                  <View style={styles.transactionHeader}>
+                    <Text style={styles.transactionReason}>{transaction.reason}</Text>
+                    <Text
+                      style={[
+                        styles.transactionAmount,
+                        transaction.amount > 0
+                          ? styles.positiveAmount
+                          : styles.negativeAmount,
+                      ]}
+                    >
+                      {transaction.amount > 0 ? '+' : ''}
+                      {transaction.amount}
+                    </Text>
+                  </View>
+                  <Text style={styles.transactionDate}>
+                    {new Date(transaction.created_at).toLocaleDateString()} • Awarded
+                    by {transaction.awarded_by_name}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Latest Awards (All Employees) */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Latest Awards</Text>
-            {latestBucks.map((buck) => (
-              <View key={buck.id} style={commonStyles.employeeCard}>
-                <View style={styles.buckHeader}>
-                  <Text style={styles.buckEmployee}>{buck.employeeName}</Text>
-                  <Text style={styles.buckAmount}>+{buck.amount}</Text>
-                </View>
-                <Text style={styles.buckReason}>{buck.reason}</Text>
-                <Text style={styles.buckDate}>
-                  {new Date(buck.date).toLocaleDateString()} • Awarded by {buck.awardedBy}
-                </Text>
+            {loading ? (
+              <ActivityIndicator size="large" color={colors.employeeAccent} />
+            ) : latestTransactions.length === 0 ? (
+              <View style={commonStyles.employeeCard}>
+                <Text style={styles.emptyText}>No awards yet</Text>
               </View>
-            ))}
+            ) : (
+              latestTransactions.map(transaction => {
+                const employee = topEmployees.find(e => e.id === transaction.employee_id);
+                return (
+                  <View key={transaction.id} style={commonStyles.employeeCard}>
+                    <View style={styles.transactionHeader}>
+                      <Text style={styles.transactionEmployee}>
+                        {employee?.full_name || 'Employee'}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.transactionAmount,
+                          transaction.amount > 0
+                            ? styles.positiveAmount
+                            : styles.negativeAmount,
+                        ]}
+                      >
+                        {transaction.amount > 0 ? '+' : ''}
+                        {transaction.amount}
+                      </Text>
+                    </View>
+                    <Text style={styles.transactionReason}>{transaction.reason}</Text>
+                    <Text style={styles.transactionDate}>
+                      {new Date(transaction.created_at).toLocaleDateString()} • Awarded
+                      by {transaction.awarded_by_name}
+                    </Text>
+                  </View>
+                );
+              })
+            )}
           </View>
 
           {/* How to Earn */}
@@ -101,23 +173,48 @@ export default function RewardsScreen() {
             <Text style={styles.sectionTitle}>How to Earn More</Text>
             <View style={commonStyles.employeeCard}>
               <View style={styles.earnItem}>
-                <IconSymbol name="star.fill" color={colors.employeeAccent} size={20} />
+                <IconSymbol
+                  ios_icon_name="star.fill"
+                  android_material_icon_name="star"
+                  color={colors.employeeAccent}
+                  size={20}
+                />
                 <Text style={styles.earnText}>Receive positive customer reviews</Text>
               </View>
               <View style={styles.earnItem}>
-                <IconSymbol name="checkmark.circle.fill" color={colors.employeeAccent} size={20} />
+                <IconSymbol
+                  ios_icon_name="checkmark.circle.fill"
+                  android_material_icon_name="check_circle"
+                  color={colors.employeeAccent}
+                  size={20}
+                />
                 <Text style={styles.earnText}>Perfect weekly attendance</Text>
               </View>
               <View style={styles.earnItem}>
-                <IconSymbol name="person.2.fill" color={colors.employeeAccent} size={20} />
+                <IconSymbol
+                  ios_icon_name="person.2.fill"
+                  android_material_icon_name="groups"
+                  color={colors.employeeAccent}
+                  size={20}
+                />
                 <Text style={styles.earnText}>Demonstrate great teamwork</Text>
               </View>
               <View style={styles.earnItem}>
-                <IconSymbol name="lightbulb.fill" color={colors.employeeAccent} size={20} />
+                <IconSymbol
+                  ios_icon_name="lightbulb.fill"
+                  android_material_icon_name="lightbulb"
+                  color={colors.employeeAccent}
+                  size={20}
+                />
                 <Text style={styles.earnText}>Suggest improvements</Text>
               </View>
               <View style={styles.earnItem}>
-                <IconSymbol name="trophy.fill" color={colors.employeeAccent} size={20} />
+                <IconSymbol
+                  ios_icon_name="trophy.fill"
+                  android_material_icon_name="emoji_events"
+                  color={colors.employeeAccent}
+                  size={20}
+                />
                 <Text style={styles.earnText}>Go above and beyond</Text>
               </View>
             </View>
@@ -135,6 +232,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingVertical: 20,
+    paddingBottom: 100,
   },
   totalCard: {
     backgroundColor: colors.employeePrimary,
@@ -209,30 +307,43 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
   },
-  buckHeader: {
+  transactionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
-  buckEmployee: {
+  transactionEmployee: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+    flex: 1,
   },
-  buckAmount: {
+  transactionAmount: {
     fontSize: 18,
     fontWeight: '700',
+    marginLeft: 8,
+  },
+  positiveAmount: {
     color: colors.success,
   },
-  buckReason: {
+  negativeAmount: {
+    color: colors.error,
+  },
+  transactionReason: {
     fontSize: 15,
     color: colors.text,
-    marginBottom: 4,
+    flex: 1,
   },
-  buckDate: {
+  transactionDate: {
     fontSize: 12,
     color: colors.textSecondary,
+  },
+  emptyText: {
+    fontSize: 15,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    padding: 20,
   },
   earnItem: {
     flexDirection: 'row',
