@@ -188,7 +188,7 @@ export default function RewardsScreen() {
                   color={colors.employeeAccent}
                   size={20}
                 />
-                <Text style={styles.earnText}>Perfect weekly attendance</Text>
+                <Text style={styles.earnText}>Great attendance</Text>
               </View>
               <View style={styles.earnItem}>
                 <IconSymbol
@@ -197,7 +197,7 @@ export default function RewardsScreen() {
                   color={colors.employeeAccent}
                   size={20}
                 />
-                <Text style={styles.earnText}>Demonstrate great teamwork</Text>
+                <Text style={styles.earnText}>Demonstrating great teamwork</Text>
               </View>
               <View style={styles.earnItem}>
                 <IconSymbol
@@ -206,7 +206,7 @@ export default function RewardsScreen() {
                   color={colors.employeeAccent}
                   size={20}
                 />
-                <Text style={styles.earnText}>Suggest improvements</Text>
+                <Text style={styles.earnText}>Overall Skill Improvments </Text>
               </View>
               <View style={styles.earnItem}>
                 <IconSymbol
@@ -215,7 +215,7 @@ export default function RewardsScreen() {
                   color={colors.employeeAccent}
                   size={20}
                 />
-                <Text style={styles.earnText}>Go above and beyond</Text>
+                <Text style={styles.earnText}>Going above and beyond</Text>
               </View>
             </View>
           </View>

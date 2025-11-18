@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Modal, Image } from 'react-native';
 import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -8,18 +8,21 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { Tables } from '@/app/integrations/supabase/types';
 
 type Profile = Tables<'profiles'>;
+type CategoryType = 'ALL' | 'A-E' | 'F-I' | 'J-R' | 'S-Z' | 'Deactivated';
 
 export default function EmployeesManagementScreen() {
   const { employees, loading, createEmployee, updateEmployee, deleteEmployee, resetPassword } = useEmployees();
   const [modalVisible, setModalVisible] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Profile | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType>('ALL');
   const [formData, setFormData] = useState({
     username: '',
     full_name: '',
     email: '',
     phone_number: '',
     job_title: '',
-    role: 'employee' as 'owner_manager' | 'manager' | 'employee',
+    role: 'employee' as 'manager' | 'employee',
   });
 
   const resetForm = () => {
@@ -47,7 +50,7 @@ export default function EmployeesManagementScreen() {
       email: employee.email,
       phone_number: employee.phone_number || '',
       job_title: employee.job_title,
-      role: employee.role,
+      role: employee.role === 'owner_manager' ? 'manager' : employee.role,
     });
     setModalVisible(true);
   };
@@ -163,6 +166,52 @@ export default function EmployeesManagementScreen() {
     }
   };
 
+  // Filter and categorize employees
+  const filteredEmployees = useMemo(() => {
+    let filtered = employees;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(emp => 
+        emp.full_name.toLowerCase().includes(query) ||
+        emp.username.toLowerCase().includes(query) ||
+        emp.email.toLowerCase().includes(query) ||
+        emp.job_title.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply category filter
+    if (selectedCategory === 'Deactivated') {
+      filtered = filtered.filter(emp => !emp.is_active);
+    } else if (selectedCategory !== 'ALL') {
+      filtered = filtered.filter(emp => {
+        if (!emp.is_active) return false;
+        const firstLetter = emp.full_name.charAt(0).toUpperCase();
+        switch (selectedCategory) {
+          case 'A-E':
+            return firstLetter >= 'A' && firstLetter <= 'E';
+          case 'F-I':
+            return firstLetter >= 'F' && firstLetter <= 'I';
+          case 'J-R':
+            return firstLetter >= 'J' && firstLetter <= 'R';
+          case 'S-Z':
+            return firstLetter >= 'S' && firstLetter <= 'Z';
+          default:
+            return true;
+        }
+      });
+    } else {
+      // For ALL, exclude deactivated
+      filtered = filtered.filter(emp => emp.is_active);
+    }
+
+    // Sort alphabetically by first name
+    return filtered.sort((a, b) => a.full_name.localeCompare(b.full_name));
+  }, [employees, searchQuery, selectedCategory]);
+
+  const categories: CategoryType[] = ['ALL', 'A-E', 'F-I', 'J-R', 'S-Z', 'Deactivated'];
+
   return (
     <>
       <Stack.Screen
@@ -176,6 +225,62 @@ export default function EmployeesManagementScreen() {
       />
       
       <View style={[commonStyles.employeeContainer, styles.container]}>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <IconSymbol 
+            ios_icon_name="magnifyingglass" 
+            android_material_icon_name="search" 
+            color={colors.textSecondary} 
+            size={20} 
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search employees..."
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <Pressable onPress={() => setSearchQuery('')}>
+              <IconSymbol 
+                ios_icon_name="xmark.circle.fill" 
+                android_material_icon_name="cancel" 
+                color={colors.textSecondary} 
+                size={20} 
+              />
+            </Pressable>
+          )}
+        </View>
+
+        {/* Category Tabs */}
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoryContainer}
+          contentContainerStyle={styles.categoryContentContainer}
+        >
+          {categories.map((category) => {
+            const isSelected = selectedCategory === category;
+            return (
+              <Pressable
+                key={category}
+                style={[
+                  styles.categoryTab,
+                  isSelected && styles.categoryTabSelected,
+                ]}
+                onPress={() => setSelectedCategory(category)}
+              >
+                <Text style={[
+                  styles.categoryTabText,
+                  isSelected && styles.categoryTabTextSelected,
+                ]}>
+                  {category}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -196,7 +301,7 @@ export default function EmployeesManagementScreen() {
             <View style={styles.loadingContainer}>
               <Text style={styles.loadingText}>Loading employees...</Text>
             </View>
-          ) : employees.length === 0 ? (
+          ) : filteredEmployees.length === 0 ? (
             <View style={styles.emptyContainer}>
               <IconSymbol 
                 ios_icon_name="person.2.fill" 
@@ -204,11 +309,15 @@ export default function EmployeesManagementScreen() {
                 color={colors.textSecondary} 
                 size={64} 
               />
-              <Text style={styles.emptyText}>No employees yet</Text>
-              <Text style={styles.emptySubtext}>Tap the button above to add your first employee</Text>
+              <Text style={styles.emptyText}>
+                {searchQuery ? 'No employees found' : 'No employees in this category'}
+              </Text>
+              <Text style={styles.emptySubtext}>
+                {searchQuery ? 'Try a different search term' : 'Tap the button above to add your first employee'}
+              </Text>
             </View>
           ) : (
-            employees.map((employee) => (
+            filteredEmployees.map((employee) => (
               <View 
                 key={employee.id} 
                 style={[
@@ -407,7 +516,7 @@ export default function EmployeesManagementScreen() {
 
               <Text style={styles.inputLabel}>Role *</Text>
               <View style={styles.roleSelector}>
-                {(['employee', 'manager', 'owner_manager'] as const).map((role) => (
+                {(['employee', 'manager'] as const).map((role) => (
                   <Pressable
                     key={role}
                     style={[
@@ -472,9 +581,54 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.employeeBackground,
   },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.employeeCard,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.text,
+  },
+  categoryContainer: {
+    maxHeight: 50,
+    marginBottom: 8,
+  },
+  categoryContentContainer: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  categoryTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.employeeCard,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  categoryTabSelected: {
+    backgroundColor: colors.managerAccent,
+    borderColor: colors.managerAccent,
+  },
+  categoryTabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  categoryTabTextSelected: {
+    color: '#FFFFFF',
+  },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingVertical: 12,
     paddingBottom: 100,
   },
   addButton: {

@@ -5,9 +5,7 @@ import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
-import { MenuDataSeeder } from '@/components/MenuDataSeeder';
 import { WeatherDisplay } from '@/components/WeatherDisplay';
-import { upcomingShifts } from '@/data/mockData';
 
 export default function ManagerHomeScreen() {
   const { user, logout, isLoading } = useAuth();
@@ -61,12 +59,7 @@ export default function ManagerHomeScreen() {
           headerTintColor: '#FFFFFF',
           headerRight: () => (
             <Pressable onPress={handleLogout} style={styles.logoutButton}>
-              <IconSymbol 
-                ios_icon_name="rectangle.portrait.and.arrow.right" 
-                android_material_icon_name="logout" 
-                color="#FFFFFF" 
-                size={24} 
-              />
+              <Text style={styles.logoutButtonText}>Logout</Text>
             </Pressable>
           ),
         }}
@@ -83,41 +76,8 @@ export default function ManagerHomeScreen() {
             <Text style={styles.welcomeSubtitle}>Manager Dashboard</Text>
           </View>
 
-          {/* Menu Data Seeder */}
-          <MenuDataSeeder />
-
           {/* Weather Card */}
           <WeatherDisplay variant="manager" />
-
-          {/* Upcoming Schedule */}
-          <View style={commonStyles.employeeCard}>
-            <View style={styles.cardHeader}>
-              <IconSymbol 
-                ios_icon_name="calendar" 
-                android_material_icon_name="calendar_today" 
-                color={colors.managerAccent} 
-                size={24} 
-              />
-              <Text style={styles.cardTitle}>Upcoming Schedule</Text>
-            </View>
-            {upcomingShifts.slice(0, 3).map((shift) => (
-              <View key={shift.id} style={styles.shiftItem}>
-                <View style={styles.shiftDate}>
-                  <Text style={styles.shiftDateText}>
-                    {new Date(shift.date).toLocaleDateString('en-US', { 
-                      weekday: 'short', 
-                      month: 'short', 
-                      day: 'numeric' 
-                    })}
-                  </Text>
-                </View>
-                <View style={styles.shiftDetails}>
-                  <Text style={styles.shiftTime}>{shift.startTime} - {shift.endTime}</Text>
-                  <Text style={styles.shiftPosition}>{shift.position}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
 
           {/* Manager Tools */}
           <View style={styles.toolsSection}>
@@ -166,8 +126,16 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   logoutButton: {
-    padding: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     marginRight: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+  },
+  logoutButtonText: {
+    color: colors.managerPrimary,
+    fontSize: 14,
+    fontWeight: '600',
   },
   welcomeSection: {
     backgroundColor: colors.managerPrimary,
@@ -184,50 +152,6 @@ const styles = StyleSheet.create({
   welcomeSubtitle: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.8)',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginLeft: 8,
-  },
-  shiftItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  shiftDate: {
-    backgroundColor: colors.managerPrimary,
-    borderRadius: 8,
-    padding: 12,
-    marginRight: 12,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  shiftDateText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  shiftDetails: {
-    flex: 1,
-  },
-  shiftTime: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  shiftPosition: {
-    fontSize: 14,
-    color: colors.textSecondary,
   },
   toolsSection: {
     marginTop: 8,

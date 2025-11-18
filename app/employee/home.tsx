@@ -7,7 +7,6 @@ import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { WeatherDisplay } from '@/components/WeatherDisplay';
-import { upcomingShifts } from '@/data/mockData';
 
 export default function EmployeeHomeScreen() {
   const { user, logout, isLoading } = useAuth();
@@ -58,12 +57,7 @@ export default function EmployeeHomeScreen() {
           headerTintColor: colors.text,
           headerRight: () => (
             <Pressable onPress={handleLogout} style={styles.logoutButton}>
-              <IconSymbol 
-                ios_icon_name="rectangle.portrait.and.arrow.right" 
-                android_material_icon_name="logout" 
-                color={colors.accent} 
-                size={24} 
-              />
+              <Text style={styles.logoutButtonText}>Logout</Text>
             </Pressable>
           ),
         }}
@@ -82,36 +76,6 @@ export default function EmployeeHomeScreen() {
 
           {/* Weather Card */}
           <WeatherDisplay variant="employee" />
-
-          {/* Upcoming Shifts */}
-          <View style={commonStyles.employeeCard}>
-            <View style={styles.cardHeader}>
-              <IconSymbol 
-                ios_icon_name="calendar" 
-                android_material_icon_name="calendar_today" 
-                color={colors.employeeAccent} 
-                size={24} 
-              />
-              <Text style={styles.cardTitle}>Your Upcoming Shifts</Text>
-            </View>
-            {upcomingShifts.map((shift) => (
-              <View key={shift.id} style={styles.shiftItem}>
-                <View style={styles.shiftDate}>
-                  <Text style={styles.shiftDateText}>
-                    {new Date(shift.date).toLocaleDateString('en-US', { 
-                      weekday: 'short', 
-                      month: 'short', 
-                      day: 'numeric' 
-                    })}
-                  </Text>
-                </View>
-                <View style={styles.shiftDetails}>
-                  <Text style={styles.shiftTime}>{shift.startTime} - {shift.endTime}</Text>
-                  <Text style={styles.shiftPosition}>{shift.position}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
 
           {/* Announcements */}
           <View style={commonStyles.employeeCard}>
@@ -153,24 +117,28 @@ export default function EmployeeHomeScreen() {
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/training')}
             >
-              <IconSymbol 
-                ios_icon_name="book.closed.fill" 
-                android_material_icon_name="import_contacts" 
-                color={colors.employeeAccent} 
-                size={32} 
-              />
+              <View style={styles.iconCircle}>
+                <IconSymbol 
+                  ios_icon_name="book.closed.fill" 
+                  android_material_icon_name="import_contacts" 
+                  color="#FFFFFF" 
+                  size={32} 
+                />
+              </View>
               <Text style={styles.quickLinkText}>Guides & Training</Text>
             </Pressable>
             <Pressable
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/rewards')}
             >
-              <IconSymbol 
-                ios_icon_name="star.fill" 
-                android_material_icon_name="star" 
-                color={colors.employeeAccent} 
-                size={32} 
-              />
+              <View style={styles.iconCircle}>
+                <IconSymbol 
+                  ios_icon_name="star.fill" 
+                  android_material_icon_name="star" 
+                  color="#FFFFFF" 
+                  size={32} 
+                />
+              </View>
               <Text style={styles.quickLinkText}>Rewards</Text>
             </Pressable>
           </View>
@@ -214,8 +182,16 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   logoutButton: {
-    padding: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     marginRight: 8,
+    backgroundColor: colors.employeeAccent,
+    borderRadius: 8,
+  },
+  logoutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   welcomeSection: {
     backgroundColor: colors.employeePrimary,
@@ -243,39 +219,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     marginLeft: 8,
-  },
-  shiftItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  shiftDate: {
-    backgroundColor: colors.employeePrimary,
-    borderRadius: 8,
-    padding: 12,
-    marginRight: 12,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  shiftDateText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  shiftDetails: {
-    flex: 1,
-  },
-  shiftTime: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  shiftPosition: {
-    fontSize: 14,
-    color: colors.textSecondary,
   },
   announcementItem: {
     paddingVertical: 12,
@@ -329,11 +272,20 @@ const styles = StyleSheet.create({
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
   },
+  iconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.employeeAccent,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
   quickLinkText: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    marginTop: 8,
+    textAlign: 'center',
   },
   profileButton: {
     flexDirection: 'row',

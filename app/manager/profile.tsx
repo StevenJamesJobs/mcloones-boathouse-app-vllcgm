@@ -88,7 +88,7 @@ export default function ManagerProfileScreen() {
     const result = await changePassword(passwordData.newPassword);
 
     if (result.success) {
-      Alert.alert('Success', result.message);
+      Alert.alert('Success', 'Password updated successfully! Your new password is now active.');
       setIsChangingPassword(false);
       setPasswordData({ newPassword: '', confirmPassword: '' });
     } else {

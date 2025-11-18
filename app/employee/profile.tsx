@@ -38,7 +38,7 @@ export default function EmployeeProfileScreen() {
         tagline: user.tagline || '',
       });
 
-      // Show password change prompt if must_change_password is true
+      // Show password change prompt only if must_change_password is true
       if (user.must_change_password) {
         setShowPasswordPrompt(true);
       }
@@ -91,7 +91,7 @@ export default function EmployeeProfileScreen() {
     const result = await changePassword(passwordData.newPassword);
 
     if (result.success) {
-      Alert.alert('Success', result.message);
+      Alert.alert('Success', 'Password updated successfully! Your new password is now active.');
       setIsChangingPassword(false);
       setShowPasswordPrompt(false);
       setPasswordData({ newPassword: '', confirmPassword: '' });
