@@ -91,14 +91,12 @@ export default function EmployeeDataSeeder() {
     const status: string[] = [];
 
     try {
-      // Get the project URL
-      const { data: { url } } = await supabase.functions.invoke('create-employee', {
-        body: { test: true }
-      });
+      status.push('Starting employee seeding process...');
+      setSeedStatus([...status]);
 
       for (const employee of INITIAL_EMPLOYEES) {
         try {
-          status.push(`Creating ${employee.full_name} (${employee.username})...`);
+          status.push(`\nCreating ${employee.full_name} (Username: ${employee.username})...`);
           setSeedStatus([...status]);
 
           const { data, error } = await supabase.functions.invoke('create-employee', {
@@ -114,14 +112,20 @@ export default function EmployeeDataSeeder() {
           });
 
           if (error) {
-            status.push(`❌ Failed: ${employee.full_name} - ${error.message}`);
+            status.push(`❌ Failed: ${error.message}`);
             console.error(`Failed to create ${employee.full_name}:`, error);
+          } else if (data?.error) {
+            status.push(`❌ Failed: ${data.error}`);
+            console.error(`Failed to create ${employee.full_name}:`, data.error);
+          } else if (data?.success) {
+            status.push(`✅ Success! User ID: ${data.user_id}`);
           } else {
-            status.push(`✅ Success: ${employee.full_name}`);
+            status.push(`⚠️ Unknown response`);
+            console.log('Response:', data);
           }
           setSeedStatus([...status]);
-        } catch (err) {
-          status.push(`❌ Error: ${employee.full_name} - ${err}`);
+        } catch (err: any) {
+          status.push(`❌ Error: ${err?.message || err}`);
           console.error(`Error creating ${employee.full_name}:`, err);
           setSeedStatus([...status]);
         }
@@ -137,11 +141,11 @@ export default function EmployeeDataSeeder() {
         'All employee accounts have been created. They can now login with their username and the password "mcloonesapp1".',
         [{ text: 'OK' }]
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('Seeding error:', error);
-      status.push(`\n❌ Fatal error: ${error}`);
+      status.push(`\n❌ Fatal error: ${error?.message || error}`);
       setSeedStatus([...status]);
-      Alert.alert('Error', 'Failed to seed employee data. Check console for details.');
+      Alert.alert('Error', `Failed to seed employee data: ${error?.message || error}`);
     } finally {
       setIsSeeding(false);
     }

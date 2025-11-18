@@ -88,15 +88,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from('profiles')
         .select('email, must_change_password, is_active')
         .eq('username', username)
-        .single();
+        .maybeSingle();
 
-      if (profileError || !profileData) {
+      if (profileError) {
         console.error('Profile lookup error:', profileError);
-        return { success: false, message: 'Invalid username or password' };
+        return { 
+          success: false, 
+          message: 'Database error. Please try again or contact support.' 
+        };
+      }
+
+      if (!profileData) {
+        console.log('No profile found for username:', username);
+        return { 
+          success: false, 
+          message: 'Invalid username or password. If this is your first time, please ask a manager to create employee accounts using the setup button (gear icon).' 
+        };
       }
 
       if (!profileData.is_active) {
-        return { success: false, message: 'Account is inactive. Please contact your manager.' };
+        return { 
+          success: false, 
+          message: 'Account is inactive. Please contact your manager.' 
+        };
       }
 
       // Attempt to sign in with email and password
@@ -107,7 +121,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) {
         console.error('Login error:', error);
-        return { success: false, message: error.message || 'Invalid username or password' };
+        return { 
+          success: false, 
+          message: error.message || 'Invalid username or password' 
+        };
       }
 
       if (data.user) {
@@ -125,7 +142,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, message: 'Login failed' };
     } catch (error) {
       console.error('Login exception:', error);
-      return { success: false, message: 'An error occurred during login' };
+      return { 
+        success: false, 
+        message: 'An error occurred during login. Please try again.' 
+      };
     }
   };
 
