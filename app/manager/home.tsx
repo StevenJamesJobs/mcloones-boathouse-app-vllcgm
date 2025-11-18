@@ -10,13 +10,13 @@ import { WeatherDisplay } from '@/components/WeatherDisplay';
 import { upcomingShifts } from '@/data/mockData';
 
 export default function ManagerHomeScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!user || user.role !== 'manager') {
+    if (!isLoading && (!user || (user.role !== 'manager' && user.role !== 'owner_manager'))) {
       router.replace('/(tabs)/(home)/');
     }
-  }, [user]);
+  }, [user, isLoading]);
 
   const handleLogout = () => {
     logout();
@@ -37,7 +37,18 @@ export default function ManagerHomeScreen() {
     { id: 11, title: 'Employees', icon: 'person.3.fill', androidIcon: 'people', route: '/manager/employees', color: colors.managerSecondary },
     { id: 12, title: 'Schedule', icon: 'calendar.badge.clock', androidIcon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
     { id: 13, title: 'Rewards', icon: 'dollarsign.circle.fill', androidIcon: 'attach_money', route: '/manager/rewards', color: colors.managerSecondary },
+    { id: 14, title: 'My Profile', icon: 'person.circle.fill', androidIcon: 'account_circle', route: '/manager/profile', color: colors.managerPrimary },
   ];
+
+  if (isLoading) {
+    return (
+      <View style={[commonStyles.employeeContainer, styles.container]}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <>
@@ -68,7 +79,7 @@ export default function ManagerHomeScreen() {
         >
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Welcome, {user?.name}!</Text>
+            <Text style={styles.welcomeTitle}>Welcome, {user?.full_name}!</Text>
             <Text style={styles.welcomeSubtitle}>Manager Dashboard</Text>
           </View>
 
@@ -143,6 +154,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 20,
     paddingBottom: 100,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.textSecondary,
   },
   logoutButton: {
     padding: 8,

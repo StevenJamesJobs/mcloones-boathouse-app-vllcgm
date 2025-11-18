@@ -10,6 +10,57 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          id: string
+          username: string
+          full_name: string
+          email: string
+          phone_number: string | null
+          address: string | null
+          job_title: string
+          role: 'owner_manager' | 'manager' | 'employee'
+          profile_picture_url: string | null
+          tagline: string | null
+          is_active: boolean
+          must_change_password: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          username: string
+          full_name: string
+          email: string
+          phone_number?: string | null
+          address?: string | null
+          job_title: string
+          role: 'owner_manager' | 'manager' | 'employee'
+          profile_picture_url?: string | null
+          tagline?: string | null
+          is_active?: boolean
+          must_change_password?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          username?: string
+          full_name?: string
+          email?: string
+          phone_number?: string | null
+          address?: string | null
+          job_title?: string
+          role?: 'owner_manager' | 'manager' | 'employee'
+          profile_picture_url?: string | null
+          tagline?: string | null
+          is_active?: boolean
+          must_change_password?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       menu_categories: {
         Row: {
           id: string

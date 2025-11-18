@@ -1,145 +1,172 @@
 
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, Pressable, Image, Alert, ActivityIndicator } from 'react-native';
-import { Stack, router } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image } from 'react-native';
+import { Stack } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
-import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/app/integrations/supabase/client';
 
 export default function ManagerProfileScreen() {
-  const { employee, updateEmployee, changePassword } = useAuth();
-  const [editing, setEditing] = useState(false);
+  const { user, updateProfile, changePassword, refreshProfile } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [changingPassword, setChangingPassword] = useState(false);
+  
+  const [formData, setFormData] = useState({
+    full_name: user?.full_name || '',
+    job_title: user?.job_title || '',
+    phone_number: user?.phone_number || '',
+    address: user?.address || '',
+    email: user?.email || '',
+    tagline: user?.tagline || '',
+  });
 
-  // Form state
-  const [fullName, setFullName] = useState(employee?.full_name || '');
-  const [jobTitle, setJobTitle] = useState(employee?.job_title || '');
-  const [tagline, setTagline] = useState(employee?.tagline || '');
-  const [phoneNumber, setPhoneNumber] = useState(employee?.phone_number || '');
-  const [address, setAddress] = useState(employee?.address || '');
-  const [email, setEmail] = useState(employee?.email || '');
-  const [profilePictureUrl, setProfilePictureUrl] = useState(employee?.profile_picture_url || '');
+  const [passwordData, setPasswordData] = useState({
+    newPassword: '',
+    confirmPassword: '',
+  });
 
-  // Password change state
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-
-  const isOwnerManager = employee?.role === 'owner_manager';
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        full_name: user.full_name,
+        job_title: user.job_title,
+        phone_number: user.phone_number || '',
+        address: user.address || '',
+        email: user.email,
+        tagline: user.tagline || '',
+      });
+    }
+  }, [user]);
 
   const handleSave = async () => {
-    if (tagline.length > 25) {
+    if (!formData.full_name || !formData.job_title || !formData.email) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+
+    if (formData.tagline && formData.tagline.length > 25) {
       Alert.alert('Error', 'Tagline must be 25 characters or less');
       return;
     }
 
-    const updates: any = {
-      tagline,
-      phone_number: phoneNumber,
-      address,
-      email,
-      profile_picture_url: profilePictureUrl,
-    };
+    const result = await updateProfile({
+      full_name: formData.full_name,
+      job_title: formData.job_title,
+      phone_number: formData.phone_number || null,
+      address: formData.address || null,
+      email: formData.email,
+      tagline: formData.tagline || null,
+    });
 
-    // Only owner_manager can update name and job title
-    if (isOwnerManager) {
-      updates.full_name = fullName;
-      updates.job_title = jobTitle;
+    if (result.success) {
+      Alert.alert('Success', result.message);
+      setIsEditing(false);
+    } else {
+      Alert.alert('Error', result.message);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwordData.newPassword || !passwordData.confirmPassword) {
+      Alert.alert('Error', 'Please fill in all password fields');
+      return;
     }
 
-    const success = await updateEmployee(updates);
+    if (passwordData.newPassword.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
 
-    if (success) {
-      setEditing(false);
-      Alert.alert('Success', 'Profile updated successfully');
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    const result = await changePassword(passwordData.newPassword);
+
+    if (result.success) {
+      Alert.alert('Success', result.message);
+      setIsChangingPassword(false);
+      setPasswordData({ newPassword: '', confirmPassword: '' });
+    } else {
+      Alert.alert('Error', result.message);
     }
   };
 
   const handlePickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert('Permission Required', 'Please grant camera roll permissions to upload a profile picture');
-      return;
-    }
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please grant camera roll permissions to upload a profile picture');
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.5,
-    });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
 
-    if (!result.canceled && result.assets[0]) {
-      await uploadImage(result.assets[0].uri);
+      if (!result.canceled && result.assets[0]) {
+        await uploadImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image');
     }
   };
 
   const uploadImage = async (uri: string) => {
+    if (!user) return;
+
     try {
       setUploading(true);
 
       const response = await fetch(uri);
       const blob = await response.blob();
-      const fileExt = uri.split('.').pop();
-      const fileName = `${employee?.id}-${Date.now()}.${fileExt}`;
-      const filePath = `profile-pictures/${fileName}`;
+      const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${user.id}/profile.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('employees')
-        .upload(filePath, blob);
+        .from('profile-pictures')
+        .upload(fileName, blob, {
+          contentType: `image/${fileExt}`,
+          upsert: true,
+        });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('employees')
-        .getPublicUrl(filePath);
+        .from('profile-pictures')
+        .getPublicUrl(fileName);
 
-      setProfilePictureUrl(publicUrl);
-      
-      // Auto-save the profile picture
-      await updateEmployee({ profile_picture_url: publicUrl });
-      
-      Alert.alert('Success', 'Profile picture updated');
+      const result = await updateProfile({
+        profile_picture_url: publicUrl,
+      });
+
+      if (result.success) {
+        Alert.alert('Success', 'Profile picture updated');
+        await refreshProfile();
+      } else {
+        Alert.alert('Error', result.message);
+      }
     } catch (error) {
       console.error('Error uploading image:', error);
-      Alert.alert('Error', 'Could not upload profile picture');
+      Alert.alert('Error', 'Failed to upload image');
     } finally {
       setUploading(false);
     }
   };
 
-  const handleChangePassword = async () => {
-    if (!newPassword || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all password fields');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      Alert.alert('Error', 'New passwords do not match');
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      Alert.alert('Error', 'Password must be at least 8 characters long');
-      return;
-    }
-
-    const success = await changePassword(newPassword);
-    
-    if (success) {
-      setChangingPassword(false);
-      setNewPassword('');
-      setConfirmPassword('');
-    }
-  };
-
-  if (!employee) {
+  if (!user) {
     return (
-      <View style={[commonStyles.employeeContainer, styles.container]}>
-        <Text style={styles.errorText}>Not logged in</Text>
+      <View style={styles.container}>
+        <Text style={styles.errorText}>No user data available</Text>
       </View>
     );
   }
@@ -163,44 +190,46 @@ export default function ManagerProfileScreen() {
         >
           {/* Profile Picture Section */}
           <View style={styles.profilePictureSection}>
-            <View style={styles.profilePictureContainer}>
-              {profilePictureUrl ? (
-                <Image source={{ uri: profilePictureUrl }} style={styles.profilePicture} />
-              ) : (
-                <View style={styles.profilePicturePlaceholder}>
-                  <IconSymbol 
-                    ios_icon_name="person.fill" 
-                    android_material_icon_name="person" 
-                    color={colors.textSecondary} 
-                    size={60} 
-                  />
-                </View>
-              )}
-              {uploading && (
-                <View style={styles.uploadingOverlay}>
-                  <ActivityIndicator color="#FFFFFF" />
-                </View>
-              )}
-            </View>
-            <Pressable style={styles.changePhotoButton} onPress={handlePickImage}>
+            {user.profile_picture_url ? (
+              <Image 
+                source={{ uri: user.profile_picture_url }} 
+                style={styles.profilePicture}
+              />
+            ) : (
+              <View style={styles.profilePicturePlaceholder}>
+                <IconSymbol 
+                  ios_icon_name="person.fill" 
+                  android_material_icon_name="person" 
+                  color={colors.textSecondary} 
+                  size={64} 
+                />
+              </View>
+            )}
+            <Pressable 
+              style={styles.changePhotoButton}
+              onPress={handlePickImage}
+              disabled={uploading}
+            >
               <IconSymbol 
                 ios_icon_name="camera.fill" 
                 android_material_icon_name="photo_camera" 
-                color={colors.managerAccent} 
+                color="#FFFFFF" 
                 size={20} 
               />
-              <Text style={styles.changePhotoText}>Change Photo</Text>
+              <Text style={styles.changePhotoText}>
+                {uploading ? 'Uploading...' : 'Change Photo'}
+              </Text>
             </Pressable>
           </View>
 
-          {/* Basic Info */}
+          {/* Profile Info Card */}
           <View style={commonStyles.employeeCard}>
             <View style={styles.cardHeader}>
-              <Text style={styles.sectionTitle}>Basic Information</Text>
-              {!editing && (
-                <Pressable onPress={() => setEditing(true)}>
+              <Text style={styles.cardTitle}>Profile Information</Text>
+              {!isEditing && (
+                <Pressable onPress={() => setIsEditing(true)}>
                   <IconSymbol 
-                    ios_icon_name="pencil.circle.fill" 
+                    ios_icon_name="pencil" 
                     android_material_icon_name="edit" 
                     color={colors.managerAccent} 
                     size={24} 
@@ -209,185 +238,204 @@ export default function ManagerProfileScreen() {
               )}
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Name {!isOwnerManager && '(Read-only)'}</Text>
-              <TextInput
-                style={[styles.input, (!editing || !isOwnerManager) && styles.inputDisabled]}
-                value={fullName}
-                onChangeText={setFullName}
-                placeholder="Full Name"
-                editable={editing && isOwnerManager}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Username (Read-only)</Text>
-              <TextInput
-                style={[styles.input, styles.inputDisabled]}
-                value={employee.username}
-                editable={false}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Job Title {!isOwnerManager && '(Read-only)'}</Text>
-              <TextInput
-                style={[styles.input, (!editing || !isOwnerManager) && styles.inputDisabled]}
-                value={jobTitle}
-                onChangeText={setJobTitle}
-                placeholder="Job Title"
-                editable={editing && isOwnerManager}
-              />
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.label}>Role</Text>
-              <Text style={styles.value}>
-                {employee.role === 'owner_manager' ? 'Owner/Manager' : 'Manager'}
-              </Text>
-            </View>
-          </View>
-
-          {/* Contact Information */}
-          <View style={commonStyles.employeeCard}>
-            <Text style={styles.sectionTitle}>Contact Information</Text>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Tagline (25 characters max)</Text>
-              <TextInput
-                style={[styles.input, !editing && styles.inputDisabled]}
-                value={tagline}
-                onChangeText={setTagline}
-                placeholder="Add a tagline..."
-                maxLength={25}
-                editable={editing}
-              />
-              <Text style={styles.characterCount}>{tagline.length}/25</Text>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email</Text>
-              <TextInput
-                style={[styles.input, !editing && styles.inputDisabled]}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="email@example.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                editable={editing}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Phone Number</Text>
-              <TextInput
-                style={[styles.input, !editing && styles.inputDisabled]}
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                placeholder="(123) 456-7890"
-                keyboardType="phone-pad"
-                editable={editing}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Address</Text>
-              <TextInput
-                style={[styles.input, styles.textArea, !editing && styles.inputDisabled]}
-                value={address}
-                onChangeText={setAddress}
-                placeholder="123 Main St, City, State ZIP"
-                multiline
-                numberOfLines={3}
-                editable={editing}
-              />
-            </View>
-
-            {editing && (
-              <View style={styles.buttonRow}>
-                <Pressable 
-                  style={[styles.button, styles.cancelButton]} 
-                  onPress={() => {
-                    setEditing(false);
-                    setFullName(employee.full_name || '');
-                    setJobTitle(employee.job_title || '');
-                    setTagline(employee.tagline || '');
-                    setPhoneNumber(employee.phone_number || '');
-                    setAddress(employee.address || '');
-                    setEmail(employee.email || '');
-                  }}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </Pressable>
-                <Pressable style={[styles.button, styles.saveButton]} onPress={handleSave}>
-                  <Text style={styles.saveButtonText}>Save Changes</Text>
-                </Pressable>
-              </View>
-            )}
-          </View>
-
-          {/* Password Change Section */}
-          <View style={commonStyles.employeeCard}>
-            <View style={styles.cardHeader}>
-              <Text style={styles.sectionTitle}>Security</Text>
-            </View>
-
-            {!changingPassword ? (
-              <Pressable 
-                style={styles.changePasswordButton} 
-                onPress={() => setChangingPassword(true)}
-              >
-                <IconSymbol 
-                  ios_icon_name="lock.fill" 
-                  android_material_icon_name="lock" 
-                  color={colors.managerAccent} 
-                  size={20} 
-                />
-                <Text style={styles.changePasswordButtonText}>Change Password</Text>
-              </Pressable>
-            ) : (
+            {isEditing ? (
               <>
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>New Password</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={newPassword}
-                    onChangeText={setNewPassword}
-                    placeholder="Enter new password"
-                    secureTextEntry
-                  />
-                </View>
+                <Text style={styles.inputLabel}>Full Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.full_name}
+                  onChangeText={(text) => setFormData({ ...formData, full_name: text })}
+                  placeholder="Enter full name"
+                  placeholderTextColor={colors.textSecondary}
+                />
 
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Confirm New Password</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    placeholder="Confirm new password"
-                    secureTextEntry
-                  />
-                </View>
+                <Text style={styles.inputLabel}>Job Title *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.job_title}
+                  onChangeText={(text) => setFormData({ ...formData, job_title: text })}
+                  placeholder="Enter job title"
+                  placeholderTextColor={colors.textSecondary}
+                />
 
-                <View style={styles.buttonRow}>
+                <Text style={styles.inputLabel}>Tagline (max 25 characters)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.tagline}
+                  onChangeText={(text) => {
+                    if (text.length <= 25) {
+                      setFormData({ ...formData, tagline: text });
+                    }
+                  }}
+                  placeholder="Enter a short tagline"
+                  placeholderTextColor={colors.textSecondary}
+                  maxLength={25}
+                />
+                <Text style={styles.characterCount}>{formData.tagline.length}/25</Text>
+
+                <Text style={styles.inputLabel}>Email *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.email}
+                  onChangeText={(text) => setFormData({ ...formData, email: text })}
+                  placeholder="Enter email"
+                  placeholderTextColor={colors.textSecondary}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+
+                <Text style={styles.inputLabel}>Phone Number</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.phone_number}
+                  onChangeText={(text) => setFormData({ ...formData, phone_number: text })}
+                  placeholder="Enter phone number"
+                  placeholderTextColor={colors.textSecondary}
+                  keyboardType="phone-pad"
+                />
+
+                <Text style={styles.inputLabel}>Address</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={formData.address}
+                  onChangeText={(text) => setFormData({ ...formData, address: text })}
+                  placeholder="Enter address"
+                  placeholderTextColor={colors.textSecondary}
+                  multiline
+                  numberOfLines={3}
+                />
+
+                <View style={styles.editActions}>
                   <Pressable 
-                    style={[styles.button, styles.cancelButton]} 
+                    style={[styles.button, styles.cancelButton]}
                     onPress={() => {
-                      setChangingPassword(false);
-                      setNewPassword('');
-                      setConfirmPassword('');
+                      setIsEditing(false);
+                      setFormData({
+                        full_name: user.full_name,
+                        job_title: user.job_title,
+                        phone_number: user.phone_number || '',
+                        address: user.address || '',
+                        email: user.email,
+                        tagline: user.tagline || '',
+                      });
                     }}
                   >
                     <Text style={styles.cancelButtonText}>Cancel</Text>
                   </Pressable>
                   <Pressable 
-                    style={[styles.button, styles.saveButton]} 
+                    style={[styles.button, styles.saveButton]}
+                    onPress={handleSave}
+                  >
+                    <Text style={styles.saveButtonText}>Save Changes</Text>
+                  </Pressable>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Username:</Text>
+                  <Text style={styles.infoValue}>{user.username}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Full Name:</Text>
+                  <Text style={styles.infoValue}>{user.full_name}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Job Title:</Text>
+                  <Text style={styles.infoValue}>{user.job_title}</Text>
+                </View>
+                {user.tagline && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Tagline:</Text>
+                    <Text style={styles.infoValue}>&quot;{user.tagline}&quot;</Text>
+                  </View>
+                )}
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Email:</Text>
+                  <Text style={styles.infoValue}>{user.email}</Text>
+                </View>
+                {user.phone_number && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Phone:</Text>
+                    <Text style={styles.infoValue}>{user.phone_number}</Text>
+                  </View>
+                )}
+                {user.address && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Address:</Text>
+                    <Text style={styles.infoValue}>{user.address}</Text>
+                  </View>
+                )}
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Role:</Text>
+                  <Text style={[styles.infoValue, styles.roleText]}>
+                    {user.role === 'owner_manager' ? 'Owner/Manager' : 
+                     user.role === 'manager' ? 'Manager' : 'Employee'}
+                  </Text>
+                </View>
+              </>
+            )}
+          </View>
+
+          {/* Change Password Card */}
+          <View style={commonStyles.employeeCard}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>Change Password</Text>
+            </View>
+
+            {isChangingPassword ? (
+              <>
+                <Text style={styles.inputLabel}>New Password *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={passwordData.newPassword}
+                  onChangeText={(text) => setPasswordData({ ...passwordData, newPassword: text })}
+                  placeholder="Enter new password"
+                  placeholderTextColor={colors.textSecondary}
+                  secureTextEntry
+                />
+
+                <Text style={styles.inputLabel}>Confirm Password *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={passwordData.confirmPassword}
+                  onChangeText={(text) => setPasswordData({ ...passwordData, confirmPassword: text })}
+                  placeholder="Confirm new password"
+                  placeholderTextColor={colors.textSecondary}
+                  secureTextEntry
+                />
+
+                <View style={styles.editActions}>
+                  <Pressable 
+                    style={[styles.button, styles.cancelButton]}
+                    onPress={() => {
+                      setIsChangingPassword(false);
+                      setPasswordData({ newPassword: '', confirmPassword: '' });
+                    }}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </Pressable>
+                  <Pressable 
+                    style={[styles.button, styles.saveButton]}
                     onPress={handleChangePassword}
                   >
                     <Text style={styles.saveButtonText}>Update Password</Text>
                   </Pressable>
                 </View>
               </>
+            ) : (
+              <Pressable 
+                style={styles.changePasswordButton}
+                onPress={() => setIsChangingPassword(true)}
+              >
+                <IconSymbol 
+                  ios_icon_name="key.fill" 
+                  android_material_icon_name="vpn_key" 
+                  color={colors.managerAccent} 
+                  size={24} 
+                />
+                <Text style={styles.changePasswordText}>Change Password</Text>
+              </Pressable>
             )}
           </View>
         </ScrollView>
@@ -409,60 +457,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.error,
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 40,
   },
   profilePictureSection: {
     alignItems: 'center',
     marginBottom: 24,
   },
-  profilePictureContainer: {
-    position: 'relative',
-    marginBottom: 12,
-  },
   profilePicture: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: colors.border,
+    marginBottom: 12,
   },
   profilePicturePlaceholder: {
     width: 120,
     height: 120,
     borderRadius: 60,
     backgroundColor: colors.border,
-    justifyContent: 'center',
     alignItems: 'center',
-  },
-  uploadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 60,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginBottom: 12,
   },
   changePhotoButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 8,
+    backgroundColor: colors.managerAccent,
     paddingHorizontal: 16,
-    borderRadius: 8,
-    backgroundColor: colors.employeeCard,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
   changePhotoText: {
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
-    color: colors.managerAccent,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 16,
+    marginLeft: 8,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -470,43 +498,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
+  },
   infoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  label: {
+  infoLabel: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.textSecondary,
+    width: 120,
   },
-  value: {
+  infoValue: {
     fontSize: 14,
     color: colors.text,
+    flex: 1,
   },
-  inputGroup: {
-    marginBottom: 16,
+  roleText: {
+    fontWeight: '600',
+    color: colors.managerAccent,
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.text,
     marginBottom: 8,
+    marginTop: 12,
   },
   input: {
+    backgroundColor: colors.employeeCard,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     color: colors.text,
-    backgroundColor: colors.background,
-  },
-  inputDisabled: {
-    backgroundColor: colors.border,
-    color: colors.textSecondary,
   },
   textArea: {
     minHeight: 80,
@@ -518,14 +550,14 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginTop: 4,
   },
-  buttonRow: {
+  editActions: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 8,
+    marginTop: 20,
   },
   button: {
     flex: 1,
-    paddingVertical: 12,
+    padding: 16,
     borderRadius: 8,
     alignItems: 'center',
   },
@@ -549,16 +581,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
+    padding: 16,
+    backgroundColor: colors.managerAccent + '20',
     borderRadius: 8,
-    backgroundColor: colors.employeeCard,
-    borderWidth: 1,
-    borderColor: colors.managerAccent,
   },
-  changePasswordButtonText: {
+  changePasswordText: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.managerAccent,
+    marginLeft: 8,
   },
 });

@@ -10,14 +10,14 @@ import { WeatherDisplay } from '@/components/WeatherDisplay';
 import { upcomingShifts } from '@/data/mockData';
 
 export default function EmployeeHomeScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const { announcements } = useAnnouncements();
 
   useEffect(() => {
-    if (!user || user.role === 'customer') {
+    if (!isLoading && (!user || user.role === 'customer')) {
       router.replace('/(tabs)/(home)/');
     }
-  }, [user]);
+  }, [user, isLoading]);
 
   const handleLogout = () => {
     logout();
@@ -36,6 +36,16 @@ export default function EmployeeHomeScreen() {
         return colors.textSecondary;
     }
   };
+
+  if (isLoading) {
+    return (
+      <View style={[commonStyles.employeeContainer, styles.container]}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <>
@@ -164,6 +174,20 @@ export default function EmployeeHomeScreen() {
               <Text style={styles.quickLinkText}>Rewards</Text>
             </Pressable>
           </View>
+
+          {/* Profile Link */}
+          <Pressable
+            style={styles.profileButton}
+            onPress={() => router.push('/employee/profile')}
+          >
+            <IconSymbol 
+              ios_icon_name="person.circle.fill" 
+              android_material_icon_name="account_circle" 
+              color={colors.employeeAccent} 
+              size={32} 
+            />
+            <Text style={styles.profileButtonText}>My Profile</Text>
+          </Pressable>
         </ScrollView>
       </View>
     </>
@@ -178,6 +202,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 20,
     paddingBottom: 100,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.textSecondary,
   },
   logoutButton: {
     padding: 8,
@@ -300,5 +334,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     marginTop: 8,
+  },
+  profileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.employeeCard,
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 12,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+  },
+  profileButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginLeft: 8,
   },
 });
