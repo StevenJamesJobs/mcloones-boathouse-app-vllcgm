@@ -14,6 +14,7 @@ import { useTagline } from '@/hooks/useTagline';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EmployeeDataSeeder from '@/components/EmployeeDataSeeder';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function HomeScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
@@ -137,12 +138,7 @@ export default function HomeScreen() {
               />
             </Pressable>
             <Pressable onPress={() => setLoginModalVisible(true)} style={styles.loginIconButton}>
-              <IconSymbol 
-                ios_icon_name="person.circle.fill" 
-                android_material_icon_name="account_circle" 
-                color="#3289a8" 
-                size={36} 
-              />
+              <MaterialIcons name="login" size={32} color="#3289a8" />
             </Pressable>
           </View>
         </View>

@@ -7,6 +7,7 @@ import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { WeatherDisplay } from '@/components/WeatherDisplay';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function EmployeeHomeScreen() {
   const { user, logout, isLoading } = useAuth();
@@ -125,24 +126,14 @@ export default function EmployeeHomeScreen() {
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/training')}
             >
-              <IconSymbol 
-                ios_icon_name="book.closed.fill" 
-                android_material_icon_name="import_contacts" 
-                color="#3289a8" 
-                size={48} 
-              />
+              <MaterialIcons name="menu-book" size={48} color="#3289a8" />
               <Text style={styles.quickLinkText}>Guides & Training</Text>
             </Pressable>
             <Pressable
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/rewards')}
             >
-              <IconSymbol 
-                ios_icon_name="star.fill" 
-                android_material_icon_name="star" 
-                color="#3289a8" 
-                size={48} 
-              />
+              <MaterialIcons name="stars" size={48} color="#3289a8" />
               <Text style={styles.quickLinkText}>Rewards</Text>
             </Pressable>
           </View>
@@ -152,12 +143,7 @@ export default function EmployeeHomeScreen() {
             style={styles.profileButton}
             onPress={() => router.push('/employee/profile')}
           >
-            <IconSymbol 
-              ios_icon_name="person.circle.fill" 
-              android_material_icon_name="account_circle" 
-              color="#3289a8" 
-              size={32} 
-            />
+            <MaterialIcons name="person" size={32} color="#3289a8" />
             <Text style={styles.profileButtonText}>My Profile</Text>
           </Pressable>
         </ScrollView>
