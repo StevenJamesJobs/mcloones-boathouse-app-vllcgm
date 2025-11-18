@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, TextInput, Alert, ActivityIndicator, Linking, Image } from 'react-native';
 import { Stack, Link } from 'expo-router';
@@ -90,7 +91,7 @@ export default function HomeScreen() {
             style={styles.logo}
             resizeMode="contain"
           />
-          <Pressable onPress={() => setLoginModalVisible(true)} style={styles.loginButton}>
+          <Pressable onPress={() => setLoginModalVisible(true)} style={styles.loginIconButton}>
             <IconSymbol name="person.circle.fill" color={colors.accent} size={32} />
           </Pressable>
         </View>
@@ -342,6 +343,7 @@ export default function HomeScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="employee@mcloones.com"
+                placeholderTextColor="#999"
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
@@ -354,6 +356,7 @@ export default function HomeScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="Enter password"
+                placeholderTextColor="#999"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -414,7 +417,7 @@ const styles = StyleSheet.create({
     height: 40,
     width: 200,
   },
-  loginButton: {
+  loginIconButton: {
     padding: 4,
   },
   scrollContent: {
@@ -684,12 +687,20 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: '#D0D0D0',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     color: colors.text,
-    backgroundColor: colors.background,
+    backgroundColor: '#F5F5F5',
+  },
+  loginButton: {
+    backgroundColor: colors.accent,
+    borderRadius: 10,
+    padding: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
   },
   loginButtonText: {
     color: '#FFFFFF',
@@ -704,3 +715,4 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 });
+
