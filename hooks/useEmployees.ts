@@ -7,6 +7,8 @@ type Profile = Tables<'profiles'>;
 type ProfileInsert = TablesInsert<'profiles'>;
 type ProfileUpdate = TablesUpdate<'profiles'>;
 
+const SUPABASE_URL = 'https://poyoopbkdesjhymhlriw.supabase.co';
+
 export function useEmployees() {
   const [employees, setEmployees] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,60 +51,55 @@ export function useEmployees() {
     try {
       console.log('Creating employee with data:', employeeData);
 
-      // Create auth user with auto-confirmed email using admin API
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: employeeData.email,
-        password: 'mcloonesapp1',
-        email_confirm: true, // Auto-confirm email
-        user_metadata: {
-          username: employeeData.username,
-          full_name: employeeData.full_name,
-        }
-      });
-
-      if (authError) {
-        console.error('Auth error:', authError);
-        return { success: false, message: authError.message };
+      // Get the current session to pass the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        return { success: false, message: 'Not authenticated. Please log in again.' };
       }
 
-      if (!authData.user) {
-        return { success: false, message: 'Failed to create user' };
-      }
-
-      console.log('Auth user created successfully:', authData.user.id);
-
-      // Create profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
+      // Call the edge function to create the employee
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/create-employee`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
           username: employeeData.username,
           full_name: employeeData.full_name,
           email: employeeData.email,
           phone_number: employeeData.phone_number || null,
           job_title: employeeData.job_title,
           role: employeeData.role,
-          must_change_password: true,
-          is_active: true,
-        });
+          password: 'mcloonesapp1', // Default password
+        }),
+      });
 
-      if (profileError) {
-        console.error('Profile error:', profileError);
-        // Try to delete the auth user if profile creation fails
-        try {
-          await supabase.auth.admin.deleteUser(authData.user.id);
-        } catch (deleteError) {
-          console.error('Failed to cleanup auth user:', deleteError);
-        }
-        return { success: false, message: profileError.message };
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('Edge function error:', result);
+        return { 
+          success: false, 
+          message: result.error || 'Failed to create employee' 
+        };
       }
 
-      console.log('Profile created successfully');
+      if (result.error) {
+        console.error('Edge function returned error:', result.error);
+        return { 
+          success: false, 
+          message: result.error 
+        };
+      }
+
+      console.log('Employee created successfully via edge function');
       await fetchEmployees();
       return { 
         success: true, 
         message: 'Employee created successfully. They can now log in immediately with their credentials.',
-        userId: authData.user.id 
+        userId: result.user_id 
       };
     } catch (err) {
       console.error('Create employee exception:', err);
