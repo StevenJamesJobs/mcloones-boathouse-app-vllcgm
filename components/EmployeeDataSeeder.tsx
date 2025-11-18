@@ -87,6 +87,26 @@ export default function EmployeeDataSeeder() {
   const [isResetting, setIsResetting] = useState(false);
   const [testUsername, setTestUsername] = useState('1');
   const [testPassword, setTestPassword] = useState('mcloonesapp1');
+  const [existingEmployees, setExistingEmployees] = useState<number>(0);
+
+  // Check if employees already exist
+  React.useEffect(() => {
+    checkExistingEmployees();
+  }, []);
+
+  const checkExistingEmployees = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true });
+      
+      if (!error && data !== null) {
+        setExistingEmployees(data.length || 0);
+      }
+    } catch (error) {
+      console.error('Error checking existing employees:', error);
+    }
+  };
 
   const seedEmployees = async () => {
     setIsSeeding(true);
@@ -95,12 +115,31 @@ export default function EmployeeDataSeeder() {
 
     try {
       status.push('Starting employee seeding process...');
+      status.push('Note: If employees already exist, they will be skipped.');
       setSeedStatus([...status]);
+
+      let successCount = 0;
+      let skipCount = 0;
+      let errorCount = 0;
 
       for (const employee of INITIAL_EMPLOYEES) {
         try {
           status.push(`\nCreating ${employee.full_name} (Username: ${employee.username})...`);
           setSeedStatus([...status]);
+
+          // Check if employee already exists
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('username', employee.username)
+            .maybeSingle();
+
+          if (existingProfile) {
+            status.push(`⏭️ Skipped: Employee already exists`);
+            skipCount++;
+            setSeedStatus([...status]);
+            continue;
+          }
 
           const { data, error } = await supabase.functions.invoke('create-employee', {
             body: {
@@ -117,31 +156,47 @@ export default function EmployeeDataSeeder() {
           if (error) {
             status.push(`❌ Failed: ${error.message}`);
             console.error(`Failed to create ${employee.full_name}:`, error);
+            errorCount++;
           } else if (data?.error) {
-            status.push(`❌ Failed: ${data.error}`);
-            console.error(`Failed to create ${employee.full_name}:`, data.error);
+            // Check if it's a duplicate user error
+            if (data.error.includes('already exists') || data.error.includes('duplicate')) {
+              status.push(`⏭️ Skipped: Employee already exists`);
+              skipCount++;
+            } else {
+              status.push(`❌ Failed: ${data.error}`);
+              console.error(`Failed to create ${employee.full_name}:`, data.error);
+              errorCount++;
+            }
           } else if (data?.success) {
             status.push(`✅ Success! User ID: ${data.user_id}`);
+            successCount++;
           } else {
             status.push(`⚠️ Unknown response`);
             console.log('Response:', data);
+            errorCount++;
           }
           setSeedStatus([...status]);
         } catch (err: any) {
           status.push(`❌ Error: ${err?.message || err}`);
           console.error(`Error creating ${employee.full_name}:`, err);
+          errorCount++;
           setSeedStatus([...status]);
         }
       }
 
-      status.push('\n🎉 Seeding complete!');
+      status.push('\n=== Seeding Summary ===');
+      status.push(`✅ Created: ${successCount}`);
+      status.push(`⏭️ Skipped: ${skipCount}`);
+      status.push(`❌ Errors: ${errorCount}`);
       status.push('\nAll accounts use password: mcloonesapp1');
       status.push('Users should change their password on first login.');
       setSeedStatus([...status]);
 
+      await checkExistingEmployees();
+
       Alert.alert(
         'Seeding Complete',
-        'All employee accounts have been created. They can now login with their username and the password "mcloonesapp1".',
+        `Created: ${successCount}, Skipped: ${skipCount}, Errors: ${errorCount}\n\nEmployees can now login with their username and the password "mcloonesapp1".`,
         [{ text: 'OK' }]
       );
     } catch (error: any) {
@@ -186,6 +241,8 @@ export default function EmployeeDataSeeder() {
       }
 
       status.push(`✅ Profile found: ${profileData.email}`);
+      status.push(`   Role: ${profileData.role}`);
+      status.push(`   Active: ${profileData.is_active}`);
       setSeedStatus([...status]);
 
       // Try to sign in
@@ -196,14 +253,17 @@ export default function EmployeeDataSeeder() {
 
       if (signInError) {
         status.push(`❌ Sign in error: ${signInError.message}`);
-        status.push(`Error details: ${JSON.stringify(signInError)}`);
+        status.push(`   Error code: ${signInError.status}`);
         setSeedStatus([...status]);
         
         // Sign out if partially logged in
         await supabase.auth.signOut();
+        
+        Alert.alert('Login Test Failed', signInError.message);
       } else {
         status.push(`✅ Sign in successful!`);
-        status.push(`User ID: ${signInData.user?.id}`);
+        status.push(`   User ID: ${signInData.user?.id}`);
+        status.push(`   Email: ${signInData.user?.email}`);
         setSeedStatus([...status]);
         
         // Sign out after test
@@ -211,7 +271,7 @@ export default function EmployeeDataSeeder() {
         status.push(`✅ Signed out successfully`);
         setSeedStatus([...status]);
         
-        Alert.alert('Success', 'Login test passed! You can now use these credentials to log in.');
+        Alert.alert('Success', 'Login test passed! You can now use these credentials to log in from the main screen.');
       }
     } catch (error: any) {
       status.push(`❌ Test error: ${error?.message || error}`);
@@ -229,13 +289,21 @@ export default function EmployeeDataSeeder() {
         This will create {INITIAL_EMPLOYEES.length} initial employee accounts with the generic password "mcloonesapp1".
       </Text>
       
+      {existingEmployees > 0 && (
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>
+            ℹ️ {existingEmployees} employee(s) already exist in the database.
+          </Text>
+        </View>
+      )}
+      
       <TouchableOpacity
         style={[styles.button, isSeeding && styles.buttonDisabled]}
         onPress={seedEmployees}
         disabled={isSeeding}
       >
         <Text style={styles.buttonText}>
-          {isSeeding ? 'Seeding...' : 'Seed Employee Data'}
+          {isSeeding ? 'Seeding...' : existingEmployees > 0 ? 'Re-run Seeder' : 'Seed Employee Data'}
         </Text>
       </TouchableOpacity>
 
@@ -307,6 +375,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     marginBottom: 20,
+  },
+  infoBox: {
+    backgroundColor: '#E3F2FD',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 15,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#1976D2',
+    fontWeight: '500',
   },
   button: {
     backgroundColor: colors.primary,

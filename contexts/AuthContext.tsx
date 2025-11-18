@@ -86,6 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Password length:', password.length);
       
       // First, get the email from the username
+      console.log('Looking up profile for username:', username);
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('email, must_change_password, is_active, id, full_name, role')
@@ -95,13 +96,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Profile lookup result:', profileData ? 'Found' : 'Not found');
       if (profileError) {
         console.error('Profile lookup error:', profileError);
-      }
-
-      if (profileError) {
-        console.error('Profile lookup error:', profileError);
         return { 
           success: false, 
-          message: 'Database error. Please try again or contact support.' 
+          message: 'Database error during profile lookup. Please try again or contact support.' 
         };
       }
 
@@ -116,7 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Profile found:', {
         email: profileData.email,
         is_active: profileData.is_active,
-        role: profileData.role
+        role: profileData.role,
+        id: profileData.id
       });
 
       if (!profileData.is_active) {
@@ -141,16 +139,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           status: error.status,
           name: error.name
         });
-      }
-
-      if (error) {
-        console.error('Login error:', error);
         
         // Provide more specific error messages
         if (error.message.includes('Invalid login credentials')) {
           return { 
             success: false, 
             message: 'Invalid username or password. Please check your credentials and try again.' 
+          };
+        }
+        
+        if (error.message.includes('Email not confirmed')) {
+          return { 
+            success: false, 
+            message: 'Email not confirmed. Please contact your manager.' 
           };
         }
         
@@ -163,9 +164,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.user) {
         console.log('User authenticated successfully:', data.user.id);
         const profile = await fetchProfile(data.user.id);
+        
+        if (!profile) {
+          console.error('Profile not found after authentication');
+          await supabase.auth.signOut();
+          return {
+            success: false,
+            message: 'Profile not found. Please contact your manager.'
+          };
+        }
+        
         setUser(profile);
         setSession(data.session);
         
+        console.log('Login successful, profile loaded');
         return { 
           success: true, 
           message: 'Login successful',
