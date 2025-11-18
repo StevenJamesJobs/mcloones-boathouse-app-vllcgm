@@ -1,3 +1,4 @@
+
 // This file is a fallback for using MaterialIcons on Android and web.
 
 import React from "react";
@@ -42,11 +43,15 @@ const MAPPING = {
   "bell": "notifications-none",
   "heart.fill": "favorite",
   "heart": "favorite-border",
+  "megaphone.fill": "campaign",
+  "megaphone": "campaign",
 
   // Actions & Controls
   "plus": "add",
   "minus": "remove",
   "xmark": "close",
+  "xmark.circle.fill": "cancel",
+  "xmark.circle": "cancel",
   "checkmark": "check",
   "checkmark.circle.fill": "check-circle",
   "checkmark.circle": "check-circle-outline",
@@ -127,6 +132,8 @@ const MAPPING = {
   "map.fill": "map",
   "map": "map",
   "compass.drawing": "explore",
+  "mappin.circle.fill": "location-on",
+  "mappin.circle": "location-on",
 
   // Time & Calendar
   "clock.fill": "access-time",
@@ -143,6 +150,14 @@ const MAPPING = {
   "person.circle": "account-circle",
   "person.crop.circle.fill": "account-circle",
   "person.crop.circle": "account-circle",
+  "account_circle": "account-circle",
+
+  // Books & Learning
+  "book.closed.fill": "import-contacts",
+  "book.closed": "import-contacts",
+  "book.fill": "menu-book",
+  "book": "menu-book",
+  "import_contacts": "import-contacts",
 
   // Sharing & Export
   "square.and.arrow.up": "share",

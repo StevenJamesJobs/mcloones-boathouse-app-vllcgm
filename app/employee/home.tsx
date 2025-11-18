@@ -125,28 +125,24 @@ export default function EmployeeHomeScreen() {
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/training')}
             >
-              <View style={styles.iconCircle}>
-                <IconSymbol 
-                  ios_icon_name="book.closed.fill" 
-                  android_material_icon_name="import_contacts" 
-                  color="#FFFFFF" 
-                  size={32} 
-                />
-              </View>
+              <IconSymbol 
+                ios_icon_name="book.closed.fill" 
+                android_material_icon_name="import_contacts" 
+                color={colors.employeeAccent} 
+                size={48} 
+              />
               <Text style={styles.quickLinkText}>Guides & Training</Text>
             </Pressable>
             <Pressable
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/rewards')}
             >
-              <View style={styles.iconCircle}>
-                <IconSymbol 
-                  ios_icon_name="star.fill" 
-                  android_material_icon_name="star" 
-                  color="#FFFFFF" 
-                  size={32} 
-                />
-              </View>
+              <IconSymbol 
+                ios_icon_name="star.fill" 
+                android_material_icon_name="star" 
+                color={colors.employeeAccent} 
+                size={48} 
+              />
               <Text style={styles.quickLinkText}>Rewards</Text>
             </Pressable>
           </View>
@@ -156,14 +152,12 @@ export default function EmployeeHomeScreen() {
             style={styles.profileButton}
             onPress={() => router.push('/employee/profile')}
           >
-            <View style={styles.profileIconCircle}>
-              <IconSymbol 
-                ios_icon_name="person.fill" 
-                android_material_icon_name="person" 
-                color="#FFFFFF" 
-                size={24} 
-              />
-            </View>
+            <IconSymbol 
+              ios_icon_name="person.circle.fill" 
+              android_material_icon_name="account_circle" 
+              color={colors.employeeAccent} 
+              size={32} 
+            />
             <Text style={styles.profileButtonText}>My Profile</Text>
           </Pressable>
         </ScrollView>
@@ -281,15 +275,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
-  },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.employeeAccent,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
+    gap: 12,
   },
   quickLinkText: {
     fontSize: 16,
@@ -307,19 +293,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
-  },
-  profileIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.employeeAccent,
-    justifyContent: 'center',
-    alignItems: 'center',
+    gap: 12,
   },
   profileButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    marginLeft: 12,
   },
 });

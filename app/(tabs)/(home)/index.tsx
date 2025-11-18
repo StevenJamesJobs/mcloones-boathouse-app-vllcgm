@@ -137,14 +137,12 @@ export default function HomeScreen() {
               />
             </Pressable>
             <Pressable onPress={() => setLoginModalVisible(true)} style={styles.loginIconButton}>
-              <View style={styles.loginIconCircle}>
-                <IconSymbol 
-                  ios_icon_name="person.fill" 
-                  android_material_icon_name="person" 
-                  color="#FFFFFF" 
-                  size={24} 
-                />
-              </View>
+              <IconSymbol 
+                ios_icon_name="person.circle.fill" 
+                android_material_icon_name="account_circle" 
+                color={colors.accent} 
+                size={36} 
+              />
             </Pressable>
           </View>
         </View>
@@ -543,28 +541,6 @@ const styles = StyleSheet.create({
   },
   loginIconButton: {
     padding: 4,
-  },
-  loginIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 6,
-      },
-      web: {
-        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.25)',
-      },
-    }),
   },
   scrollContent: {
     paddingBottom: 20,
