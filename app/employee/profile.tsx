@@ -130,38 +130,71 @@ export default function EmployeeProfileScreen() {
 
     try {
       setUploading(true);
+      console.log('Starting profile picture upload for URI:', uri);
 
-      const response = await fetch(uri);
-      const blob = await response.blob();
+      // Generate unique filename
       const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${user.id}/profile.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      console.log('Generated filename:', fileName);
+
+      // Fetch the image as a blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      
+      console.log('Blob created, size:', blob.size, 'type:', blob.type);
+
+      // Convert blob to ArrayBuffer for upload
+      const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (reader.result instanceof ArrayBuffer) {
+            resolve(reader.result);
+          } else {
+            reject(new Error('Failed to convert blob to ArrayBuffer'));
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(blob);
+      });
+
+      console.log('ArrayBuffer created, size:', arrayBuffer.byteLength);
+
+      // Upload to Supabase Storage
+      const { data, error: uploadError } = await supabase.storage
         .from('profile-pictures')
-        .upload(fileName, blob, {
-          contentType: `image/${fileExt}`,
+        .upload(fileName, arrayBuffer, {
+          contentType: blob.type || `image/${fileExt}`,
           upsert: true,
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Supabase upload error:', uploadError);
+        throw uploadError;
+      }
 
+      console.log('Upload successful, data:', data);
+
+      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('profile-pictures')
         .getPublicUrl(fileName);
+
+      console.log('Public URL:', publicUrl);
 
       const result = await updateProfile({
         profile_picture_url: publicUrl,
       });
 
       if (result.success) {
-        Alert.alert('Success', 'Profile picture updated');
+        Alert.alert('Success', 'Profile picture updated successfully');
         await refreshProfile();
       } else {
         Alert.alert('Error', result.message);
       }
     } catch (error) {
       console.error('Error uploading image:', error);
-      Alert.alert('Error', 'Failed to upload image');
+      Alert.alert('Error', `Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploading(false);
     }

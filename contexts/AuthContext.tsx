@@ -224,6 +224,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updates = allowedUpdates;
       }
 
+      // If email is being updated, also update it in auth
+      if (updates.email && updates.email !== user.email) {
+        const { error: authError } = await supabase.auth.updateUser({
+          email: updates.email
+        });
+
+        if (authError) {
+          console.error('Update auth email error:', authError);
+          return { success: false, message: authError.message };
+        }
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update(updates)
@@ -263,7 +275,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await refreshProfile();
       }
 
-      return { success: true, message: 'Password changed successfully' };
+      return { success: true, message: 'Password updated successfully! Your new password is now active.' };
     } catch (error) {
       console.error('Change password exception:', error);
       return { success: false, message: 'An error occurred while changing password' };

@@ -47,15 +47,16 @@ export function useEmployees() {
     }
   ): Promise<{ success: boolean; message: string; userId?: string }> => {
     try {
-      // Create auth user with default password
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      console.log('Creating employee with data:', employeeData);
+
+      // Create auth user with auto-confirmed email using admin API
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: employeeData.email,
         password: 'mcloonesapp1',
-        options: {
-          data: {
-            username: employeeData.username,
-            full_name: employeeData.full_name,
-          }
+        email_confirm: true, // Auto-confirm email
+        user_metadata: {
+          username: employeeData.username,
+          full_name: employeeData.full_name,
         }
       });
 
@@ -67,6 +68,8 @@ export function useEmployees() {
       if (!authData.user) {
         return { success: false, message: 'Failed to create user' };
       }
+
+      console.log('Auth user created successfully:', authData.user.id);
 
       // Create profile
       const { error: profileError } = await supabase
@@ -86,14 +89,19 @@ export function useEmployees() {
       if (profileError) {
         console.error('Profile error:', profileError);
         // Try to delete the auth user if profile creation fails
-        await supabase.auth.admin.deleteUser(authData.user.id);
+        try {
+          await supabase.auth.admin.deleteUser(authData.user.id);
+        } catch (deleteError) {
+          console.error('Failed to cleanup auth user:', deleteError);
+        }
         return { success: false, message: profileError.message };
       }
 
+      console.log('Profile created successfully');
       await fetchEmployees();
       return { 
         success: true, 
-        message: 'Employee created successfully',
+        message: 'Employee created successfully. They can now log in immediately with their credentials.',
         userId: authData.user.id 
       };
     } catch (err) {
@@ -164,7 +172,9 @@ export function useEmployees() {
       }
 
       // Send password reset email
-      const { error } = await supabase.auth.resetPasswordForEmail(employee.email);
+      const { error } = await supabase.auth.resetPasswordForEmail(employee.email, {
+        redirectTo: 'https://natively.dev/email-confirmed'
+      });
 
       if (error) {
         console.error('Reset password error:', error);
