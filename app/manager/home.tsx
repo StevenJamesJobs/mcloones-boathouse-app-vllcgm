@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
@@ -16,9 +16,17 @@ export default function ManagerHomeScreen() {
     }
   }, [user, isLoading]);
 
-  const handleLogout = () => {
-    logout();
-    router.replace('/(tabs)/(home)/');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Force navigation to home page
+      setTimeout(() => {
+        router.replace('/(tabs)/(home)/');
+      }, 100);
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert('Error', 'Failed to logout. Please try again.');
+    }
   };
 
   const managerTools = [
@@ -130,7 +138,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginRight: 8,
     backgroundColor: '#FFFFFF',
-    borderRadius: 8,
+    borderRadius: 20,
   },
   logoutButtonText: {
     color: colors.managerPrimary,

@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
@@ -18,9 +18,17 @@ export default function EmployeeHomeScreen() {
     }
   }, [user, isLoading]);
 
-  const handleLogout = () => {
-    logout();
-    router.replace('/(tabs)/(home)/');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Force navigation to home page
+      setTimeout(() => {
+        router.replace('/(tabs)/(home)/');
+      }, 100);
+    } catch (error) {
+      console.error('Logout error:', error);
+      Alert.alert('Error', 'Failed to logout. Please try again.');
+    }
   };
 
   const getPriorityColor = (priority: string) => {
@@ -148,12 +156,14 @@ export default function EmployeeHomeScreen() {
             style={styles.profileButton}
             onPress={() => router.push('/employee/profile')}
           >
-            <IconSymbol 
-              ios_icon_name="person.circle.fill" 
-              android_material_icon_name="account_circle" 
-              color={colors.employeeAccent} 
-              size={32} 
-            />
+            <View style={styles.profileIconCircle}>
+              <IconSymbol 
+                ios_icon_name="person.fill" 
+                android_material_icon_name="person" 
+                color="#FFFFFF" 
+                size={24} 
+              />
+            </View>
             <Text style={styles.profileButtonText}>My Profile</Text>
           </Pressable>
         </ScrollView>
@@ -186,7 +196,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginRight: 8,
     backgroundColor: colors.employeeAccent,
-    borderRadius: 8,
+    borderRadius: 20,
   },
   logoutButtonText: {
     color: '#FFFFFF',
@@ -298,10 +308,18 @@ const styles = StyleSheet.create({
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
   },
+  profileIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.employeeAccent,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   profileButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    marginLeft: 8,
+    marginLeft: 12,
   },
 });
