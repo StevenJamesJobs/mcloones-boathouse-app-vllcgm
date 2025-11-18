@@ -269,6 +269,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const changePassword = async (newPassword: string): Promise<{ success: boolean; message: string }> => {
     try {
+      console.log('=== CHANGE PASSWORD ATTEMPT ===');
+      
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
@@ -278,12 +280,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, message: error.message };
       }
 
-      // Update must_change_password flag
-      if (user?.must_change_password) {
-        await supabase
+      console.log('Password updated successfully in auth');
+
+      // Update must_change_password flag to false
+      if (user) {
+        console.log('Updating must_change_password flag to false');
+        const { error: updateError } = await supabase
           .from('profiles')
           .update({ must_change_password: false })
           .eq('id', user.id);
+        
+        if (updateError) {
+          console.error('Error updating must_change_password flag:', updateError);
+          // Don't fail the password change if this update fails
+        } else {
+          console.log('must_change_password flag updated successfully');
+        }
         
         await refreshProfile();
       }

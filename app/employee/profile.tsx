@@ -91,7 +91,7 @@ export default function EmployeeProfileScreen() {
     const result = await changePassword(passwordData.newPassword);
 
     if (result.success) {
-      Alert.alert('Success', 'Password updated successfully! Your new password is now active.');
+      Alert.alert('Success', 'Password changed successfully! Your new password is now active.');
       setIsChangingPassword(false);
       setShowPasswordPrompt(false);
       setPasswordData({ newPassword: '', confirmPassword: '' });
