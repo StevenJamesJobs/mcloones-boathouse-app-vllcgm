@@ -13,9 +13,11 @@ import { useReviews } from '@/hooks/useReviews';
 import { useTagline } from '@/hooks/useTagline';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import EmployeeDataSeeder from '@/components/EmployeeDataSeeder';
 
 export default function HomeScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
+  const [seederModalVisible, setSeederModalVisible] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
@@ -124,14 +126,25 @@ export default function HomeScreen() {
             style={styles.logo}
             resizeMode="contain"
           />
-          <Pressable onPress={() => setLoginModalVisible(true)} style={styles.loginIconButton}>
-            <IconSymbol 
-              ios_icon_name="person.circle.fill" 
-              android_material_icon_name="account_circle" 
-              color={colors.accent} 
-              size={32} 
-            />
-          </Pressable>
+          <View style={styles.headerButtons}>
+            {/* Temporary Setup Button - Remove after initial setup */}
+            <Pressable onPress={() => setSeederModalVisible(true)} style={styles.setupButton}>
+              <IconSymbol 
+                ios_icon_name="gear" 
+                android_material_icon_name="settings" 
+                color={colors.textSecondary} 
+                size={24} 
+              />
+            </Pressable>
+            <Pressable onPress={() => setLoginModalVisible(true)} style={styles.loginIconButton}>
+              <IconSymbol 
+                ios_icon_name="person.circle.fill" 
+                android_material_icon_name="account_circle" 
+                color={colors.accent} 
+                size={32} 
+              />
+            </Pressable>
+          </View>
         </View>
 
         <ScrollView 
@@ -385,6 +398,33 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
+      {/* Employee Data Seeder Modal */}
+      <Modal
+        visible={seederModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setSeederModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.seederModalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Initial Setup</Text>
+              <Pressable onPress={() => setSeederModalVisible(false)}>
+                <IconSymbol 
+                  ios_icon_name="xmark.circle.fill" 
+                  android_material_icon_name="cancel" 
+                  color={colors.textSecondary} 
+                  size={28} 
+                />
+              </Pressable>
+            </View>
+            <ScrollView style={styles.seederScrollView}>
+              <EmployeeDataSeeder />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       {/* Login Modal */}
       <Modal
         visible={loginModalVisible}
@@ -490,6 +530,14 @@ const styles = StyleSheet.create({
   logo: {
     height: 40,
     width: 200,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  setupButton: {
+    padding: 4,
   },
   loginIconButton: {
     padding: 4,
@@ -738,6 +786,17 @@ const styles = StyleSheet.create({
     padding: 24,
     width: '90%',
     maxWidth: 400,
+  },
+  seederModalContent: {
+    backgroundColor: colors.background,
+    borderRadius: 16,
+    padding: 24,
+    width: '90%',
+    maxWidth: 500,
+    maxHeight: '80%',
+  },
+  seederScrollView: {
+    maxHeight: 500,
   },
   modalHeader: {
     flexDirection: 'row',
