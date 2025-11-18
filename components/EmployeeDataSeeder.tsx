@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView, TextInput } from 'react-native';
 import { supabase } from '@/app/integrations/supabase/client';
 import { colors } from '@/styles/commonStyles';
 
@@ -84,6 +84,9 @@ const INITIAL_EMPLOYEES: Employee[] = [
 export default function EmployeeDataSeeder() {
   const [isSeeding, setIsSeeding] = useState(false);
   const [seedStatus, setSeedStatus] = useState<string[]>([]);
+  const [isResetting, setIsResetting] = useState(false);
+  const [testUsername, setTestUsername] = useState('1');
+  const [testPassword, setTestPassword] = useState('mcloonesapp1');
 
   const seedEmployees = async () => {
     setIsSeeding(true);
@@ -151,6 +154,74 @@ export default function EmployeeDataSeeder() {
     }
   };
 
+  const testLogin = async () => {
+    setIsResetting(true);
+    const status: string[] = [...seedStatus];
+    
+    try {
+      status.push('\n=== Testing Login ===');
+      status.push(`Username: ${testUsername}`);
+      status.push(`Password: ${testPassword}`);
+      setSeedStatus([...status]);
+
+      // Get profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('username', testUsername)
+        .maybeSingle();
+
+      if (profileError) {
+        status.push(`❌ Profile lookup error: ${profileError.message}`);
+        setSeedStatus([...status]);
+        setIsResetting(false);
+        return;
+      }
+
+      if (!profileData) {
+        status.push(`❌ No profile found for username: ${testUsername}`);
+        setSeedStatus([...status]);
+        setIsResetting(false);
+        return;
+      }
+
+      status.push(`✅ Profile found: ${profileData.email}`);
+      setSeedStatus([...status]);
+
+      // Try to sign in
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: profileData.email,
+        password: testPassword,
+      });
+
+      if (signInError) {
+        status.push(`❌ Sign in error: ${signInError.message}`);
+        status.push(`Error details: ${JSON.stringify(signInError)}`);
+        setSeedStatus([...status]);
+        
+        // Sign out if partially logged in
+        await supabase.auth.signOut();
+      } else {
+        status.push(`✅ Sign in successful!`);
+        status.push(`User ID: ${signInData.user?.id}`);
+        setSeedStatus([...status]);
+        
+        // Sign out after test
+        await supabase.auth.signOut();
+        status.push(`✅ Signed out successfully`);
+        setSeedStatus([...status]);
+        
+        Alert.alert('Success', 'Login test passed! You can now use these credentials to log in.');
+      }
+    } catch (error: any) {
+      status.push(`❌ Test error: ${error?.message || error}`);
+      setSeedStatus([...status]);
+      Alert.alert('Error', `Test failed: ${error?.message || error}`);
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Employee Data Seeder</Text>
@@ -167,6 +238,46 @@ export default function EmployeeDataSeeder() {
           {isSeeding ? 'Seeding...' : 'Seed Employee Data'}
         </Text>
       </TouchableOpacity>
+
+      <View style={styles.testSection}>
+        <Text style={styles.sectionTitle}>Test Login</Text>
+        <Text style={styles.sectionDescription}>
+          Test if login works with the seeded credentials
+        </Text>
+        
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Username:</Text>
+          <TextInput
+            style={styles.input}
+            value={testUsername}
+            onChangeText={setTestUsername}
+            placeholder="Enter username"
+            editable={!isResetting}
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Password:</Text>
+          <TextInput
+            style={styles.input}
+            value={testPassword}
+            onChangeText={setTestPassword}
+            placeholder="Enter password"
+            secureTextEntry
+            editable={!isResetting}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.button, styles.testButton, isResetting && styles.buttonDisabled]}
+          onPress={testLogin}
+          disabled={isResetting}
+        >
+          <Text style={styles.buttonText}>
+            {isResetting ? 'Testing...' : 'Test Login'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {seedStatus.length > 0 && (
         <ScrollView style={styles.statusContainer}>
@@ -211,6 +322,45 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  testSection: {
+    backgroundColor: '#F0F0F0',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: colors.text,
+    marginBottom: 5,
+  },
+  sectionDescription: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: 15,
+  },
+  inputGroup: {
+    marginBottom: 12,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 5,
+  },
+  input: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 6,
+    padding: 10,
+    fontSize: 14,
+    color: colors.text,
+  },
+  testButton: {
+    backgroundColor: colors.accent,
+    marginTop: 5,
   },
   statusContainer: {
     backgroundColor: '#F5F5F5',

@@ -81,14 +81,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, password: string): Promise<{ success: boolean; message: string; mustChangePassword?: boolean }> => {
     try {
-      console.log('Attempting login for username:', username);
+      console.log('=== LOGIN ATTEMPT ===');
+      console.log('Username:', username);
+      console.log('Password length:', password.length);
       
       // First, get the email from the username
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('email, must_change_password, is_active')
+        .select('email, must_change_password, is_active, id, full_name, role')
         .eq('username', username)
         .maybeSingle();
+
+      console.log('Profile lookup result:', profileData ? 'Found' : 'Not found');
+      if (profileError) {
+        console.error('Profile lookup error:', profileError);
+      }
 
       if (profileError) {
         console.error('Profile lookup error:', profileError);
@@ -106,6 +113,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
       }
 
+      console.log('Profile found:', {
+        email: profileData.email,
+        is_active: profileData.is_active,
+        role: profileData.role
+      });
+
       if (!profileData.is_active) {
         return { 
           success: false, 
@@ -113,14 +126,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
       }
 
+      console.log('Attempting signInWithPassword with email:', profileData.email);
+
       // Attempt to sign in with email and password
       const { data, error } = await supabase.auth.signInWithPassword({
         email: profileData.email,
         password: password,
       });
 
+      console.log('SignIn result:', data ? 'Success' : 'Failed');
+      if (error) {
+        console.error('Login error details:', {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
+      }
+
       if (error) {
         console.error('Login error:', error);
+        
+        // Provide more specific error messages
+        if (error.message.includes('Invalid login credentials')) {
+          return { 
+            success: false, 
+            message: 'Invalid username or password. Please check your credentials and try again.' 
+          };
+        }
+        
         return { 
           success: false, 
           message: error.message || 'Invalid username or password' 
@@ -128,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
+        console.log('User authenticated successfully:', data.user.id);
         const profile = await fetchProfile(data.user.id);
         setUser(profile);
         setSession(data.session);
