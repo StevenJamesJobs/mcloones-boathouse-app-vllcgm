@@ -12,7 +12,7 @@ interface AuthContextType {
   session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<{ success: boolean; message: string; mustChangePassword?: boolean }>;
+  login: (username: string, password: string) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ success: boolean; message: string }>;
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (username: string, password: string): Promise<{ success: boolean; message: string; mustChangePassword?: boolean }> => {
+  const login = async (username: string, password: string): Promise<{ success: boolean; message: string }> => {
     try {
       console.log('=== LOGIN ATTEMPT ===');
       console.log('Username:', username);
@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Looking up profile for username:', username);
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('email, must_change_password, is_active, id, full_name, role')
+        .select('email, is_active, id, full_name, role')
         .eq('username', username)
         .maybeSingle();
 
@@ -180,8 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('Login successful, profile loaded');
         return { 
           success: true, 
-          message: 'Login successful',
-          mustChangePassword: profileData.must_change_password 
+          message: 'Login successful'
         };
       }
 
@@ -297,6 +296,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('must_change_password flag updated successfully');
         }
         
+        // Refresh profile to get updated must_change_password value
         await refreshProfile();
       }
 

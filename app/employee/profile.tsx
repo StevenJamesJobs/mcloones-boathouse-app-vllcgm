@@ -13,7 +13,7 @@ export default function EmployeeProfileScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   
   const [formData, setFormData] = useState({
     job_title: user?.job_title || '',
@@ -37,11 +37,6 @@ export default function EmployeeProfileScreen() {
         email: user.email,
         tagline: user.tagline || '',
       });
-
-      // Show password change prompt only if must_change_password is true
-      if (user.must_change_password) {
-        setShowPasswordPrompt(true);
-      }
     }
   }, [user]);
 
@@ -91,9 +86,9 @@ export default function EmployeeProfileScreen() {
     const result = await changePassword(passwordData.newPassword);
 
     if (result.success) {
-      Alert.alert('Success', 'Password changed successfully! Your new password is now active.');
+      // Show success modal instead of Alert
+      setShowSuccessModal(true);
       setIsChangingPassword(false);
-      setShowPasswordPrompt(false);
       setPasswordData({ newPassword: '', confirmPassword: '' });
     } else {
       Alert.alert('Error', result.message);
@@ -473,39 +468,32 @@ export default function EmployeeProfileScreen() {
         </ScrollView>
       </View>
 
-      {/* Password Change Prompt Modal */}
+      {/* Password Change Success Modal */}
       <Modal
-        visible={showPasswordPrompt}
-        animationType="slide"
+        visible={showSuccessModal}
+        animationType="fade"
         transparent={true}
-        onRequestClose={() => {}}
+        onRequestClose={() => setShowSuccessModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <IconSymbol 
-              ios_icon_name="exclamationmark.triangle.fill" 
-              android_material_icon_name="warning" 
-              color={colors.warning} 
-              size={48} 
-            />
-            <Text style={styles.modalTitle}>Password Change Required</Text>
+            <View style={styles.successIconContainer}>
+              <IconSymbol 
+                ios_icon_name="checkmark.circle.fill" 
+                android_material_icon_name="check_circle" 
+                color={colors.success} 
+                size={64} 
+              />
+            </View>
+            <Text style={styles.modalTitle}>Password Changed Successfully!</Text>
             <Text style={styles.modalText}>
-              For security reasons, please change your password from the default password.
+              Your password has been updated. Your new password is now active and you can use it for future logins.
             </Text>
             <Pressable 
               style={styles.modalButton}
-              onPress={() => {
-                setShowPasswordPrompt(false);
-                setIsChangingPassword(true);
-              }}
+              onPress={() => setShowSuccessModal(false)}
             >
-              <Text style={styles.modalButtonText}>Change Password Now</Text>
-            </Pressable>
-            <Pressable 
-              style={styles.modalButtonSecondary}
-              onPress={() => setShowPasswordPrompt(false)}
-            >
-              <Text style={styles.modalButtonSecondaryText}>Remind Me Later</Text>
+              <Text style={styles.modalButtonText}>Got It</Text>
             </Pressable>
           </View>
         </View>
@@ -683,11 +671,13 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
   },
+  successIconContainer: {
+    marginBottom: 16,
+  },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: colors.text,
-    marginTop: 16,
     marginBottom: 12,
     textAlign: 'center',
   },
@@ -700,27 +690,15 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     backgroundColor: colors.employeeAccent,
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 8,
     width: '100%',
     alignItems: 'center',
-    marginBottom: 12,
   },
   modalButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
-  },
-  modalButtonSecondary: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    width: '100%',
-    alignItems: 'center',
-  },
-  modalButtonSecondaryText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
   },
 });
