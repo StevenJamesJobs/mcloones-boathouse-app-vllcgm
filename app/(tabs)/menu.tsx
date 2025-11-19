@@ -646,10 +646,11 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   selectMenuText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: 8,
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 10,
+    letterSpacing: 0.5,
   },
   dropdownButton: {
     flexDirection: 'row',

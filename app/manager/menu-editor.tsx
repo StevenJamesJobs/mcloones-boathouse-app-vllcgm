@@ -17,6 +17,7 @@ export default function MenuEditorScreen() {
   const [editMode, setEditMode] = useState<EditMode>(null);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Form states for menu item
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -36,10 +37,18 @@ export default function MenuEditorScreen() {
   const [categoryMealType, setCategoryMealType] = useState<'lunch' | 'dinner' | 'both'>('both');
   const [categoryDisplayOrder, setCategoryDisplayOrder] = useState('0');
 
-  // Filter items by selected category
-  const filteredItems = selectedCategoryFilter === 'all' 
-    ? items 
-    : items.filter(item => item.category_id === selectedCategoryFilter);
+  // Filter items by selected category and search query
+  const filteredItems = items.filter(item => {
+    // Filter by category
+    const categoryMatch = selectedCategoryFilter === 'all' || item.category_id === selectedCategoryFilter;
+    
+    // Filter by search query
+    const searchMatch = searchQuery === '' || 
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    return categoryMatch && searchMatch;
+  });
 
   const groupedItems = filteredItems.reduce((acc, item) => {
     const categoryName = item.category?.name || 'Uncategorized';
@@ -388,6 +397,33 @@ export default function MenuEditorScreen() {
             <IconSymbol name="folder.badge.plus" color="#FFFFFF" size={20} />
             <Text style={styles.addButtonText}>Add Category</Text>
           </Pressable>
+        </View>
+
+        {/* Search Box */}
+        <View style={styles.searchContainer}>
+          <IconSymbol 
+            ios_icon_name="magnifyingglass" 
+            android_material_icon_name="search" 
+            color={colors.textSecondary} 
+            size={20} 
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search menu items..."
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <Pressable onPress={() => setSearchQuery('')}>
+              <IconSymbol 
+                ios_icon_name="xmark.circle.fill" 
+                android_material_icon_name="cancel" 
+                color={colors.textSecondary} 
+                size={20} 
+              />
+            </Pressable>
+          )}
         </View>
 
         {/* Category Filter */}
@@ -865,6 +901,25 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.text,
+    padding: 0,
   },
   filters: {
     borderBottomWidth: 1,

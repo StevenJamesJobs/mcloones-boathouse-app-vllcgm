@@ -79,8 +79,9 @@ export default function EmployeeHomeScreen() {
         >
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>Boathouse Deck Team</Text>
-            <Text style={styles.welcomeSubtitle}>What is on the menu today for you?</Text>
+            <Text style={styles.welcomeTitle}>Welcome, {user?.full_name}!</Text>
+            <Text style={styles.welcomeJobTitle}>{user?.job_title}</Text>
+            <Text style={styles.welcomeSubtitle}>Here&apos;s what&apos;s going on today!</Text>
           </View>
 
           {/* Weather Card */}
@@ -190,14 +191,21 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   welcomeTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 4,
+    marginBottom: 6,
+  },
+  welcomeJobTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.employeeAccent,
+    marginBottom: 8,
   },
   welcomeSubtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: colors.textSecondary,
+    fontStyle: 'italic',
   },
   cardHeader: {
     flexDirection: 'row',

@@ -35,6 +35,14 @@ export default function RewardsManagementScreen() {
     e.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleCancelModal = () => {
+    setShowAwardModal(false);
+    setSelectedEmployeeId('');
+    setAmount('');
+    setReason('');
+    setSearchQuery('');
+  };
+
   const handleAwardBucks = async () => {
     if (!selectedEmployeeId) {
       Alert.alert('Error', 'Please select an employee');
@@ -71,11 +79,7 @@ export default function RewardsManagementScreen() {
 
     if (result.success) {
       Alert.alert('Success', result.message);
-      setShowAwardModal(false);
-      setSelectedEmployeeId('');
-      setAmount('');
-      setReason('');
-      setSearchQuery('');
+      handleCancelModal();
     } else {
       Alert.alert('Error', result.message);
     }
@@ -207,13 +211,13 @@ export default function RewardsManagementScreen() {
         visible={showAwardModal}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setShowAwardModal(false)}
+        onRequestClose={handleCancelModal}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Award/Deduct Bucks</Text>
-              <TouchableOpacity onPress={() => setShowAwardModal(false)}>
+              <TouchableOpacity onPress={handleCancelModal}>
                 <IconSymbol
                   ios_icon_name="xmark.circle.fill"
                   android_material_icon_name="cancel"
@@ -303,26 +307,34 @@ export default function RewardsManagementScreen() {
                 numberOfLines={3}
               />
 
-              {/* Submit Button */}
-              <TouchableOpacity
-                style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
-                onPress={handleAwardBucks}
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <>
-                    <IconSymbol
-                      ios_icon_name="checkmark.circle.fill"
-                      android_material_icon_name="check_circle"
-                      color="#FFFFFF"
-                      size={20}
-                    />
-                    <Text style={styles.submitButtonText}>Submit</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+              {/* Action Buttons */}
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.cancelButton]}
+                  onPress={handleCancelModal}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.submitButton, submitting && styles.submitButtonDisabled]}
+                  onPress={handleAwardBucks}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <IconSymbol
+                        ios_icon_name="checkmark.circle.fill"
+                        android_material_icon_name="check_circle"
+                        color="#FFFFFF"
+                        size={20}
+                      />
+                      <Text style={styles.submitButtonText}>Submit</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
             </ScrollView>
           </View>
         </View>
@@ -558,14 +570,30 @@ const styles = StyleSheet.create({
     minHeight: 80,
     textAlignVertical: 'top',
   },
-  submitButton: {
-    backgroundColor: colors.managerAccent,
-    borderRadius: 12,
-    padding: 16,
+  modalActions: {
     flexDirection: 'row',
+    gap: 12,
+    marginTop: 24,
+  },
+  actionButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+  },
+  cancelButton: {
+    backgroundColor: colors.border,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  submitButton: {
+    backgroundColor: colors.managerAccent,
+    flexDirection: 'row',
+    gap: 8,
   },
   submitButtonDisabled: {
     opacity: 0.6,
@@ -574,6 +602,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginLeft: 8,
   },
 });

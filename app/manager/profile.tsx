@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image } from 'react-native';
 import { Stack } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -13,7 +13,7 @@ export default function ManagerProfileScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
@@ -41,6 +41,15 @@ export default function ManagerProfileScreen() {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    if (showSuccessMessage) {
+      const timer = setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessMessage]);
 
   const handleSave = async () => {
     if (!formData.full_name || !formData.job_title || !formData.email) {
@@ -89,8 +98,8 @@ export default function ManagerProfileScreen() {
     const result = await changePassword(passwordData.newPassword);
 
     if (result.success) {
-      // Show success modal instead of Alert
-      setShowSuccessModal(true);
+      // Show success message bubble
+      setShowSuccessMessage(true);
       setIsChangingPassword(false);
       setPasswordData({ newPassword: '', confirmPassword: '' });
     } else {
@@ -474,38 +483,20 @@ export default function ManagerProfileScreen() {
             )}
           </View>
         </ScrollView>
-      </View>
 
-      {/* Password Change Success Modal */}
-      <Modal
-        visible={showSuccessModal}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setShowSuccessModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.successIconContainer}>
-              <IconSymbol 
-                ios_icon_name="checkmark.circle.fill" 
-                android_material_icon_name="check_circle" 
-                color={colors.success} 
-                size={64} 
-              />
-            </View>
-            <Text style={styles.modalTitle}>Password Changed Successfully!</Text>
-            <Text style={styles.modalText}>
-              Your password has been updated. Your new password is now active and you can use it for future logins.
-            </Text>
-            <Pressable 
-              style={styles.modalButton}
-              onPress={() => setShowSuccessModal(false)}
-            >
-              <Text style={styles.modalButtonText}>Got It</Text>
-            </Pressable>
+        {/* Success Message Bubble */}
+        {showSuccessMessage && (
+          <View style={styles.successBubble}>
+            <IconSymbol 
+              ios_icon_name="checkmark.circle.fill" 
+              android_material_icon_name="check_circle" 
+              color="#FFFFFF" 
+              size={20} 
+            />
+            <Text style={styles.successBubbleText}>Password changed</Text>
           </View>
-        </View>
-      </Modal>
+        )}
+      </View>
     </>
   );
 }
@@ -657,47 +648,28 @@ const styles = StyleSheet.create({
     color: colors.managerAccent,
     marginLeft: 8,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
+  successBubble: {
+    position: 'absolute',
+    top: 100,
+    left: '50%',
+    transform: [{ translateX: -100 }],
+    backgroundColor: colors.success,
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: colors.background,
-    borderRadius: 16,
-    width: '85%',
-    padding: 24,
-    alignItems: 'center',
-  },
-  successIconContainer: {
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  modalText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  modalButton: {
-    backgroundColor: colors.managerAccent,
-    paddingHorizontal: 32,
+    paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 8,
-    width: '100%',
-    alignItems: 'center',
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 1000,
   },
-  modalButtonText: {
+  successBubbleText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    marginLeft: 8,
   },
 });
