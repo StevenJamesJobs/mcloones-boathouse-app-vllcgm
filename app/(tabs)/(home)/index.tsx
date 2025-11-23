@@ -88,7 +88,7 @@ export default function HomeScreen() {
             key={star}
             ios_icon_name="star.fill"
             android_material_icon_name="star"
-            size={14}
+            size={16}
             color={star <= rating ? '#FFD700' : '#ccc'}
           />
         ))}

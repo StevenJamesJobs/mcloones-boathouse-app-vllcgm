@@ -18,13 +18,16 @@ export default function RewardsScreen() {
     }
   }, [user?.id, transactions]);
 
-  // Get user's recent transactions
-  const userRecentTransactions = transactions
+  // Filter out hidden transactions for employees
+  const visibleTransactions = transactions.filter(t => !t.hidden_from_employees);
+
+  // Get user's recent transactions (excluding hidden ones)
+  const userRecentTransactions = visibleTransactions
     .filter(t => t.employee_id === user?.id)
     .slice(0, 10);
 
-  // Get latest transactions across all employees
-  const latestTransactions = transactions.slice(0, 10);
+  // Get latest transactions across all employees (excluding hidden ones)
+  const latestTransactions = visibleTransactions.slice(0, 10);
 
   return (
     <>
@@ -51,7 +54,7 @@ export default function RewardsScreen() {
               color={colors.employeeAccent}
               size={48}
             />
-            <Text style={styles.totalAmount}>{user?.mcloones_bucks || 0}</Text>
+            <Text style={styles.totalAmount}>${user?.mcloones_bucks || 0}</Text>
             <Text style={styles.totalLabel}>Your McLoone&apos;s Bucks</Text>
           </View>
 
@@ -80,7 +83,7 @@ export default function RewardsScreen() {
                   <View style={styles.employeeInfo}>
                     <Text style={styles.employeeName}>{employee.full_name}</Text>
                     <Text style={styles.employeeBucks}>
-                      {employee.mcloones_bucks || 0} Bucks
+                      ${employee.mcloones_bucks || 0} Bucks
                     </Text>
                   </View>
                   {index < 3 && (

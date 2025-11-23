@@ -10,6 +10,7 @@ import {
   Alert,
   Modal,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -20,12 +21,13 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function RewardsManagementScreen() {
   const { user } = useAuth();
-  const { transactions, topEmployees, loading, awardBucks } = useRewards();
+  const { transactions, topEmployees, loading, awardBucks, updateTransactionVisibility } = useRewards();
   const { employees } = useEmployees();
   const [showAwardModal, setShowAwardModal] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState('');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
+  const [keepHidden, setKeepHidden] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -40,6 +42,7 @@ export default function RewardsManagementScreen() {
     setSelectedEmployeeId('');
     setAmount('');
     setReason('');
+    setKeepHidden(false);
     setSearchQuery('');
   };
 
@@ -72,7 +75,8 @@ export default function RewardsManagementScreen() {
       numAmount,
       reason,
       user?.id || '',
-      user?.full_name || 'Manager'
+      user?.full_name || 'Manager',
+      keepHidden
     );
 
     setSubmitting(false);
@@ -80,6 +84,15 @@ export default function RewardsManagementScreen() {
     if (result.success) {
       Alert.alert('Success', result.message);
       handleCancelModal();
+    } else {
+      Alert.alert('Error', result.message);
+    }
+  };
+
+  const handleToggleVisibility = async (transactionId: string, currentlyHidden: boolean) => {
+    const result = await updateTransactionVisibility(transactionId, !currentlyHidden);
+    if (result.success) {
+      Alert.alert('Success', result.message);
     } else {
       Alert.alert('Error', result.message);
     }
@@ -143,7 +156,7 @@ export default function RewardsManagementScreen() {
                   <View style={styles.employeeInfo}>
                     <Text style={styles.employeeName}>{employee.full_name}</Text>
                     <Text style={styles.employeeBucks}>
-                      {employee.mcloones_bucks || 0} Bucks
+                      ${employee.mcloones_bucks || 0} Bucks
                     </Text>
                   </View>
                   {index < 3 && (
@@ -178,9 +191,22 @@ export default function RewardsManagementScreen() {
                 return (
                   <View key={transaction.id} style={commonStyles.employeeCard}>
                     <View style={styles.transactionHeader}>
-                      <Text style={styles.transactionEmployee}>
-                        {employee?.full_name || 'Unknown Employee'}
-                      </Text>
+                      <View style={styles.transactionHeaderLeft}>
+                        <Text style={styles.transactionEmployee}>
+                          {employee?.full_name || 'Unknown Employee'}
+                        </Text>
+                        {transaction.hidden_from_employees && (
+                          <View style={styles.hiddenBadge}>
+                            <IconSymbol
+                              ios_icon_name="eye.slash.fill"
+                              android_material_icon_name="visibility_off"
+                              color="#FFFFFF"
+                              size={12}
+                            />
+                            <Text style={styles.hiddenBadgeText}>Removed from View</Text>
+                          </View>
+                        )}
+                      </View>
                       <Text
                         style={[
                           styles.transactionAmount,
@@ -198,6 +224,20 @@ export default function RewardsManagementScreen() {
                       {new Date(transaction.created_at).toLocaleDateString()} •
                       Awarded by {transaction.awarded_by_name}
                     </Text>
+                    <TouchableOpacity
+                      style={styles.visibilityToggle}
+                      onPress={() => handleToggleVisibility(transaction.id, transaction.hidden_from_employees)}
+                    >
+                      <IconSymbol
+                        ios_icon_name={transaction.hidden_from_employees ? "eye.fill" : "eye.slash.fill"}
+                        android_material_icon_name={transaction.hidden_from_employees ? "visibility" : "visibility_off"}
+                        color={colors.managerAccent}
+                        size={20}
+                      />
+                      <Text style={styles.visibilityToggleText}>
+                        {transaction.hidden_from_employees ? 'Show to Employees' : 'Hide from Employees'}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 );
               })
@@ -254,7 +294,7 @@ export default function RewardsManagementScreen() {
                     <View style={styles.employeeItemInfo}>
                       <Text style={styles.employeeItemName}>{employee.full_name}</Text>
                       <Text style={styles.employeeItemRole}>
-                        {employee.job_title} • {employee.mcloones_bucks || 0} Bucks
+                        {employee.job_title} • ${employee.mcloones_bucks || 0} Bucks
                       </Text>
                     </View>
                     {selectedEmployeeId === employee.id && (
@@ -276,7 +316,7 @@ export default function RewardsManagementScreen() {
                     {selectedEmployee.full_name}
                   </Text>
                   <Text style={styles.selectedEmployeeBucks}>
-                    Current Balance: {selectedEmployee.mcloones_bucks || 0} Bucks
+                    Current Balance: ${selectedEmployee.mcloones_bucks || 0} Bucks
                   </Text>
                 </View>
               )}
@@ -306,6 +346,22 @@ export default function RewardsManagementScreen() {
                 multiline
                 numberOfLines={3}
               />
+
+              {/* Keep Hidden Toggle */}
+              <View style={styles.toggleContainer}>
+                <View style={styles.toggleLabelContainer}>
+                  <Text style={styles.label}>Keep Hidden from Employees</Text>
+                  <Text style={styles.helperText}>
+                    Transaction will not be visible to employees but bucks will still be awarded
+                  </Text>
+                </View>
+                <Switch
+                  value={keepHidden}
+                  onValueChange={setKeepHidden}
+                  trackColor={{ false: colors.border, true: colors.managerAccent }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
 
               {/* Action Buttons */}
               <View style={styles.modalActions}>
@@ -425,13 +481,33 @@ const styles = StyleSheet.create({
   transactionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 8,
+  },
+  transactionHeaderLeft: {
+    flex: 1,
+    marginRight: 8,
   },
   transactionEmployee: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+    marginBottom: 4,
+  },
+  hiddenBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.error,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+    gap: 4,
+  },
+  hiddenBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   transactionAmount: {
     fontSize: 18,
@@ -451,6 +527,20 @@ const styles = StyleSheet.create({
   transactionDate: {
     fontSize: 12,
     color: colors.textSecondary,
+    marginBottom: 8,
+  },
+  visibilityToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    gap: 8,
+  },
+  visibilityToggleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.managerAccent,
   },
   emptyText: {
     fontSize: 15,
@@ -569,6 +659,20 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.employeeCard,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  toggleLabelContainer: {
+    flex: 1,
+    marginRight: 12,
   },
   modalActions: {
     flexDirection: 'row',

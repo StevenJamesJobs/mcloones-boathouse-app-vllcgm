@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    marginTop: 10,
+    marginBottom: 20,
   },
   leaveReviewText: {
     color: '#fff',
@@ -241,7 +241,8 @@ export default function ReviewsScreen() {
         {[1, 2, 3, 4, 5].map((star) => (
           <IconSymbol
             key={star}
-            name="star.fill"
+            ios_icon_name="star.fill"
+            android_material_icon_name="star"
             size={16}
             color={star <= rating ? '#FFD700' : '#ccc'}
           />
@@ -290,6 +291,17 @@ export default function ReviewsScreen() {
           </View>
 
           <View style={styles.section}>
+            {/* Leave a Review Button - Moved to Top */}
+            <Pressable style={styles.leaveReviewButton} onPress={handleLeaveReview}>
+              <IconSymbol 
+                ios_icon_name="star.fill" 
+                android_material_icon_name="star" 
+                size={20} 
+                color="#fff" 
+              />
+              <Text style={styles.leaveReviewText}>Leave a Review on Google</Text>
+            </Pressable>
+
             {loading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={colors.accent} />
@@ -323,11 +335,6 @@ export default function ReviewsScreen() {
                 ))}
               </>
             )}
-
-            <Pressable style={styles.leaveReviewButton} onPress={handleLeaveReview}>
-              <IconSymbol name="star.fill" size={20} color="#fff" />
-              <Text style={styles.leaveReviewText}>Leave a Review on Google</Text>
-            </Pressable>
           </View>
 
           {/* Bottom Padding */}
@@ -347,7 +354,12 @@ export default function ReviewsScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Employee Login</Text>
               <Pressable onPress={() => setLoginModalVisible(false)}>
-                <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
+                <IconSymbol 
+                  ios_icon_name="xmark.circle.fill" 
+                  android_material_icon_name="cancel" 
+                  color={colors.textSecondary} 
+                  size={28} 
+                />
               </Pressable>
             </View>
             

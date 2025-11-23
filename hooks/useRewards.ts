@@ -9,6 +9,7 @@ export interface RewardTransaction {
   reason: string;
   awarded_by_id: string;
   awarded_by_name: string;
+  hidden_from_employees: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -115,7 +116,8 @@ export function useRewards() {
     amount: number,
     reason: string,
     awardedById: string,
-    awardedByName: string
+    awardedByName: string,
+    hiddenFromEmployees: boolean = false
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const { error } = await supabase
@@ -126,6 +128,7 @@ export function useRewards() {
           reason: reason,
           awarded_by_id: awardedById,
           awarded_by_name: awardedByName,
+          hidden_from_employees: hiddenFromEmployees,
         });
 
       if (error) {
@@ -141,6 +144,32 @@ export function useRewards() {
       return {
         success: false,
         message: err instanceof Error ? err.message : 'Failed to award bucks',
+      };
+    }
+  };
+
+  const updateTransactionVisibility = async (
+    transactionId: string,
+    hiddenFromEmployees: boolean
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const { error } = await supabase
+        .from('rewards_transactions')
+        .update({ hidden_from_employees: hiddenFromEmployees })
+        .eq('id', transactionId);
+
+      if (error) {
+        console.error('Update visibility error:', error);
+        return { success: false, message: error.message };
+      }
+
+      await fetchTransactions();
+      return { success: true, message: 'Transaction visibility updated successfully!' };
+    } catch (err) {
+      console.error('Update visibility exception:', err);
+      return {
+        success: false,
+        message: err instanceof Error ? err.message : 'Failed to update visibility',
       };
     }
   };
@@ -174,6 +203,7 @@ export function useRewards() {
     fetchTransactions,
     fetchTopEmployees,
     awardBucks,
+    updateTransactionVisibility,
     getEmployeeTransactions,
     getEmployeeTotalBucks,
   };
