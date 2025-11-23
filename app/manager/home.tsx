@@ -39,17 +39,17 @@ export default function ManagerHomeScreen() {
     { id: 1, title: 'Menu Editor', icon: 'restaurant', route: '/manager/menu-editor', color: colors.managerAccent },
     { id: 2, title: 'Weekly Specials Editor', icon: 'star', route: '/manager/weekly-specials-editor', color: colors.managerAccent },
     { id: 3, title: 'Events Editor', icon: 'event', route: '/manager/events-editor', color: colors.managerAccent },
-    { id: 4, title: 'Gallery Editor', icon: 'photo_library', route: '/manager/gallery-editor', color: colors.managerAccent },
+    { id: 4, title: 'Gallery Editor', icon: 'photo', route: '/manager/gallery-editor', color: colors.managerAccent },
     { id: 5, title: 'About Us Editor', icon: 'info', route: '/manager/about-us-editor', color: colors.managerAccent },
     { id: 6, title: 'Contact Us', icon: 'phone', route: '/manager/contact-us-editor', color: colors.managerAccent },
-    { id: 7, title: 'Reviews Editor', icon: 'star_rate', route: '/manager/reviews-editor', color: colors.managerAccent },
-    { id: 8, title: 'Tagline Editor', icon: 'format_quote', route: '/manager/tagline-editor', color: colors.managerAccent },
+    { id: 7, title: 'Reviews Editor', icon: 'star', route: '/manager/reviews-editor', color: colors.managerAccent },
+    { id: 8, title: 'Tagline Editor', icon: 'edit', route: '/manager/tagline-editor', color: colors.managerAccent },
   ];
 
   const employeeTools = [
     { id: 1, title: 'Employees', icon: 'people', route: '/manager/employees', color: colors.managerSecondary },
     { id: 2, title: 'Announcements', icon: 'campaign', route: '/manager/announcements-editor', color: colors.managerSecondary },
-    { id: 3, title: 'Rewards', icon: 'attach_money', route: '/manager/rewards', color: colors.managerSecondary },
+    { id: 3, title: 'Rewards', icon: 'attach-money', route: '/manager/rewards', color: colors.managerSecondary },
     { id: 4, title: 'Schedules', icon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
   ];
 
@@ -208,7 +208,7 @@ export default function ManagerHomeScreen() {
             style={styles.profileButton}
             onPress={() => router.push('/manager/profile')}
           >
-            <MaterialIcons name="account_circle" size={32} color={colors.managerAccent} />
+            <MaterialIcons name="person" size={32} color={colors.managerAccent} />
             <Text style={styles.profileButtonText}>My Profile</Text>
           </Pressable>
         </ScrollView>
