@@ -84,12 +84,11 @@ export default function HomeScreen() {
     return (
       <View style={styles.ratingContainer}>
         {[1, 2, 3, 4, 5].map((star) => (
-          <IconSymbol
+          <MaterialIcons
             key={star}
-            ios_icon_name="star.fill"
-            android_material_icon_name="star"
-            size={16}
-            color={star <= rating ? '#FFD700' : '#E0E0E0'}
+            name="star"
+            size={18}
+            color={star <= rating ? '#FFD700' : '#D3D3D3'}
           />
         ))}
       </View>
@@ -296,12 +295,7 @@ export default function HomeScreen() {
                   </View>
                 ))}
                 <Pressable style={styles.leaveReviewButton} onPress={handleLeaveReview}>
-                  <IconSymbol 
-                    ios_icon_name="star.fill" 
-                    android_material_icon_name="star" 
-                    size={20} 
-                    color="#fff" 
-                  />
+                  <MaterialIcons name="star" size={20} color="#fff" />
                   <Text style={styles.leaveReviewText}>Leave a Review on Google</Text>
                 </Pressable>
               </>
@@ -321,28 +315,26 @@ export default function HomeScreen() {
                 <View style={commonStyles.card}>
                   {visitUsSection.content.split('•').filter((line: string) => line.trim()).map((line: string, index: number) => {
                     const trimmedLine = line.trim();
-                    let iconName = 'info.circle.fill';
+                    let iosIconName = 'info.circle.fill';
+                    let androidIconName = 'info';
                     
                     if (trimmedLine.toLowerCase().includes('ocean') || trimmedLine.toLowerCase().includes('avenue') || trimmedLine.toLowerCase().includes('address')) {
-                      iconName = 'mappin.circle.fill';
+                      iosIconName = 'mappin.circle.fill';
+                      androidIconName = 'place';
                     } else if (trimmedLine.match(/\(\d{3}\)/) || trimmedLine.toLowerCase().includes('phone')) {
-                      iconName = 'phone.fill';
+                      iosIconName = 'phone.fill';
+                      androidIconName = 'phone';
                     } else if (trimmedLine.toLowerCase().includes('hours') || trimmedLine.toLowerCase().includes('monday') || trimmedLine.toLowerCase().includes('day')) {
-                      iconName = 'clock.fill';
+                      iosIconName = 'clock.fill';
+                      androidIconName = 'schedule';
                     }
                     
                     return (
                       <View key={index} style={styles.visitUsRow}>
-                        <IconSymbol 
-                          ios_icon_name={iconName}
-                          android_material_icon_name={
-                            iconName === 'mappin.circle.fill' ? 'location_on' :
-                            iconName === 'phone.fill' ? 'phone' :
-                            iconName === 'clock.fill' ? 'schedule' :
-                            'info'
-                          }
+                        <MaterialIcons 
+                          name={androidIconName as any}
                           color={colors.accent} 
-                          size={20} 
+                          size={22} 
                         />
                         <Text style={styles.visitUsText}>{trimmedLine}</Text>
                       </View>

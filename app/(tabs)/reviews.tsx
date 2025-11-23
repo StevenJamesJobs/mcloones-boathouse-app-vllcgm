@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Linking, ActivityIndicator, Modal, TextInput, Alert, Image } from 'react-native';
 import { colors, commonStyles } from '@/styles/commonStyles';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 const styles = StyleSheet.create({
   container: {
@@ -239,12 +240,11 @@ export default function ReviewsScreen() {
     return (
       <View style={styles.ratingContainer}>
         {[1, 2, 3, 4, 5].map((star) => (
-          <IconSymbol
+          <MaterialIcons
             key={star}
-            ios_icon_name="star.fill"
-            android_material_icon_name="star"
-            size={16}
-            color={star <= rating ? '#FFD700' : '#ccc'}
+            name="star"
+            size={18}
+            color={star <= rating ? '#FFD700' : '#D3D3D3'}
           />
         ))}
       </View>
@@ -293,12 +293,7 @@ export default function ReviewsScreen() {
           <View style={styles.section}>
             {/* Leave a Review Button - Moved to Top */}
             <Pressable style={styles.leaveReviewButton} onPress={handleLeaveReview}>
-              <IconSymbol 
-                ios_icon_name="star.fill" 
-                android_material_icon_name="star" 
-                size={20} 
-                color="#fff" 
-              />
+              <MaterialIcons name="star" size={20} color="#fff" />
               <Text style={styles.leaveReviewText}>Leave a Review on Google</Text>
             </Pressable>
 

@@ -75,6 +75,7 @@ const MAPPING = {
   // Media & Content
   "photo.fill": "image",
   "photo": "image-outlined",
+  "photo.on.rectangle": "photo-library",
   "camera.fill": "camera-alt",
   "camera": "camera-alt",
   "video.fill": "videocam",
@@ -106,6 +107,7 @@ const MAPPING = {
   "star": "star-border",
   "bookmark.fill": "bookmark",
   "bookmark": "bookmark-border",
+  "sparkles": "auto-awesome",
 
   // Technology & Code
   "chevron.left.forwardslash.chevron.right": "code",
@@ -125,6 +127,7 @@ const MAPPING = {
   "dollarsign.circle.fill": "monetization-on",
   "bag.fill": "shopping-bag",
   "bag": "shopping-bag",
+  "gift.fill": "card-giftcard",
 
   // Location & Maps
   "location.fill": "location-on",
@@ -132,12 +135,12 @@ const MAPPING = {
   "map.fill": "map",
   "map": "map",
   "compass.drawing": "explore",
-  "mappin.circle.fill": "location-on",
-  "mappin.circle": "location-on",
+  "mappin.circle.fill": "place",
+  "mappin.circle": "place",
 
   // Time & Calendar
-  "clock.fill": "access-time",
-  "clock": "access-time",
+  "clock.fill": "schedule",
+  "clock": "schedule",
   "calendar": "event",
   "timer": "timer",
 
@@ -192,21 +195,34 @@ export type IconSymbolName = keyof typeof MAPPING;
  */
 export function IconSymbol({
   name,
+  ios_icon_name,
+  android_material_icon_name,
   size = 24,
   color,
   style,
 }: {
-  name: IconSymbolName;
+  name?: IconSymbolName;
+  ios_icon_name?: IconSymbolName;
+  android_material_icon_name?: React.ComponentProps<typeof MaterialIcons>["name"];
   size?: number;
   color: string | OpaqueColorValue;
   style?: StyleProp<ViewStyle>;
   weight?: SymbolWeight;
 }) {
+  // Support both old and new prop formats
+  const iconName = name || ios_icon_name;
+  const materialIconName = android_material_icon_name || (iconName ? MAPPING[iconName] : undefined);
+
+  if (!materialIconName) {
+    console.warn(`No MaterialIcon mapping found for: ${iconName}`);
+    return null;
+  }
+
   return (
     <MaterialIcons
       color={color}
       size={size}
-      name={MAPPING[name]}
+      name={materialIconName}
       style={style as StyleProp<TextStyle>}
     />
   );
