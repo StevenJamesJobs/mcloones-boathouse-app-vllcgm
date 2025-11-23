@@ -5,6 +5,7 @@ import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAnnouncementsEditor, Announcement } from '@/hooks/useAnnouncements';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function AnnouncementsEditorScreen() {
   const { announcements, loading, error, addAnnouncement, updateAnnouncement, deleteAnnouncement } = useAnnouncementsEditor();
@@ -17,6 +18,7 @@ export default function AnnouncementsEditorScreen() {
   const [message, setMessage] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [displayOrder, setDisplayOrder] = useState('0');
+  const [visibleTo, setVisibleTo] = useState<'employees' | 'managers' | 'both'>('both');
 
   const openAddModal = () => {
     setEditingAnnouncement(null);
@@ -24,6 +26,7 @@ export default function AnnouncementsEditorScreen() {
     setMessage('');
     setPriority('medium');
     setDisplayOrder('0');
+    setVisibleTo('both');
     setModalVisible(true);
   };
 
@@ -33,6 +36,7 @@ export default function AnnouncementsEditorScreen() {
     setMessage(announcement.message);
     setPriority(announcement.priority as 'low' | 'medium' | 'high');
     setDisplayOrder(announcement.display_order.toString());
+    setVisibleTo((announcement.visible_to as 'employees' | 'managers' | 'both') || 'both');
     setModalVisible(true);
   };
 
@@ -53,6 +57,7 @@ export default function AnnouncementsEditorScreen() {
       priority,
       display_order: parseInt(displayOrder) || 0,
       is_active: true,
+      visible_to: visibleTo,
     };
 
     if (editingAnnouncement) {
@@ -118,6 +123,19 @@ export default function AnnouncementsEditorScreen() {
     }
   };
 
+  const getVisibilityLabel = (visible: string) => {
+    switch (visible) {
+      case 'employees':
+        return 'Employees Only';
+      case 'managers':
+        return 'Managers Only';
+      case 'both':
+        return 'Everyone';
+      default:
+        return 'Everyone';
+    }
+  };
+
   return (
     <>
       <Stack.Screen
@@ -134,7 +152,7 @@ export default function AnnouncementsEditorScreen() {
         {/* Action Button */}
         <View style={styles.actionButtons}>
           <Pressable style={styles.addButton} onPress={openAddModal}>
-            <IconSymbol name="plus.circle.fill" color="#FFFFFF" size={20} />
+            <MaterialIcons name="add-circle" color="#FFFFFF" size={20} />
             <Text style={styles.addButtonText}>Add Announcement</Text>
           </Pressable>
         </View>
@@ -156,7 +174,7 @@ export default function AnnouncementsEditorScreen() {
           >
             {announcements.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <IconSymbol name="megaphone.fill" color={colors.textSecondary} size={64} />
+                <MaterialIcons name="campaign" color={colors.textSecondary} size={64} />
                 <Text style={styles.emptyText}>No announcements yet</Text>
                 <Text style={styles.emptySubtext}>Tap the button above to create one</Text>
               </View>
@@ -171,21 +189,33 @@ export default function AnnouncementsEditorScreen() {
                   onPress={() => openEditModal(announcement)}
                 >
                   <View style={styles.announcementHeader}>
-                    <View style={[
-                      styles.priorityBadge,
-                      { backgroundColor: getPriorityColor(announcement.priority) },
-                    ]}>
-                      <Text style={styles.priorityText}>
-                        {announcement.priority.toUpperCase()}
-                      </Text>
+                    <View style={styles.badgeContainer}>
+                      <View style={[
+                        styles.priorityBadge,
+                        { backgroundColor: getPriorityColor(announcement.priority) },
+                      ]}>
+                        <Text style={styles.priorityText}>
+                          {announcement.priority.toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={styles.visibilityBadge}>
+                        <MaterialIcons 
+                          name={announcement.visible_to === 'employees' ? 'people' : announcement.visible_to === 'managers' ? 'admin_panel_settings' : 'public'} 
+                          size={12} 
+                          color={colors.managerAccent} 
+                        />
+                        <Text style={styles.visibilityText}>
+                          {getVisibilityLabel(announcement.visible_to || 'both')}
+                        </Text>
+                      </View>
                     </View>
                     <View style={styles.announcementActions}>
                       <Pressable
                         style={styles.actionButton}
                         onPress={() => toggleActive(announcement)}
                       >
-                        <IconSymbol
-                          name={announcement.is_active ? 'eye.fill' : 'eye.slash.fill'}
+                        <MaterialIcons
+                          name={announcement.is_active ? 'visibility' : 'visibility_off'}
                           color={announcement.is_active ? colors.managerAccent : colors.textSecondary}
                           size={20}
                         />
@@ -194,7 +224,7 @@ export default function AnnouncementsEditorScreen() {
                         style={styles.actionButton}
                         onPress={() => handleDelete(announcement)}
                       >
-                        <IconSymbol name="trash" color={colors.error} size={20} />
+                        <MaterialIcons name="delete" color={colors.error} size={20} />
                       </Pressable>
                     </View>
                   </View>
@@ -225,7 +255,7 @@ export default function AnnouncementsEditorScreen() {
                   {editingAnnouncement ? 'Edit Announcement' : 'Add Announcement'}
                 </Text>
                 <Pressable onPress={() => setModalVisible(false)}>
-                  <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
+                  <MaterialIcons name="cancel" color={colors.textSecondary} size={28} />
                 </Pressable>
               </View>
 
@@ -269,6 +299,34 @@ export default function AnnouncementsEditorScreen() {
                         ]}
                       >
                         {p.charAt(0).toUpperCase() + p.slice(1)}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+
+                <Text style={styles.label}>Visible To</Text>
+                <View style={styles.visibilitySelector}>
+                  {(['employees', 'managers', 'both'] as const).map((v) => (
+                    <Pressable
+                      key={v}
+                      style={[
+                        styles.visibilityButton,
+                        visibleTo === v && styles.visibilityButtonActive,
+                      ]}
+                      onPress={() => setVisibleTo(v)}
+                    >
+                      <MaterialIcons 
+                        name={v === 'employees' ? 'people' : v === 'managers' ? 'admin_panel_settings' : 'public'} 
+                        size={20} 
+                        color={visibleTo === v ? colors.managerAccent : colors.textSecondary} 
+                      />
+                      <Text
+                        style={[
+                          styles.visibilityButtonText,
+                          visibleTo === v && styles.visibilityButtonTextActive,
+                        ]}
+                      >
+                        {getVisibilityLabel(v)}
                       </Text>
                     </Pressable>
                   ))}
@@ -349,8 +407,14 @@ const styles = StyleSheet.create({
   announcementHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 12,
+  },
+  badgeContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+    flex: 1,
   },
   priorityBadge: {
     paddingHorizontal: 8,
@@ -361,6 +425,22 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  visibilityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.managerAccent,
+    gap: 4,
+  },
+  visibilityText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.managerAccent,
   },
   announcementActions: {
     flexDirection: 'row',
@@ -505,6 +585,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.text,
+  },
+  visibilitySelector: {
+    gap: 8,
+  },
+  visibilityButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: colors.card,
+    borderWidth: 2,
+    borderColor: colors.border,
+    gap: 8,
+  },
+  visibilityButtonActive: {
+    backgroundColor: colors.background,
+    borderColor: colors.managerAccent,
+  },
+  visibilityButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  visibilityButtonTextActive: {
+    color: colors.managerAccent,
   },
   modalActions: {
     flexDirection: 'row',

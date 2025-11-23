@@ -5,7 +5,7 @@ import { Tables } from '@/app/integrations/supabase/types';
 
 export type Announcement = Tables<'announcements'>;
 
-export function useAnnouncements() {
+export function useAnnouncements(userRole?: 'employees' | 'managers') {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,10 +15,17 @@ export function useAnnouncements() {
       setLoading(true);
       setError(null);
 
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from('announcements')
         .select('*')
-        .eq('is_active', true)
+        .eq('is_active', true);
+
+      // Filter based on user role
+      if (userRole) {
+        query = query.or(`visible_to.eq.${userRole},visible_to.eq.both`);
+      }
+
+      const { data, error: fetchError } = await query
         .order('display_order', { ascending: true })
         .order('created_at', { ascending: false });
 
@@ -31,7 +38,7 @@ export function useAnnouncements() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userRole]);
 
   useEffect(() => {
     fetchAnnouncements();

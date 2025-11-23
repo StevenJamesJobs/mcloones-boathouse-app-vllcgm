@@ -1,14 +1,20 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { WeatherDisplay } from '@/components/WeatherDisplay';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
+type TabType = 'customer' | 'employee';
 
 export default function ManagerHomeScreen() {
   const { user, logout, isLoading } = useAuth();
+  const { announcements } = useAnnouncements('managers');
+  const [activeTab, setActiveTab] = useState<TabType>('customer');
 
   useEffect(() => {
     if (!isLoading && (!user || (user.role !== 'manager' && user.role !== 'owner_manager'))) {
@@ -29,22 +35,36 @@ export default function ManagerHomeScreen() {
     }
   };
 
-  const managerTools = [
-    { id: 1, title: 'Menu Editor', icon: 'fork.knife', androidIcon: 'restaurant', route: '/manager/menu-editor', color: colors.managerAccent },
-    { id: 2, title: 'Weekly Specials', icon: 'star.fill', androidIcon: 'star', route: '/manager/weekly-specials-editor', color: colors.managerAccent },
-    { id: 3, title: 'Events Editor', icon: 'calendar', androidIcon: 'event', route: '/manager/events-editor', color: colors.managerAccent },
-    { id: 4, title: 'Gallery Editor', icon: 'photo.on.rectangle', androidIcon: 'photo_library', route: '/manager/gallery-editor', color: colors.managerAccent },
-    { id: 5, title: 'Announcements', icon: 'megaphone.fill', androidIcon: 'campaign', route: '/manager/announcements-editor', color: colors.managerAccent },
-    { id: 6, title: 'About Us Editor', icon: 'info.circle.fill', androidIcon: 'info', route: '/manager/about-us-editor', color: colors.managerAccent },
-    { id: 7, title: 'Contact Us Editor', icon: 'phone.fill', androidIcon: 'phone', route: '/manager/contact-us-editor', color: colors.managerAccent },
-    { id: 8, title: 'Tagline Editor', icon: 'text.quote', androidIcon: 'format_quote', route: '/manager/tagline-editor', color: colors.managerAccent },
-    { id: 9, title: 'Reviews Editor', icon: 'star.fill', androidIcon: 'star', route: '/manager/reviews-editor', color: colors.managerAccent },
-    { id: 10, title: 'Guides Editor', icon: 'book.closed.fill', androidIcon: 'import_contacts', route: '/manager/guides-editor', color: colors.managerAccent },
-    { id: 11, title: 'Employees', icon: 'person.3.fill', androidIcon: 'people', route: '/manager/employees', color: colors.managerSecondary },
-    { id: 12, title: 'Schedule', icon: 'calendar.badge.clock', androidIcon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
-    { id: 13, title: 'Rewards', icon: 'dollarsign.circle.fill', androidIcon: 'attach_money', route: '/manager/rewards', color: colors.managerSecondary },
-    { id: 14, title: 'My Profile', icon: 'person.circle.fill', androidIcon: 'account_circle', route: '/manager/profile', color: colors.managerPrimary },
+  const customerTools = [
+    { id: 1, title: 'Menu Editor', icon: 'restaurant', route: '/manager/menu-editor', color: colors.managerAccent },
+    { id: 2, title: 'Weekly Specials Editor', icon: 'star', route: '/manager/weekly-specials-editor', color: colors.managerAccent },
+    { id: 3, title: 'Events Editor', icon: 'event', route: '/manager/events-editor', color: colors.managerAccent },
+    { id: 4, title: 'Gallery Editor', icon: 'photo_library', route: '/manager/gallery-editor', color: colors.managerAccent },
+    { id: 5, title: 'About Us Editor', icon: 'info', route: '/manager/about-us-editor', color: colors.managerAccent },
+    { id: 6, title: 'Contact Us', icon: 'phone', route: '/manager/contact-us-editor', color: colors.managerAccent },
+    { id: 7, title: 'Reviews Editor', icon: 'star_rate', route: '/manager/reviews-editor', color: colors.managerAccent },
+    { id: 8, title: 'Tagline Editor', icon: 'format_quote', route: '/manager/tagline-editor', color: colors.managerAccent },
   ];
+
+  const employeeTools = [
+    { id: 1, title: 'Employees', icon: 'people', route: '/manager/employees', color: colors.managerSecondary },
+    { id: 2, title: 'Announcements', icon: 'campaign', route: '/manager/announcements-editor', color: colors.managerSecondary },
+    { id: 3, title: 'Rewards', icon: 'attach_money', route: '/manager/rewards', color: colors.managerSecondary },
+    { id: 4, title: 'Schedules', icon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
+  ];
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return colors.error;
+      case 'medium':
+        return colors.warning;
+      case 'low':
+        return colors.textSecondary;
+      default:
+        return colors.textSecondary;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -55,6 +75,8 @@ export default function ManagerHomeScreen() {
       </View>
     );
   }
+
+  const currentTools = activeTab === 'customer' ? customerTools : employeeTools;
 
   return (
     <>
@@ -88,27 +110,107 @@ export default function ManagerHomeScreen() {
           {/* Weather Card */}
           <WeatherDisplay variant="manager" />
 
+          {/* Announcements */}
+          <View style={commonStyles.employeeCard}>
+            <View style={styles.cardHeader}>
+              <MaterialIcons name="campaign" color={colors.managerAccent} size={24} />
+              <Text style={styles.cardTitle}>Announcements</Text>
+            </View>
+            {announcements.length === 0 ? (
+              <Text style={styles.noAnnouncementsText}>No announcements at this time</Text>
+            ) : (
+              announcements.map((announcement) => (
+                <View key={announcement.id} style={styles.announcementItem}>
+                  <View style={[
+                    styles.priorityBadge,
+                    { backgroundColor: getPriorityColor(announcement.priority) },
+                  ]}>
+                    <Text style={styles.priorityText}>
+                      {announcement.priority.toUpperCase()}
+                    </Text>
+                  </View>
+                  <Text style={styles.announcementTitle}>{announcement.title}</Text>
+                  <Text style={styles.announcementMessage}>{announcement.message}</Text>
+                  <Text style={styles.announcementDate}>
+                    {new Date(announcement.created_at || '').toLocaleDateString()}
+                  </Text>
+                </View>
+              ))
+            )}
+          </View>
+
+          {/* Guides and Training */}
+          <Pressable
+            style={styles.guidesButton}
+            onPress={() => router.push('/employee/training')}
+          >
+            <MaterialIcons name="menu-book" size={32} color={colors.managerAccent} />
+            <Text style={styles.guidesButtonText}>Guides & Training</Text>
+          </Pressable>
+
           {/* Manager Tools */}
           <View style={styles.toolsSection}>
             <Text style={styles.sectionTitle}>Management Tools</Text>
+            
+            {/* Tabs */}
+            <View style={styles.tabContainer}>
+              <Pressable
+                style={[styles.tab, activeTab === 'customer' && styles.tabActive]}
+                onPress={() => setActiveTab('customer')}
+              >
+                <MaterialIcons 
+                  name="storefront" 
+                  size={20} 
+                  color={activeTab === 'customer' ? '#FFFFFF' : colors.text} 
+                />
+                <Text style={[
+                  styles.tabText,
+                  activeTab === 'customer' && styles.tabTextActive
+                ]}>
+                  Customer Tools
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[styles.tab, activeTab === 'employee' && styles.tabActive]}
+                onPress={() => setActiveTab('employee')}
+              >
+                <MaterialIcons 
+                  name="people" 
+                  size={20} 
+                  color={activeTab === 'employee' ? '#FFFFFF' : colors.text} 
+                />
+                <Text style={[
+                  styles.tabText,
+                  activeTab === 'employee' && styles.tabTextActive
+                ]}>
+                  Employee Tools
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Tools Grid */}
             <View style={styles.toolsGrid}>
-              {managerTools.map((tool) => (
+              {currentTools.map((tool) => (
                 <Pressable
                   key={tool.id}
                   style={[styles.toolCard, { backgroundColor: tool.color }]}
                   onPress={() => router.push(tool.route as any)}
                 >
-                  <IconSymbol 
-                    ios_icon_name={tool.icon as any} 
-                    android_material_icon_name={tool.androidIcon} 
-                    color="#FFFFFF" 
-                    size={32} 
-                  />
+                  <MaterialIcons name={tool.icon as any} color="#FFFFFF" size={28} />
                   <Text style={styles.toolTitle}>{tool.title}</Text>
                 </Pressable>
               ))}
             </View>
           </View>
+
+          {/* My Profile */}
+          <Pressable
+            style={styles.profileButton}
+            onPress={() => router.push('/manager/profile')}
+          >
+            <MaterialIcons name="account_circle" size={32} color={colors.managerAccent} />
+            <Text style={styles.profileButtonText}>My Profile</Text>
+          </Pressable>
         </ScrollView>
       </View>
     </>
@@ -169,8 +271,74 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
     fontStyle: 'italic',
   },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginLeft: 8,
+  },
+  announcementItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  priorityBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  priorityText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  announcementTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  announcementMessage: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  announcementDate: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  noAnnouncementsText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  guidesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.employeeCard,
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 12,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+    gap: 12,
+  },
+  guidesButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
   toolsSection: {
-    marginTop: 8,
+    marginTop: 20,
   },
   sectionTitle: {
     fontSize: 20,
@@ -178,26 +346,72 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: 16,
   },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: colors.card,
+    borderRadius: 8,
+    padding: 4,
+    marginBottom: 16,
+    gap: 4,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    gap: 6,
+  },
+  tabActive: {
+    backgroundColor: colors.managerAccent,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  tabTextActive: {
+    color: '#FFFFFF',
+  },
   toolsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 10,
   },
   toolCard: {
     width: '48%',
-    aspectRatio: 1,
+    aspectRatio: 1.2,
     borderRadius: 12,
-    padding: 16,
+    padding: 12,
     justifyContent: 'center',
     alignItems: 'center',
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
   },
   toolTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#FFFFFF',
-    marginTop: 12,
+    marginTop: 8,
     textAlign: 'center',
+  },
+  profileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.employeeCard,
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 12,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+    gap: 12,
+  },
+  profileButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
   },
 });

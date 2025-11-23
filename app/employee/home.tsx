@@ -11,7 +11,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function EmployeeHomeScreen() {
   const { user, logout, isLoading } = useAuth();
-  const { announcements } = useAnnouncements();
+  const { announcements } = useAnnouncements('employees');
 
   useEffect(() => {
     if (!isLoading && (!user || user.role === 'customer')) {
@@ -90,12 +90,7 @@ export default function EmployeeHomeScreen() {
           {/* Announcements */}
           <View style={commonStyles.employeeCard}>
             <View style={styles.cardHeader}>
-              <IconSymbol 
-                ios_icon_name="megaphone.fill" 
-                android_material_icon_name="campaign" 
-                color={colors.employeeAccent} 
-                size={24} 
-              />
+              <MaterialIcons name="campaign" color={colors.employeeAccent} size={24} />
               <Text style={styles.cardTitle}>Announcements</Text>
             </View>
             {announcements.length === 0 ? (
