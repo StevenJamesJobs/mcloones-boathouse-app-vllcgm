@@ -87,15 +87,6 @@ export default function EventsScreen() {
           ) : (
             events.map((event) => (
               <View key={event.id} style={styles.eventCard}>
-                {event.image_url && (
-                  <Pressable onPress={() => setExpandedImage(event.image_url)}>
-                    <Image
-                      source={{ uri: event.image_url }}
-                      style={styles.eventThumbnail}
-                      resizeMode="cover"
-                    />
-                  </Pressable>
-                )}
                 <View style={styles.eventHeader}>
                   <IconSymbol name="calendar" color={colors.accent} size={24} />
                   <View style={styles.eventHeaderText}>
@@ -110,6 +101,16 @@ export default function EventsScreen() {
                     </Text>
                   </View>
                 </View>
+
+                {event.image_url && (
+                  <Pressable onPress={() => setExpandedImage(event.image_url)}>
+                    <Image
+                      source={{ uri: event.image_url }}
+                      style={styles.eventThumbnail}
+                      resizeMode="cover"
+                    />
+                  </Pressable>
+                )}
 
                 <View style={styles.eventTime}>
                   <IconSymbol name="clock.fill" color={colors.textSecondary} size={16} />
@@ -302,13 +303,6 @@ const styles = StyleSheet.create({
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
   },
-  eventThumbnail: {
-    width: '100%',
-    height: 150,
-    borderRadius: 8,
-    marginBottom: 12,
-    backgroundColor: colors.border,
-  },
   eventHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -328,6 +322,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.accent,
     fontWeight: '600',
+  },
+  eventThumbnail: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: colors.border,
   },
   eventTime: {
     flexDirection: 'row',

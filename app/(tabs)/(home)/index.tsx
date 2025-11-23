@@ -13,12 +13,10 @@ import { useTagline } from '@/hooks/useTagline';
 import { useAboutUs } from '@/hooks/useAboutUs';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import EmployeeDataSeeder from '@/components/EmployeeDataSeeder';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function HomeScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
-  const [seederModalVisible, setSeederModalVisible] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
@@ -132,15 +130,6 @@ export default function HomeScreen() {
             resizeMode="contain"
           />
           <View style={styles.headerButtons}>
-            {/* Temporary Setup Button - Remove after initial setup */}
-            <Pressable onPress={() => setSeederModalVisible(true)} style={styles.setupButton}>
-              <IconSymbol 
-                ios_icon_name="gear" 
-                android_material_icon_name="settings" 
-                color={colors.textSecondary} 
-                size={24} 
-              />
-            </Pressable>
             <Pressable onPress={() => setLoginModalVisible(true)} style={styles.loginIconButton}>
               <MaterialIcons name="login" size={32} color="#3289a8" />
             </Pressable>
@@ -191,6 +180,7 @@ export default function HomeScreen() {
             ) : (
               nextTwoEvents.map((event) => (
                 <View key={event.id} style={commonStyles.card}>
+                  <Text style={styles.eventTitle}>{event.title}</Text>
                   {event.image_url && (
                     <Pressable onPress={() => setExpandedImage(event.image_url)}>
                       <Image
@@ -200,7 +190,6 @@ export default function HomeScreen() {
                       />
                     </Pressable>
                   )}
-                  <Text style={styles.eventTitle}>{event.title}</Text>
                   <Text style={styles.eventDate}>
                     {new Date(event.event_date).toLocaleDateString('en-US', { 
                       weekday: 'long', 
@@ -379,33 +368,6 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
-      {/* Employee Data Seeder Modal */}
-      <Modal
-        visible={seederModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setSeederModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.seederModalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Initial Setup</Text>
-              <Pressable onPress={() => setSeederModalVisible(false)}>
-                <IconSymbol 
-                  ios_icon_name="xmark.circle.fill" 
-                  android_material_icon_name="cancel" 
-                  color={colors.textSecondary} 
-                  size={28} 
-                />
-              </Pressable>
-            </View>
-            <ScrollView style={styles.seederScrollView}>
-              <EmployeeDataSeeder />
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
       {/* Login Modal */}
       <Modal
         visible={loginModalVisible}
@@ -517,9 +479,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  setupButton: {
-    padding: 4,
-  },
   loginIconButton: {
     padding: 4,
   },
@@ -586,18 +545,18 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
   },
+  eventTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
+  },
   eventThumbnail: {
     width: '100%',
     height: 150,
     borderRadius: 8,
     marginBottom: 12,
     backgroundColor: colors.border,
-  },
-  eventTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
   },
   eventDate: {
     fontSize: 14,
@@ -747,17 +706,6 @@ const styles = StyleSheet.create({
     padding: 24,
     width: '90%',
     maxWidth: 400,
-  },
-  seederModalContent: {
-    backgroundColor: colors.background,
-    borderRadius: 16,
-    padding: 24,
-    width: '90%',
-    maxWidth: 500,
-    maxHeight: '80%',
-  },
-  seederScrollView: {
-    maxHeight: 500,
   },
   modalHeader: {
     flexDirection: 'row',
