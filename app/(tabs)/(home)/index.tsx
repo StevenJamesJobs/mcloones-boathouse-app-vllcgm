@@ -8,9 +8,9 @@ import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWeeklySpecials } from '@/hooks/useWeeklySpecials';
 import { useEvents } from '@/hooks/useEvents';
-import { useContactUs } from '@/hooks/useContactUs';
 import { useReviews } from '@/hooks/useReviews';
 import { useTagline } from '@/hooks/useTagline';
+import { useAboutUs } from '@/hooks/useAboutUs';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import EmployeeDataSeeder from '@/components/EmployeeDataSeeder';
@@ -26,9 +26,9 @@ export default function HomeScreen() {
   const { login, user } = useAuth();
   const { specials, loading: specialsLoading } = useWeeklySpecials();
   const { events, loading: eventsLoading } = useEvents();
-  const { contactInfo, loading: contactLoading } = useContactUs();
   const { reviews, loading: reviewsLoading } = useReviews();
   const { tagline, loading: taglineLoading } = useTagline();
+  const { sections: aboutSections, loading: aboutLoading } = useAboutUs();
   const insets = useSafeAreaInsets();
 
   const handleLogin = async () => {
@@ -89,7 +89,7 @@ export default function HomeScreen() {
             ios_icon_name="star.fill"
             android_material_icon_name="star"
             size={16}
-            color={star <= rating ? '#FFD700' : '#ccc'}
+            color={star <= rating ? '#FFD700' : '#E0E0E0'}
           />
         ))}
       </View>
@@ -106,6 +106,11 @@ export default function HomeScreen() {
 
   // Get next two upcoming events
   const nextTwoEvents = events.slice(0, 2);
+
+  // Find the "Visit Us" section from About Us
+  const visitUsSection = aboutSections.find(section => 
+    section.title.toLowerCase().includes('visit') || section.title.toLowerCase().includes('contact')
+  );
 
   const bannerHeight = insets.top + 60;
 
@@ -303,62 +308,50 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* Contact Information */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Contact Us</Text>
-            {contactLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color={colors.accent} />
-                <Text style={styles.loadingText}>Loading contact info...</Text>
-              </View>
-            ) : contactInfo ? (
-              <View style={commonStyles.card}>
-                <View style={styles.contactRow}>
-                  <IconSymbol 
-                    ios_icon_name="phone.fill" 
-                    android_material_icon_name="phone" 
-                    color={colors.accent} 
-                    size={20} 
-                  />
-                  <Text style={styles.contactText}>{contactInfo.phone}</Text>
+          {/* Visit Us Section - Replacing Contact Us */}
+          {visitUsSection && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{visitUsSection.title}</Text>
+              {aboutLoading ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color={colors.accent} />
+                  <Text style={styles.loadingText}>Loading...</Text>
                 </View>
-                <View style={styles.contactRow}>
-                  <IconSymbol 
-                    ios_icon_name="envelope.fill" 
-                    android_material_icon_name="email" 
-                    color={colors.accent} 
-                    size={20} 
-                  />
-                  <Text style={styles.contactText}>{contactInfo.email}</Text>
+              ) : (
+                <View style={commonStyles.card}>
+                  {visitUsSection.content.split('•').filter((line: string) => line.trim()).map((line: string, index: number) => {
+                    const trimmedLine = line.trim();
+                    let iconName = 'info.circle.fill';
+                    
+                    if (trimmedLine.toLowerCase().includes('ocean') || trimmedLine.toLowerCase().includes('avenue') || trimmedLine.toLowerCase().includes('address')) {
+                      iconName = 'mappin.circle.fill';
+                    } else if (trimmedLine.match(/\(\d{3}\)/) || trimmedLine.toLowerCase().includes('phone')) {
+                      iconName = 'phone.fill';
+                    } else if (trimmedLine.toLowerCase().includes('hours') || trimmedLine.toLowerCase().includes('monday') || trimmedLine.toLowerCase().includes('day')) {
+                      iconName = 'clock.fill';
+                    }
+                    
+                    return (
+                      <View key={index} style={styles.visitUsRow}>
+                        <IconSymbol 
+                          ios_icon_name={iconName}
+                          android_material_icon_name={
+                            iconName === 'mappin.circle.fill' ? 'location_on' :
+                            iconName === 'phone.fill' ? 'phone' :
+                            iconName === 'clock.fill' ? 'schedule' :
+                            'info'
+                          }
+                          color={colors.accent} 
+                          size={20} 
+                        />
+                        <Text style={styles.visitUsText}>{trimmedLine}</Text>
+                      </View>
+                    );
+                  })}
                 </View>
-                <View style={styles.contactRow}>
-                  <IconSymbol 
-                    ios_icon_name="mappin.circle.fill" 
-                    android_material_icon_name="location_on" 
-                    color={colors.accent} 
-                    size={20} 
-                  />
-                  <Text style={styles.contactText}>{contactInfo.address}</Text>
-                </View>
-                {(contactInfo.hours_weekday || contactInfo.hours_weekend) && (
-                  <>
-                    <View style={styles.divider} />
-                    <Text style={styles.hoursTitle}>Hours</Text>
-                    {contactInfo.hours_weekday && (
-                      <Text style={styles.hoursText}>Weekdays: {contactInfo.hours_weekday}</Text>
-                    )}
-                    {contactInfo.hours_weekend && (
-                      <Text style={styles.hoursText}>Weekends: {contactInfo.hours_weekend}</Text>
-                    )}
-                  </>
-                )}
-              </View>
-            ) : (
-              <View style={commonStyles.card}>
-                <Text style={styles.noContactText}>Contact information not available</Text>
-              </View>
-            )}
-          </View>
+              )}
+            </View>
+          )}
 
           {/* Bottom Padding/Footer */}
           <View style={styles.bottomPadding} />
@@ -718,37 +711,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  contactRow: {
+  visitUsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 12,
   },
-  contactText: {
+  visitUsText: {
     fontSize: 16,
     color: colors.text,
     marginLeft: 12,
     flex: 1,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: 12,
-  },
-  hoursTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 8,
-  },
-  hoursText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 4,
-  },
-  noContactText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
+    lineHeight: 22,
   },
   bottomPadding: {
     height: 80,
