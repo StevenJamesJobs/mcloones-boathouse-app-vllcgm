@@ -7,6 +7,7 @@ import { colors, commonStyles } from '@/styles/commonStyles';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 type PercentageOption = '0.01' | '0.02' | '0.03' | '0.035' | '0.04';
+type DeclarePercentageOption = '0.08' | '0.12';
 
 export default function CheckOutsScreen() {
   const [totalShiftSales, setTotalShiftSales] = useState('');
@@ -14,10 +15,12 @@ export default function CheckOutsScreen() {
   const [isNegative, setIsNegative] = useState(false);
   const [busserRunnerPercent, setBusserRunnerPercent] = useState<PercentageOption>('0.01');
   const [bartenderPercent, setBartenderPercent] = useState<PercentageOption>('0.02');
+  const [declarePercent, setDeclarePercent] = useState<DeclarePercentageOption>('0.08');
   const [showResults, setShowResults] = useState(false);
 
   const busserRunnerOptions: PercentageOption[] = ['0.01', '0.02', '0.035'];
   const bartenderOptions: PercentageOption[] = ['0.02', '0.03', '0.04'];
+  const declareOptions: DeclarePercentageOption[] = ['0.08', '0.12'];
 
   const formatPercentageDisplay = (value: string) => {
     const num = parseFloat(value);
@@ -67,6 +70,7 @@ export default function CheckOutsScreen() {
     setIsNegative(false);
     setBusserRunnerPercent('0.01');
     setBartenderPercent('0.02');
+    setDeclarePercent('0.08');
     setShowResults(false);
   };
 
@@ -75,6 +79,7 @@ export default function CheckOutsScreen() {
   const cashTotal = getActualCashTotal();
   const busserAmount = sales * parseFloat(busserRunnerPercent);
   const bartenderAmount = sales * parseFloat(bartenderPercent);
+  const declareAmount = Math.round(sales * parseFloat(declarePercent));
   
   // Calculate final tally - ALWAYS ADD tip outs to cash total
   // Whether cash total is positive or negative, we add the tip out amounts
@@ -126,6 +131,37 @@ export default function CheckOutsScreen() {
                   keyboardType="decimal-pad"
                 />
               </View>
+            </View>
+
+            {/* Declare Percentage */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Declare Percentage *</Text>
+              <View style={styles.percentageOptions}>
+                {declareOptions.map((option) => (
+                  <Pressable
+                    key={option}
+                    style={[
+                      styles.percentageButton,
+                      declarePercent === option && styles.percentageButtonSelected,
+                    ]}
+                    onPress={() => setDeclarePercent(option)}
+                  >
+                    <Text
+                      style={[
+                        styles.percentageButtonText,
+                        declarePercent === option && styles.percentageButtonTextSelected,
+                      ]}
+                    >
+                      {formatPercentageDisplay(option)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              {totalShiftSales && (
+                <Text style={styles.calculatedAmount}>
+                  You will declare: ${declareAmount}
+                </Text>
+              )}
             </View>
 
             {/* Cashed Out/In Total */}
@@ -305,6 +341,15 @@ export default function CheckOutsScreen() {
                 </View>
               </View>
 
+              {/* Declare Amount */}
+              <View style={styles.declareContainer}>
+                <MaterialIcons name="assignment" size={24} color={colors.employeeAccent} />
+                <View style={styles.declareContent}>
+                  <Text style={styles.declareLabel}>You will declare</Text>
+                  <Text style={styles.declareAmount}>${declareAmount}</Text>
+                </View>
+              </View>
+
               {/* Reset Button */}
               <Pressable
                 style={styles.resetButton}
@@ -323,9 +368,10 @@ export default function CheckOutsScreen() {
               <Text style={styles.helpTitle}>How to use this calculator:</Text>
               <Text style={styles.helpText}>
                 - Enter your total shift sales{'\n'}
+                - Select your declare percentage (8% or 12%){'\n'}
                 - Enter your cash in/out amount and toggle between positive (cashed in) or negative (cashed out){'\n'}
                 - Select the tip out percentages for busser/runner and bartenders{'\n'}
-                - Tap Calculate to see your final check out amount
+                - Tap Calculate to see your final check out amount and declare amount
               </Text>
             </View>
           </View>
@@ -578,6 +624,33 @@ const styles = StyleSheet.create({
   },
   oweAmount: {
     color: colors.error,
+  },
+  declareContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.employeeBackground,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    gap: 12,
+    borderWidth: 2,
+    borderColor: colors.employeeAccent,
+  },
+  declareContent: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  declareLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  declareAmount: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: colors.employeeAccent,
   },
   resetButton: {
     flexDirection: 'row',
