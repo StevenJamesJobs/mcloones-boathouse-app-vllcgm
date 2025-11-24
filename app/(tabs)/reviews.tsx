@@ -78,6 +78,61 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 10,
   },
+  reviewPromptText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  reviewButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 32,
+  },
+  googleReviewButton: {
+    flex: 1,
+    backgroundColor: '#4285F4',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  openTableReviewButton: {
+    flex: 1,
+    backgroundColor: '#DA3743',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  reviewButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  reviewsSectionTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
   reviewCard: {
     backgroundColor: colors.card,
     borderRadius: 10,
@@ -109,21 +164,6 @@ const styles = StyleSheet.create({
   reviewDate: {
     fontSize: 13,
     color: colors.textSecondary,
-  },
-  leaveReviewButton: {
-    backgroundColor: colors.accent,
-    borderRadius: 10,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    marginBottom: 20,
-  },
-  leaveReviewText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
   loadingContainer: {
     flex: 1,
@@ -251,11 +291,19 @@ export default function ReviewsScreen() {
     );
   };
 
-  const handleLeaveReview = () => {
+  const handleGoogleReview = () => {
     const googleReviewUrl = 'https://www.google.com/search?q=mcloone%27s+boathouse&rlz=1C5CHFA_enUS1042US1042#lrd=0x89c22e7b6dd8b5a1:0x8e3c3e3e3e3e3e3e,3';
     Linking.openURL(googleReviewUrl).catch(err => {
-      console.error('Failed to open URL:', err);
-      Alert.alert('Error', 'Could not open review page');
+      console.error('Failed to open Google review URL:', err);
+      Alert.alert('Error', 'Could not open Google review page');
+    });
+  };
+
+  const handleOpenTableReview = () => {
+    const openTableUrl = 'https://www.opentable.com/r/mcloones-boat-house-west-orange?corrid=df6e3a51-d45f-43a7-9a5c-4208a1921ba5&p=2&sd=2025-11-23T21%3A30%3A00';
+    Linking.openURL(openTableUrl).catch(err => {
+      console.error('Failed to open OpenTable URL:', err);
+      Alert.alert('Error', 'Could not open OpenTable page');
     });
   };
 
@@ -286,16 +334,38 @@ export default function ReviewsScreen() {
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Customer Reviews</Text>
             <Text style={styles.headerSubtitle}>
-              See what our guests are saying about their dining experience
+              See what our guests are saying about their dining experiences with us!
             </Text>
           </View>
 
           <View style={styles.section}>
-            {/* Leave a Review Button - Moved to Top */}
-            <Pressable style={styles.leaveReviewButton} onPress={handleLeaveReview}>
-              <MaterialIcons name="star" size={20} color="#fff" />
-              <Text style={styles.leaveReviewText}>Leave a Review on Google</Text>
-            </Pressable>
+            {/* Review Prompt and Buttons */}
+            <Text style={styles.reviewPromptText}>Leave us a review of your visit!</Text>
+            
+            <View style={styles.reviewButtonsContainer}>
+              <Pressable style={styles.googleReviewButton} onPress={handleGoogleReview}>
+                <IconSymbol 
+                  ios_icon_name="magnifyingglass" 
+                  android_material_icon_name="search" 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+                <Text style={styles.reviewButtonText}>Review on{'\n'}Google</Text>
+              </Pressable>
+              
+              <Pressable style={styles.openTableReviewButton} onPress={handleOpenTableReview}>
+                <IconSymbol 
+                  ios_icon_name="fork.knife" 
+                  android_material_icon_name="restaurant" 
+                  size={20} 
+                  color="#FFFFFF" 
+                />
+                <Text style={styles.reviewButtonText}>Leave on{'\n'}OpenTable</Text>
+              </Pressable>
+            </View>
+
+            {/* Reviews Section Title */}
+            <Text style={styles.reviewsSectionTitle}>Check out our latest Reviews</Text>
 
             {loading ? (
               <View style={styles.loadingContainer}>

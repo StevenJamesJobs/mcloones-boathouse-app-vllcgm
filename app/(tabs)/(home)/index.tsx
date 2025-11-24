@@ -206,7 +206,7 @@ export default function HomeScreen() {
 
           {/* Weekly Specials */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Weekly Specials</Text>
+            <Text style={styles.sectionTitle}>What's hot this week! </Text>
             {specialsLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color={colors.accent} />

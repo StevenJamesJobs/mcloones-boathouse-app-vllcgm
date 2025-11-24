@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Platform, ActivityIndicator, Modal, TextInput, Alert, Image, Linking } from 'react-native';
 import { Stack, router } from 'expo-router';
 import CustomerBanner from '@/components/CustomerBanner';
@@ -15,7 +15,7 @@ export default function MenuScreen() {
   const [selectedTab, setSelectedTab] = useState<'specials' | 'lunch' | 'dinner' | 'happyhour' | 'libations' | 'wine'>('specials');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loginModalVisible, setLoginModalVisible] = useState(false);
-  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [dropdownVisible, setDropdownVisible] = useState(true); // Auto-open dropdown on first visit
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
