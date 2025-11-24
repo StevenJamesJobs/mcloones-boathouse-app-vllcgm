@@ -7,6 +7,7 @@ import { colors, commonStyles } from '@/styles/commonStyles';
 import { useEvents } from '@/hooks/useEvents';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
+import { SwipeableImageModal } from '@/components/SwipeableImageModal';
 
 export default function EventsScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
@@ -80,7 +81,12 @@ export default function EventsScreen() {
             </View>
           ) : events.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <IconSymbol name="calendar" color={colors.textSecondary} size={64} />
+              <IconSymbol 
+                ios_icon_name="calendar" 
+                android_material_icon_name="event" 
+                color={colors.textSecondary} 
+                size={64} 
+              />
               <Text style={styles.emptyText}>No upcoming events at this time</Text>
               <Text style={styles.emptySubtext}>Check back soon for exciting events!</Text>
             </View>
@@ -88,7 +94,12 @@ export default function EventsScreen() {
             events.map((event) => (
               <View key={event.id} style={styles.eventCard}>
                 <View style={styles.eventHeader}>
-                  <IconSymbol name="calendar" color={colors.accent} size={24} />
+                  <IconSymbol 
+                    ios_icon_name="calendar" 
+                    android_material_icon_name="event" 
+                    color={colors.accent} 
+                    size={24} 
+                  />
                   <View style={styles.eventHeaderText}>
                     <Text style={styles.eventTitle}>{event.title}</Text>
                     <Text style={styles.eventDate}>
@@ -113,7 +124,12 @@ export default function EventsScreen() {
                 )}
 
                 <View style={styles.eventTime}>
-                  <IconSymbol name="clock.fill" color={colors.textSecondary} size={16} />
+                  <IconSymbol 
+                    ios_icon_name="clock.fill" 
+                    android_material_icon_name="schedule" 
+                    color={colors.textSecondary} 
+                    size={16} 
+                  />
                   <Text style={styles.eventTimeText}>{event.event_time}</Text>
                 </View>
 
@@ -125,7 +141,12 @@ export default function EventsScreen() {
                     onPress={() => handleRSVP(event.rsvp_link)}
                   >
                     <Text style={styles.rsvpButtonText}>RSVP Now</Text>
-                    <IconSymbol name="arrow.right" color="#FFFFFF" size={16} />
+                    <IconSymbol 
+                      ios_icon_name="arrow.right" 
+                      android_material_icon_name="arrow_forward" 
+                      color="#FFFFFF" 
+                      size={16} 
+                    />
                   </Pressable>
                 )}
               </View>
@@ -133,7 +154,12 @@ export default function EventsScreen() {
           )}
 
           <View style={styles.infoCard}>
-            <IconSymbol name="info.circle.fill" color={colors.accent} size={24} />
+            <IconSymbol 
+              ios_icon_name="info.circle.fill" 
+              android_material_icon_name="info" 
+              color={colors.accent} 
+              size={24} 
+            />
             <Text style={styles.infoText}>
               {infoBubbleText || 'For private events and bookings, please contact us at (732) 555-0123 or email events@mcloones.com'}
             </Text>
@@ -143,29 +169,12 @@ export default function EventsScreen() {
           <View style={styles.bottomPadding} />
         </ScrollView>
 
-        {/* Expanded Image Modal */}
-        <Modal
+        {/* Expanded Image Modal with Swipe-Down Gesture */}
+        <SwipeableImageModal
           visible={expandedImage !== null}
-          animationType="fade"
-          transparent={true}
-          onRequestClose={() => setExpandedImage(null)}
-        >
-          <View style={styles.expandedModalOverlay}>
-            <Pressable
-              style={styles.closeButton}
-              onPress={() => setExpandedImage(null)}
-            >
-              <IconSymbol name="xmark.circle.fill" color="#FFFFFF" size={36} />
-            </Pressable>
-            {expandedImage && (
-              <Image
-                source={{ uri: expandedImage }}
-                style={styles.expandedImage}
-                resizeMode="contain"
-              />
-            )}
-          </View>
-        </Modal>
+          imageUrl={expandedImage}
+          onClose={() => setExpandedImage(null)}
+        />
 
         {/* Login Modal */}
         <Modal
@@ -179,7 +188,12 @@ export default function EventsScreen() {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Employee Login</Text>
                 <Pressable onPress={() => setLoginModalVisible(false)}>
-                  <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
+                  <IconSymbol 
+                    ios_icon_name="xmark.circle.fill" 
+                    android_material_icon_name="cancel" 
+                    color={colors.textSecondary} 
+                    size={28} 
+                  />
                 </Pressable>
               </View>
 
@@ -378,23 +392,6 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 80,
-  },
-  expandedModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 10,
-    padding: 8,
-  },
-  expandedImage: {
-    width: '100%',
-    height: '100%',
   },
   modalOverlay: {
     flex: 1,

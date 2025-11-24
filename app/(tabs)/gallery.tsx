@@ -8,6 +8,7 @@ import { colors, commonStyles } from '@/styles/commonStyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGallery } from '@/hooks/useGallery';
+import { SwipeableImageModal } from '@/components/SwipeableImageModal';
 
 export default function GalleryScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
@@ -110,7 +111,12 @@ export default function GalleryScreen() {
             </View>
           ) : currentImages.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <IconSymbol name="photo.on.rectangle" color={colors.textSecondary} size={64} />
+              <IconSymbol 
+                ios_icon_name="photo.on.rectangle" 
+                android_material_icon_name="photo_library" 
+                color={colors.textSecondary} 
+                size={64} 
+              />
               <Text style={styles.emptyText}>No images in this category yet</Text>
               <Text style={styles.emptySubtext}>Check back soon for beautiful photos!</Text>
             </View>
@@ -140,29 +146,12 @@ export default function GalleryScreen() {
           )}
         </ScrollView>
 
-        {/* Expanded Image Modal */}
-        <Modal
+        {/* Expanded Image Modal with Swipe-Down Gesture */}
+        <SwipeableImageModal
           visible={expandedImage !== null}
-          animationType="fade"
-          transparent={true}
-          onRequestClose={() => setExpandedImage(null)}
-        >
-          <View style={styles.expandedModalOverlay}>
-            <Pressable
-              style={styles.closeButton}
-              onPress={() => setExpandedImage(null)}
-            >
-              <IconSymbol name="xmark.circle.fill" color="#FFFFFF" size={36} />
-            </Pressable>
-            {expandedImage && (
-              <Image
-                source={{ uri: expandedImage }}
-                style={styles.expandedImage}
-                resizeMode="contain"
-              />
-            )}
-          </View>
-        </Modal>
+          imageUrl={expandedImage}
+          onClose={() => setExpandedImage(null)}
+        />
 
         {/* Login Modal */}
         <Modal
@@ -176,7 +165,12 @@ export default function GalleryScreen() {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Employee Login</Text>
                 <Pressable onPress={() => setLoginModalVisible(false)}>
-                  <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
+                  <IconSymbol 
+                    ios_icon_name="xmark.circle.fill" 
+                    android_material_icon_name="cancel" 
+                    color={colors.textSecondary} 
+                    size={28} 
+                  />
                 </Pressable>
               </View>
 
@@ -314,23 +308,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#FFFFFF',
     lineHeight: 14,
-  },
-  expandedModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 10,
-    padding: 8,
-  },
-  expandedImage: {
-    width: '100%',
-    height: '100%',
   },
   modalOverlay: {
     flex: 1,

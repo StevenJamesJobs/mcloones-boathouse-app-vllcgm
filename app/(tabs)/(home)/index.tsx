@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, TextInput, Alert, ActivityIndicator, Linking, Image, Keyboard, TouchableWithoutFeedback, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, TextInput, Alert, ActivityIndicator, Linking, Image, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { Stack, Link } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import CustomerBanner from '@/components/CustomerBanner';
@@ -14,6 +14,7 @@ import { useAboutUs } from '@/hooks/useAboutUs';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { SwipeableImageModal } from '@/components/SwipeableImageModal';
 
 export default function HomeScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
@@ -28,23 +29,6 @@ export default function HomeScreen() {
   const { tagline, loading: taglineLoading } = useTagline();
   const { sections: aboutSections, loading: aboutLoading } = useAboutUs();
   const insets = useSafeAreaInsets();
-
-  // PanResponder for swipe-down gesture on expanded image
-  const panResponder = React.useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Only respond to vertical swipes
-        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        // If swiped down more than 100 pixels, close the modal
-        if (gestureState.dy > 100) {
-          setExpandedImage(null);
-        }
-      },
-    })
-  ).current;
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -357,33 +341,11 @@ export default function HomeScreen() {
       </View>
 
       {/* Expanded Image Modal with Swipe-Down Gesture */}
-      <Modal
+      <SwipeableImageModal
         visible={expandedImage !== null}
-        animationType="fade"
-        transparent={true}
-        onRequestClose={() => setExpandedImage(null)}
-      >
-        <View style={styles.expandedModalOverlay} {...panResponder.panHandlers}>
-          <Pressable
-            style={styles.closeButton}
-            onPress={() => setExpandedImage(null)}
-          >
-            <IconSymbol 
-              ios_icon_name="xmark.circle.fill" 
-              android_material_icon_name="cancel" 
-              color="#FFFFFF" 
-              size={36} 
-            />
-          </Pressable>
-          {expandedImage && (
-            <Image
-              source={{ uri: expandedImage }}
-              style={styles.expandedImage}
-              resizeMode="contain"
-            />
-          )}
-        </View>
-      </Modal>
+        imageUrl={expandedImage}
+        onClose={() => setExpandedImage(null)}
+      />
 
       {/* Login Modal with Keyboard Dismiss */}
       <Modal
@@ -697,23 +659,6 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 80,
-  },
-  expandedModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 10,
-    padding: 8,
-  },
-  expandedImage: {
-    width: '100%',
-    height: '100%',
   },
   modalOverlay: {
     flex: 1,

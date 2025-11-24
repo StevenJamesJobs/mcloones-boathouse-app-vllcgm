@@ -9,6 +9,7 @@ import { useWeeklySpecials } from '@/hooks/useWeeklySpecials';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/contexts/AuthContext';
 import { IconSymbol } from '@/components/IconSymbol';
+import { SwipeableImageModal } from '@/components/SwipeableImageModal';
 
 export default function MenuScreen() {
   // Set default to 'specials' (Weekly Specials)
@@ -508,29 +509,12 @@ export default function MenuScreen() {
           )}
         </View>
 
-        {/* Expanded Image Modal */}
-        <Modal
+        {/* Expanded Image Modal with Swipe-Down Gesture */}
+        <SwipeableImageModal
           visible={expandedImage !== null}
-          animationType="fade"
-          transparent={true}
-          onRequestClose={() => setExpandedImage(null)}
-        >
-          <View style={styles.expandedModalOverlay}>
-            <Pressable
-              style={styles.closeButton}
-              onPress={() => setExpandedImage(null)}
-            >
-              <IconSymbol name="xmark.circle.fill" color="#FFFFFF" size={36} />
-            </Pressable>
-            {expandedImage && (
-              <Image
-                source={{ uri: expandedImage }}
-                style={styles.expandedImage}
-                resizeMode="contain"
-              />
-            )}
-          </View>
-        </Modal>
+          imageUrl={expandedImage}
+          onClose={() => setExpandedImage(null)}
+        />
 
         {/* Login Modal */}
         <Modal
@@ -544,7 +528,12 @@ export default function MenuScreen() {
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Employee Login</Text>
                 <Pressable onPress={() => setLoginModalVisible(false)}>
-                  <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
+                  <IconSymbol 
+                    ios_icon_name="xmark.circle.fill" 
+                    android_material_icon_name="cancel" 
+                    color={colors.textSecondary} 
+                    size={28} 
+                  />
                 </Pressable>
               </View>
 
@@ -858,23 +847,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: colors.textSecondary,
-  },
-  expandedModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 10,
-    padding: 8,
-  },
-  expandedImage: {
-    width: '100%',
-    height: '100%',
   },
   modalOverlay: {
     flex: 1,
