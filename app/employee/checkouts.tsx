@@ -76,16 +76,11 @@ export default function CheckOutsScreen() {
   const busserAmount = sales * parseFloat(busserRunnerPercent);
   const bartenderAmount = sales * parseFloat(bartenderPercent);
   
-  // Calculate final tally
-  let finalTally = 0;
-  if (cashTotal < 0) {
-    // If cash total is negative, add the tip outs to it (making it more negative)
-    finalTally = cashTotal - busserAmount - bartenderAmount;
-  } else {
-    // If cash total is positive, subtract the tip outs from it
-    finalTally = cashTotal - busserAmount - bartenderAmount;
-  }
+  // Calculate final tally - ALWAYS ADD tip outs to cash total
+  // Whether cash total is positive or negative, we add the tip out amounts
+  const finalTally = cashTotal + busserAmount + bartenderAmount;
 
+  // Determine if they owe or are owed based on final tally
   const isOwed = finalTally < 0;
   const displayAmount = Math.abs(finalTally);
 
