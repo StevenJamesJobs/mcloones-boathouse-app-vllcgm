@@ -17,7 +17,6 @@ export default function EmployeeProfileScreen() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   
   const [formData, setFormData] = useState({
-    job_title: user?.job_title || '',
     phone_number: user?.phone_number || '',
     address: user?.address || '',
     email: user?.email || '',
@@ -32,7 +31,6 @@ export default function EmployeeProfileScreen() {
   useEffect(() => {
     if (user) {
       setFormData({
-        job_title: user.job_title,
         phone_number: user.phone_number || '',
         address: user.address || '',
         email: user.email,
@@ -51,7 +49,7 @@ export default function EmployeeProfileScreen() {
   }, [showSuccessMessage]);
 
   const handleSave = async () => {
-    if (!formData.job_title || !formData.email) {
+    if (!formData.email) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
@@ -62,7 +60,6 @@ export default function EmployeeProfileScreen() {
     }
 
     const result = await updateProfile({
-      job_title: formData.job_title,
       phone_number: formData.phone_number || null,
       address: formData.address || null,
       email: formData.email,
@@ -96,6 +93,7 @@ export default function EmployeeProfileScreen() {
     const result = await changePassword(passwordData.newPassword);
 
     if (result.success) {
+      console.log('Password change successful, showing success message');
       // Show success message bubble
       setShowSuccessMessage(true);
       setIsChangingPassword(false);
@@ -317,19 +315,8 @@ export default function EmployeeProfileScreen() {
                       size={20} 
                     />
                     <Text style={styles.readOnlyText}>
-                      Name and Username can only be changed by managers
+                      Name, Username, and Job Title can only be changed by managers
                     </Text>
-                  </View>
-
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Job Title *</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={formData.job_title}
-                      onChangeText={(text) => setFormData({ ...formData, job_title: text })}
-                      placeholder="Enter job title"
-                      placeholderTextColor={colors.textSecondary}
-                    />
                   </View>
 
                   <View style={styles.inputGroup}>
@@ -393,7 +380,6 @@ export default function EmployeeProfileScreen() {
                       onPress={() => {
                         setIsEditing(false);
                         setFormData({
-                          job_title: user.job_title,
                           phone_number: user.phone_number || '',
                           address: user.address || '',
                           email: user.email,
