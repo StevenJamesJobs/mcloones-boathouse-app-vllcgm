@@ -51,6 +51,7 @@ export default function ManagerHomeScreen() {
     { id: 2, title: 'Announcements', icon: 'campaign', route: '/manager/announcements-editor', color: colors.managerSecondary },
     { id: 3, title: 'Rewards', icon: 'attach-money', route: '/manager/rewards', color: colors.managerSecondary },
     { id: 4, title: 'Schedules', icon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
+    { id: 5, title: 'Check Outs', icon: 'calculate', route: '/employee/checkouts', color: colors.managerSecondary },
   ];
 
   const getPriorityColor = (priority: string) => {
@@ -382,7 +383,7 @@ const styles = StyleSheet.create({
   },
   toolCard: {
     width: '48%',
-    aspectRatio: 1.2,
+    aspectRatio: 1.5,
     borderRadius: 12,
     padding: 12,
     justifyContent: 'center',

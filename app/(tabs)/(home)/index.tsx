@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, TextInput, Alert, ActivityIndicator, Linking, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform, Modal, TextInput, Alert, ActivityIndicator, Linking, Image, Keyboard, TouchableWithoutFeedback, PanResponder } from 'react-native';
 import { Stack, Link } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import CustomerBanner from '@/components/CustomerBanner';
@@ -28,6 +28,23 @@ export default function HomeScreen() {
   const { tagline, loading: taglineLoading } = useTagline();
   const { sections: aboutSections, loading: aboutLoading } = useAboutUs();
   const insets = useSafeAreaInsets();
+
+  // PanResponder for swipe-down gesture on expanded image
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // Only respond to vertical swipes
+        return Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        // If swiped down more than 100 pixels, close the modal
+        if (gestureState.dy > 100) {
+          setExpandedImage(null);
+        }
+      },
+    })
+  ).current;
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -339,14 +356,14 @@ export default function HomeScreen() {
         </ScrollView>
       </View>
 
-      {/* Expanded Image Modal */}
+      {/* Expanded Image Modal with Swipe-Down Gesture */}
       <Modal
         visible={expandedImage !== null}
         animationType="fade"
         transparent={true}
         onRequestClose={() => setExpandedImage(null)}
       >
-        <View style={styles.expandedModalOverlay}>
+        <View style={styles.expandedModalOverlay} {...panResponder.panHandlers}>
           <Pressable
             style={styles.closeButton}
             onPress={() => setExpandedImage(null)}
@@ -368,70 +385,74 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
-      {/* Login Modal */}
+      {/* Login Modal with Keyboard Dismiss */}
       <Modal
         visible={loginModalVisible}
         animationType="slide"
         transparent={true}
         onRequestClose={() => setLoginModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Employee Login</Text>
-              <Pressable onPress={() => setLoginModalVisible(false)}>
-                <IconSymbol 
-                  ios_icon_name="xmark.circle.fill" 
-                  android_material_icon_name="cancel" 
-                  color={colors.textSecondary} 
-                  size={28} 
-                />
-              </Pressable>
-            </View>
-            
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Username</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your username"
-                placeholderTextColor="#999"
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-                editable={!loggingIn}
-              />
-            </View>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Employee Login</Text>
+                  <Pressable onPress={() => setLoginModalVisible(false)}>
+                    <IconSymbol 
+                      ios_icon_name="xmark.circle.fill" 
+                      android_material_icon_name="cancel" 
+                      color={colors.textSecondary} 
+                      size={28} 
+                    />
+                  </Pressable>
+                </View>
+                
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Username</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your username"
+                    placeholderTextColor="#999"
+                    value={username}
+                    onChangeText={setUsername}
+                    autoCapitalize="none"
+                    editable={!loggingIn}
+                  />
+                </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Password</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter password"
-                placeholderTextColor="#999"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                editable={!loggingIn}
-              />
-            </View>
+                <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Password</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter password"
+                    placeholderTextColor="#999"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    editable={!loggingIn}
+                  />
+                </View>
 
-            <Pressable 
-              style={[styles.loginButton, loggingIn && styles.loginButtonDisabled]} 
-              onPress={handleLogin}
-              disabled={loggingIn}
-            >
-              {loggingIn ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.loginButtonText}>Login</Text>
-              )}
-            </Pressable>
+                <Pressable 
+                  style={[styles.loginButton, loggingIn && styles.loginButtonDisabled]} 
+                  onPress={handleLogin}
+                  disabled={loggingIn}
+                >
+                  {loggingIn ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.loginButtonText}>Login</Text>
+                  )}
+                </Pressable>
 
-            <Text style={styles.helpText}>
-              Contact your manager if you need login credentials
-            </Text>
+                <Text style={styles.helpText}>
+                  Contact your manager if you need login credentials
+                </Text>
+              </View>
+            </TouchableWithoutFeedback>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </>
   );
