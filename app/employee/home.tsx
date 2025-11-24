@@ -134,6 +134,15 @@ export default function EmployeeHomeScreen() {
             </Pressable>
           </View>
 
+          {/* Check Outs Link */}
+          <Pressable
+            style={styles.checkOutsButton}
+            onPress={() => router.push('/employee/checkouts')}
+          >
+            <MaterialIcons name="calculate" size={32} color="#3289a8" />
+            <Text style={styles.checkOutsButtonText}>Check Outs</Text>
+          </Pressable>
+
           {/* Profile Link */}
           <Pressable
             style={styles.profileButton}
@@ -271,6 +280,23 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
+  },
+  checkOutsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.employeeCard,
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 12,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+    gap: 12,
+  },
+  checkOutsButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
   },
   profileButton: {
     flexDirection: 'row',
