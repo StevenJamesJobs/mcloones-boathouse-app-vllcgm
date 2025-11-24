@@ -11,6 +11,7 @@ type PercentageOption = '0.01' | '0.02' | '0.03' | '0.035' | '0.04';
 export default function CheckOutsScreen() {
   const [totalShiftSales, setTotalShiftSales] = useState('');
   const [cashedOutInTotal, setCashedOutInTotal] = useState('');
+  const [isNegative, setIsNegative] = useState(false);
   const [busserRunnerPercent, setBusserRunnerPercent] = useState<PercentageOption>('0.01');
   const [bartenderPercent, setBartenderPercent] = useState<PercentageOption>('0.02');
   const [showResults, setShowResults] = useState(false);
@@ -23,6 +24,21 @@ export default function CheckOutsScreen() {
     return `${(num * 100).toFixed(num === 0.035 ? 2 : 1)}%`;
   };
 
+  const handleCashedOutInChange = (text: string) => {
+    // Remove any non-numeric characters except decimal point and minus sign
+    const cleaned = text.replace(/[^0-9.]/g, '');
+    setCashedOutInTotal(cleaned);
+  };
+
+  const toggleSign = () => {
+    setIsNegative(!isNegative);
+  };
+
+  const getActualCashTotal = () => {
+    const value = parseFloat(cashedOutInTotal) || 0;
+    return isNegative ? -Math.abs(value) : Math.abs(value);
+  };
+
   const handleCalculate = () => {
     if (!totalShiftSales || !cashedOutInTotal) {
       Alert.alert('Missing Information', 'Please enter all required fields');
@@ -30,7 +46,7 @@ export default function CheckOutsScreen() {
     }
 
     const sales = parseFloat(totalShiftSales);
-    const cashTotal = parseFloat(cashedOutInTotal);
+    const cashTotal = getActualCashTotal();
 
     if (isNaN(sales) || isNaN(cashTotal)) {
       Alert.alert('Invalid Input', 'Please enter valid numbers');
@@ -48,6 +64,7 @@ export default function CheckOutsScreen() {
   const handleReset = () => {
     setTotalShiftSales('');
     setCashedOutInTotal('');
+    setIsNegative(false);
     setBusserRunnerPercent('0.01');
     setBartenderPercent('0.02');
     setShowResults(false);
@@ -55,7 +72,7 @@ export default function CheckOutsScreen() {
 
   // Calculations
   const sales = parseFloat(totalShiftSales) || 0;
-  const cashTotal = parseFloat(cashedOutInTotal) || 0;
+  const cashTotal = getActualCashTotal();
   const busserAmount = sales * parseFloat(busserRunnerPercent);
   const bartenderAmount = sales * parseFloat(bartenderPercent);
   
@@ -120,19 +137,48 @@ export default function CheckOutsScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Cashed Out/In Total *</Text>
               <Text style={styles.inputHint}>
-                (Enter negative number if you cashed out, positive if you cashed in)
+                (Enter amount and select positive or negative)
               </Text>
-              <View style={styles.inputWrapper}>
-                <Text style={styles.currencySymbol}>$</Text>
-                <TextInput
-                  style={styles.input}
-                  value={cashedOutInTotal}
-                  onChangeText={setCashedOutInTotal}
-                  placeholder="0.00"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="numeric"
-                />
+              <View style={styles.cashInputContainer}>
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.currencySymbol}>$</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={cashedOutInTotal}
+                    onChangeText={handleCashedOutInChange}
+                    placeholder="0.00"
+                    placeholderTextColor={colors.textSecondary}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+                <Pressable
+                  style={[
+                    styles.signToggleButton,
+                    isNegative && styles.signToggleButtonNegative,
+                  ]}
+                  onPress={toggleSign}
+                >
+                  <MaterialIcons 
+                    name={isNegative ? "remove" : "add"} 
+                    size={24} 
+                    color="#FFFFFF" 
+                  />
+                  <Text style={styles.signToggleText}>
+                    {isNegative ? 'Negative' : 'Positive'}
+                  </Text>
+                </Pressable>
               </View>
+              {cashedOutInTotal && (
+                <View style={styles.previewContainer}>
+                  <Text style={styles.previewLabel}>Preview:</Text>
+                  <Text style={[
+                    styles.previewValue,
+                    isNegative ? styles.negativeValue : styles.positiveValue,
+                  ]}>
+                    ${isNegative ? '-' : ''}{cashedOutInTotal || '0.00'}
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Busser/Runner Percentage */}
@@ -282,7 +328,7 @@ export default function CheckOutsScreen() {
               <Text style={styles.helpTitle}>How to use this calculator:</Text>
               <Text style={styles.helpText}>
                 - Enter your total shift sales{'\n'}
-                - Enter your cash in/out total (negative if you cashed out, positive if you cashed in){'\n'}
+                - Enter your cash in/out amount and toggle between positive (cashed in) or negative (cashed out){'\n'}
                 - Select the tip out percentages for busser/runner and bartenders{'\n'}
                 - Tap Calculate to see your final check out amount
               </Text>
@@ -351,6 +397,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 16,
+    flex: 1,
   },
   currencySymbol: {
     fontSize: 20,
@@ -363,6 +410,45 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: colors.text,
     paddingVertical: 14,
+  },
+  cashInputContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+  },
+  signToggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.success,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    gap: 6,
+    minWidth: 110,
+  },
+  signToggleButtonNegative: {
+    backgroundColor: colors.error,
+  },
+  signToggleText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  previewContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 8,
+  },
+  previewLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  previewValue: {
+    fontSize: 16,
+    fontWeight: '700',
   },
   percentageOptions: {
     flexDirection: 'row',
