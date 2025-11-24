@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
   },
   toolCard: {
     width: '48%',
-    aspectRatio: 1.5,
+    aspectRatio: 2,
     borderRadius: 12,
     padding: 12,
     justifyContent: 'center',

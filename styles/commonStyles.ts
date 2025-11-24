@@ -23,14 +23,14 @@ export const colors = {
   employeePrimary: '#87CEEB',
   employeeSecondary: '#4682B4',
   employeeAccent: '#5F9EA0',
-  employeeCard: '#E6F3F7',
+  employeeCard: '#daebf7',
   
   // Manager side colors (darker blue and gray)
   managerBackground: '#E8EEF2',
   managerPrimary: '#2C5F7C',
   managerSecondary: '#4682B4',
   managerAccent: '#5F9EA0',
-  managerCard: '#D6E4EC',
+  managerCard: '#daebf7',
 };
 
 export const commonStyles = StyleSheet.create({
