@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, Alert, ActivityIndicator, Platform, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, Alert, ActivityIndicator, Platform, Image, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
@@ -9,15 +9,19 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/app/integrations/supabase/client';
 
 type EditMode = 'item' | 'category' | null;
+type ViewMode = 'all' | 'lunch' | 'dinner' | 'libations' | 'wine' | 'happyhour';
+type SortOption = 'name' | 'price' | 'category' | 'order';
 
 export default function MenuEditorScreen() {
   const { categories, items, loading, error, addMenuItem, updateMenuItem, deleteMenuItem, addCategory, updateCategory, deleteCategory } = useMenuEditor();
   
   const [modalVisible, setModalVisible] = useState(false);
   const [editMode, setEditMode] = useState<EditMode>(null);
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('category');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
   
   // Form states for menu item
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -37,20 +41,86 @@ export default function MenuEditorScreen() {
   const [categoryMealType, setCategoryMealType] = useState<'lunch' | 'dinner' | 'both'>('both');
   const [categoryDisplayOrder, setCategoryDisplayOrder] = useState('0');
 
-  // Filter items by selected category and search query
-  const filteredItems = items.filter(item => {
-    // Filter by category
-    const categoryMatch = selectedCategoryFilter === 'all' || item.category_id === selectedCategoryFilter;
-    
-    // Filter by search query
-    const searchMatch = searchQuery === '' || 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    return categoryMatch && searchMatch;
-  });
+  // Dismiss keyboard when clicking outside search
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
 
-  const groupedItems = filteredItems.reduce((acc, item) => {
+  // Filter items based on view mode and search query
+  const getFilteredItems = () => {
+    let filtered = [...items];
+
+    // Apply view mode filter
+    switch (viewMode) {
+      case 'lunch':
+        filtered = filtered.filter(item => 
+          (item.meal_type === 'lunch' || item.meal_type === 'both') &&
+          item.category?.name !== 'Wine' && 
+          item.category?.name !== 'Libations' && 
+          item.category?.name !== 'Happy Hour'
+        );
+        break;
+      case 'dinner':
+        filtered = filtered.filter(item => 
+          (item.meal_type === 'dinner' || item.meal_type === 'both') &&
+          item.category?.name !== 'Wine' && 
+          item.category?.name !== 'Libations' && 
+          item.category?.name !== 'Happy Hour'
+        );
+        break;
+      case 'libations':
+        filtered = filtered.filter(item => item.category?.name === 'Libations');
+        break;
+      case 'wine':
+        filtered = filtered.filter(item => item.category?.name === 'Wine');
+        break;
+      case 'happyhour':
+        filtered = filtered.filter(item => item.category?.name === 'Happy Hour');
+        break;
+      // 'all' shows everything
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(item =>
+        item.name.toLowerCase().includes(query) ||
+        (item.description && item.description.toLowerCase().includes(query)) ||
+        (item.category?.name && item.category.name.toLowerCase().includes(query)) ||
+        ((item as any).subcategory && (item as any).subcategory.toLowerCase().includes(query))
+      );
+    }
+
+    return filtered;
+  };
+
+  // Sort filtered items
+  const getSortedItems = () => {
+    const filtered = getFilteredItems();
+
+    switch (sortBy) {
+      case 'name':
+        return filtered.sort((a, b) => a.name.localeCompare(b.name));
+      case 'price':
+        return filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+      case 'category':
+        return filtered.sort((a, b) => {
+          const catA = a.category?.name || 'Uncategorized';
+          const catB = b.category?.name || 'Uncategorized';
+          if (catA === catB) {
+            return a.display_order - b.display_order;
+          }
+          return catA.localeCompare(catB);
+        });
+      case 'order':
+        return filtered.sort((a, b) => a.display_order - b.display_order);
+      default:
+        return filtered;
+    }
+  };
+
+  // Group items by category
+  const groupedItems = getSortedItems().reduce((acc, item) => {
     const categoryName = item.category?.name || 'Uncategorized';
     if (!acc[categoryName]) {
       acc[categoryName] = [];
@@ -109,14 +179,12 @@ export default function MenuEditorScreen() {
 
   const pickImage = async () => {
     try {
-      // Request permission
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permission Required', 'Please grant permission to access your photo library');
         return;
       }
 
-      // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -138,20 +206,17 @@ export default function MenuEditorScreen() {
       setUploadingImage(true);
       console.log('Starting image upload for URI:', uri);
 
-      // Generate unique filename
       const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${fileName}`;
 
       console.log('Generated filename:', fileName);
 
-      // Fetch the image as a blob
       const response = await fetch(uri);
       const blob = await response.blob();
       
       console.log('Blob created, size:', blob.size, 'type:', blob.type);
 
-      // Convert blob to ArrayBuffer for upload
       const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -167,7 +232,6 @@ export default function MenuEditorScreen() {
 
       console.log('ArrayBuffer created, size:', arrayBuffer.byteLength);
 
-      // Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from('menu-thumbnails')
         .upload(filePath, arrayBuffer, {
@@ -182,7 +246,6 @@ export default function MenuEditorScreen() {
 
       console.log('Upload successful, data:', data);
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('menu-thumbnails')
         .getPublicUrl(filePath);
@@ -220,11 +283,9 @@ export default function MenuEditorScreen() {
       return;
     }
 
-    // Check if selected category is Wine, Libations, or Happy Hour
     const selectedCategory = categories.find(cat => cat.id === itemCategoryId);
     const isSpecialCategory = selectedCategory?.name === 'Wine' || selectedCategory?.name === 'Libations' || selectedCategory?.name === 'Happy Hour';
 
-    // Prevent adding special category items to Lunch or Dinner meal types
     if (isSpecialCategory && (itemMealType === 'lunch' || itemMealType === 'dinner')) {
       Alert.alert(
         'Invalid Configuration',
@@ -234,7 +295,6 @@ export default function MenuEditorScreen() {
       return;
     }
 
-    // Prevent adding Lunch/Dinner items to special categories
     if (isSpecialCategory && itemMealType !== 'both') {
       Alert.alert(
         'Invalid Configuration',
@@ -361,18 +421,17 @@ export default function MenuEditorScreen() {
     }
   };
 
-  // Check if selected category is Wine, Libations, or Happy Hour
   const selectedCategory = categories.find(cat => cat.id === itemCategoryId);
   const isSpecialCategory = selectedCategory?.name === 'Wine' || selectedCategory?.name === 'Libations' || selectedCategory?.name === 'Happy Hour';
 
-  // Get available categories - filter out special categories when meal type is lunch or dinner
   const availableCategories = categories.filter(cat => {
-    // If meal type is lunch or dinner, exclude Wine, Libations, and Happy Hour
     if (itemMealType === 'lunch' || itemMealType === 'dinner') {
       return cat.name !== 'Wine' && cat.name !== 'Libations' && cat.name !== 'Happy Hour';
     }
     return true;
   });
+
+  const filteredItemsCount = getFilteredItems().length;
 
   return (
     <>
@@ -386,489 +445,583 @@ export default function MenuEditorScreen() {
         }}
       />
       
-      <View style={[commonStyles.employeeContainer, styles.container]}>
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <Pressable style={styles.addButton} onPress={openAddItemModal}>
-            <IconSymbol name="plus.circle.fill" color="#FFFFFF" size={20} />
-            <Text style={styles.addButtonText}>Add Item</Text>
-          </Pressable>
-          <Pressable style={[styles.addButton, styles.addCategoryButton]} onPress={openAddCategoryModal}>
-            <IconSymbol name="folder.badge.plus" color="#FFFFFF" size={20} />
-            <Text style={styles.addButtonText}>Add Category</Text>
-          </Pressable>
-        </View>
+      <TouchableWithoutFeedback onPress={dismissKeyboard}>
+        <View style={[commonStyles.employeeContainer, styles.container]}>
+          {/* Action Buttons */}
+          <View style={styles.actionButtons}>
+            <Pressable style={styles.addButton} onPress={openAddItemModal}>
+              <IconSymbol ios_icon_name="plus.circle.fill" android_material_icon_name="add_circle" color="#FFFFFF" size={20} />
+              <Text style={styles.addButtonText}>Add Item</Text>
+            </Pressable>
+            <Pressable 
+              style={[styles.addButton, styles.manageCategoriesButton]} 
+              onPress={() => setShowCategoryManager(!showCategoryManager)}
+            >
+              <IconSymbol ios_icon_name="folder.fill" android_material_icon_name="folder" color="#FFFFFF" size={20} />
+              <Text style={styles.addButtonText}>Categories</Text>
+            </Pressable>
+          </View>
 
-        {/* Search Box */}
-        <View style={styles.searchContainer}>
-          <IconSymbol 
-            ios_icon_name="magnifyingglass" 
-            android_material_icon_name="search" 
-            color={colors.textSecondary} 
-            size={20} 
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search menu items..."
-            placeholderTextColor={colors.textSecondary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <Pressable onPress={() => setSearchQuery('')}>
-              <IconSymbol 
-                ios_icon_name="xmark.circle.fill" 
-                android_material_icon_name="cancel" 
-                color={colors.textSecondary} 
-                size={20} 
-              />
-            </Pressable>
-          )}
-        </View>
-
-        {/* Category Filter */}
-        <View style={styles.filters}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-            <Pressable
-              style={[styles.filterButton, selectedCategoryFilter === 'all' && styles.filterButtonActive]}
-              onPress={() => setSelectedCategoryFilter('all')}
-            >
-              <Text style={[styles.filterButtonText, selectedCategoryFilter === 'all' && styles.filterButtonTextActive]}>
-                All
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[styles.filterButton, selectedCategoryFilter === 'lunch' && styles.filterButtonActive]}
-              onPress={() => {
-                const lunchCategories = categories.filter(cat => 
-                  (cat.meal_type === 'lunch' || cat.meal_type === 'both') && 
-                  cat.name !== 'Wine' && cat.name !== 'Libations' && cat.name !== 'Happy Hour'
-                );
-                if (lunchCategories.length > 0) {
-                  setSelectedCategoryFilter(lunchCategories[0].id);
-                }
-              }}
-            >
-              <Text style={[styles.filterButtonText, selectedCategoryFilter === 'lunch' && styles.filterButtonTextActive]}>
-                Lunch
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[styles.filterButton, selectedCategoryFilter === 'dinner' && styles.filterButtonActive]}
-              onPress={() => {
-                const dinnerCategories = categories.filter(cat => 
-                  (cat.meal_type === 'dinner' || cat.meal_type === 'both') && 
-                  cat.name !== 'Wine' && cat.name !== 'Libations' && cat.name !== 'Happy Hour'
-                );
-                if (dinnerCategories.length > 0) {
-                  setSelectedCategoryFilter(dinnerCategories[0].id);
-                }
-              }}
-            >
-              <Text style={[styles.filterButtonText, selectedCategoryFilter === 'dinner' && styles.filterButtonTextActive]}>
-                Dinner
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[styles.filterButton, selectedCategoryFilter === 'libations' && styles.filterButtonActive]}
-              onPress={() => {
-                const libationsCategory = categories.find(cat => cat.name === 'Libations');
-                if (libationsCategory) {
-                  setSelectedCategoryFilter(libationsCategory.id);
-                }
-              }}
-            >
-              <Text style={[styles.filterButtonText, selectedCategoryFilter === 'libations' && styles.filterButtonTextActive]}>
-                Libations
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[styles.filterButton, selectedCategoryFilter === 'wine' && styles.filterButtonActive]}
-              onPress={() => {
-                const wineCategory = categories.find(cat => cat.name === 'Wine');
-                if (wineCategory) {
-                  setSelectedCategoryFilter(wineCategory.id);
-                }
-              }}
-            >
-              <Text style={[styles.filterButtonText, selectedCategoryFilter === 'wine' && styles.filterButtonTextActive]}>
-                Wine
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[styles.filterButton, selectedCategoryFilter === 'happyhour' && styles.filterButtonActive]}
-              onPress={() => {
-                const happyHourCategory = categories.find(cat => cat.name === 'Happy Hour');
-                if (happyHourCategory) {
-                  setSelectedCategoryFilter(happyHourCategory.id);
-                }
-              }}
-            >
-              <Text style={[styles.filterButtonText, selectedCategoryFilter === 'happyhour' && styles.filterButtonTextActive]}>
-                Happy Hour
-              </Text>
-            </Pressable>
-          </ScrollView>
-        </View>
-
-        {/* Categories List */}
-        <View style={styles.categoriesHeader}>
-          <Text style={styles.sectionTitle}>Categories</Text>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesScroll}>
-          {categories.map(category => (
-            <Pressable
-              key={category.id}
-              style={styles.categoryCard}
-              onLongPress={() => openEditCategoryModal(category)}
-            >
-              <Text style={styles.categoryCardName}>{category.name}</Text>
-              <Text style={styles.categoryCardMealType}>{category.meal_type}</Text>
-              <Pressable
-                style={styles.categoryDeleteButton}
-                onPress={() => handleDeleteCategory(category)}
+          {/* Category Manager (Collapsible) */}
+          {showCategoryManager && (
+            <View style={styles.categoryManager}>
+              <View style={styles.categoryManagerHeader}>
+                <Text style={styles.categoryManagerTitle}>Manage Categories</Text>
+                <Pressable style={styles.addCategoryButton} onPress={openAddCategoryModal}>
+                  <IconSymbol ios_icon_name="plus" android_material_icon_name="add" color="#FFFFFF" size={16} />
+                  <Text style={styles.addCategoryButtonText}>Add</Text>
+                </Pressable>
+              </View>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false} 
+                contentContainerStyle={styles.categoriesScroll}
               >
-                <IconSymbol name="trash" color={colors.error} size={16} />
-              </Pressable>
-            </Pressable>
-          ))}
-        </ScrollView>
-
-        {/* Menu Items */}
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.managerAccent} />
-            <Text style={styles.loadingText}>Loading menu...</Text>
-          </View>
-        ) : error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>Error: {error}</Text>
-          </View>
-        ) : (
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            {Object.entries(groupedItems).map(([categoryName, categoryItems]) => (
-              <View key={categoryName} style={styles.categorySection}>
-                <Text style={styles.categoryTitle}>{categoryName}</Text>
-                {categoryItems.map(item => (
+                {categories.map((category, index) => (
                   <Pressable
-                    key={item.id}
-                    style={styles.menuItemCard}
-                    onPress={() => openEditItemModal(item)}
+                    key={category.id}
+                    style={styles.categoryCard}
+                    onPress={() => openEditCategoryModal(category)}
                   >
-                    <View style={styles.menuItemContent}>
-                      {item.image_url && (
-                        <Image
-                          source={{ uri: item.image_url }}
-                          style={styles.menuItemThumbnail}
-                          resizeMode="cover"
-                        />
-                      )}
-                      <View style={styles.menuItemDetails}>
-                        <View style={styles.menuItemHeader}>
-                          <Text style={styles.menuItemName}>{item.name}</Text>
-                          <Text style={styles.menuItemPrice}>
-                            {item.price ? `$${item.price.toFixed(2)}` : 'N/A'}
-                          </Text>
-                        </View>
-                        {item.description && (
-                          <Text style={styles.menuItemDescription} numberOfLines={2}>
-                            {item.description}
-                          </Text>
-                        )}
-                        {(item as any).subcategory && (
-                          <Text style={styles.menuItemSubcategory}>
-                            {(item as any).subcategory}
-                          </Text>
-                        )}
-                        <View style={styles.menuItemFooter}>
-                          <Text style={styles.menuItemMealType}>{item.meal_type}</Text>
-                          {item.dietary_info && item.dietary_info.length > 0 && (
-                            <Text style={styles.menuItemDietary}>
-                              {item.dietary_info.join(', ').toUpperCase()}
-                            </Text>
-                          )}
-                          <Pressable
-                            style={styles.deleteButton}
-                            onPress={() => handleDeleteItem(item)}
-                          >
-                            <IconSymbol name="trash" color={colors.error} size={18} />
-                          </Pressable>
-                        </View>
-                      </View>
+                    <View style={styles.categoryCardHeader}>
+                      <Text style={styles.categoryCardName}>{category.name}</Text>
+                      <Pressable
+                        style={styles.categoryDeleteButton}
+                        onPress={() => handleDeleteCategory(category)}
+                      >
+                        <IconSymbol ios_icon_name="trash" android_material_icon_name="delete" color={colors.error} size={16} />
+                      </Pressable>
                     </View>
+                    <Text style={styles.categoryCardMealType}>
+                      {category.meal_type === 'both' ? 'Lunch & Dinner' : category.meal_type.charAt(0).toUpperCase() + category.meal_type.slice(1)}
+                    </Text>
+                    <Text style={styles.categoryCardOrder}>Order: {category.display_order}</Text>
                   </Pressable>
                 ))}
-              </View>
-            ))}
-          </ScrollView>
-        )}
-
-        {/* Edit Modal */}
-        <Modal
-          visible={modalVisible}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
-                  {editMode === 'item' 
-                    ? (editingItem ? 'Edit Menu Item' : 'Add Menu Item')
-                    : (editingCategory ? 'Edit Category' : 'Add Category')
-                  }
-                </Text>
-                <Pressable onPress={() => setModalVisible(false)}>
-                  <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
-                </Pressable>
-              </View>
-
-              <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
-                {editMode === 'item' ? (
-                  <>
-                    <Text style={styles.label}>Name *</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={itemName}
-                      onChangeText={setItemName}
-                      placeholder="Enter item name"
-                      placeholderTextColor={colors.textSecondary}
-                    />
-
-                    <Text style={styles.label}>Description</Text>
-                    <TextInput
-                      style={[styles.input, styles.textArea]}
-                      value={itemDescription}
-                      onChangeText={setItemDescription}
-                      placeholder="Enter description"
-                      placeholderTextColor={colors.textSecondary}
-                      multiline
-                      numberOfLines={3}
-                    />
-
-                    <Text style={styles.label}>Price</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={itemPrice}
-                      onChangeText={setItemPrice}
-                      placeholder="0.00"
-                      placeholderTextColor={colors.textSecondary}
-                      keyboardType="decimal-pad"
-                    />
-
-                    <Text style={styles.label}>Thumbnail Image (Optional)</Text>
-                    {itemImageUrl ? (
-                      <View style={styles.imagePreviewContainer}>
-                        <Image
-                          source={{ uri: itemImageUrl }}
-                          style={styles.imagePreview}
-                          resizeMode="cover"
-                        />
-                        <View style={styles.imageActions}>
-                          <Pressable
-                            style={styles.changeImageButton}
-                            onPress={pickImage}
-                            disabled={uploadingImage}
-                          >
-                            <IconSymbol name="photo" color="#FFFFFF" size={16} />
-                            <Text style={styles.changeImageButtonText}>Change</Text>
-                          </Pressable>
-                          <Pressable
-                            style={styles.removeImageButton}
-                            onPress={removeImage}
-                            disabled={uploadingImage}
-                          >
-                            <IconSymbol name="trash" color="#FFFFFF" size={16} />
-                            <Text style={styles.removeImageButtonText}>Remove</Text>
-                          </Pressable>
-                        </View>
-                      </View>
-                    ) : (
-                      <Pressable
-                        style={styles.uploadButton}
-                        onPress={pickImage}
-                        disabled={uploadingImage}
-                      >
-                        {uploadingImage ? (
-                          <ActivityIndicator color="#FFFFFF" />
-                        ) : (
-                          <>
-                            <IconSymbol name="photo.badge.plus" color="#FFFFFF" size={24} />
-                            <Text style={styles.uploadButtonText}>Upload Thumbnail</Text>
-                          </>
-                        )}
-                      </Pressable>
-                    )}
-
-                    <Text style={styles.label}>Meal Type *</Text>
-                    <View style={styles.mealTypeSelector}>
-                      {(['lunch', 'dinner', 'both'] as const).map(type => (
-                        <Pressable
-                          key={type}
-                          style={[
-                            styles.mealTypeButton,
-                            itemMealType === type && styles.mealTypeButtonActive
-                          ]}
-                          onPress={() => setItemMealType(type)}
-                        >
-                          <Text style={[
-                            styles.mealTypeButtonText,
-                            itemMealType === type && styles.mealTypeButtonTextActive
-                          ]}>
-                            {type.charAt(0).toUpperCase() + type.slice(1)}
-                          </Text>
-                        </Pressable>
-                      ))}
-                    </View>
-
-                    <Text style={styles.label}>Category *</Text>
-                    {availableCategories.length === 0 ? (
-                      <View style={styles.warningBox}>
-                        <IconSymbol name="exclamationmark.triangle.fill" color={colors.warning} size={20} />
-                        <Text style={styles.warningText}>
-                          No categories available for {itemMealType === 'both' ? 'this meal type' : itemMealType}. 
-                          {itemMealType !== 'both' && ' Wine, Libations, and Happy Hour can only be added with meal type "Both".'}
-                        </Text>
-                      </View>
-                    ) : (
-                      <View style={styles.pickerContainer}>
-                        {availableCategories.map(cat => (
-                          <Pressable
-                            key={cat.id}
-                            style={[
-                              styles.pickerOption,
-                              itemCategoryId === cat.id && styles.pickerOptionActive
-                            ]}
-                            onPress={() => setItemCategoryId(cat.id)}
-                          >
-                            <Text style={[
-                              styles.pickerOptionText,
-                              itemCategoryId === cat.id && styles.pickerOptionTextActive
-                            ]}>
-                              {cat.name}
-                            </Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    )}
-
-                    {isSpecialCategory && (
-                      <>
-                        <Text style={styles.label}>Subcategory (for Wine/Libations/Happy Hour)</Text>
-                        <TextInput
-                          style={styles.input}
-                          value={itemSubcategory}
-                          onChangeText={setItemSubcategory}
-                          placeholder="e.g., Sparkling, Chardonnay, Signature Cocktails, Appetizers"
-                          placeholderTextColor={colors.textSecondary}
-                        />
-                        <View style={styles.infoBox}>
-                          <IconSymbol name="info.circle.fill" color={colors.accent} size={20} />
-                          <Text style={styles.infoText}>
-                            Wine, Libations, and Happy Hour items must have meal type set to "Both" to appear in their dedicated categories.
-                          </Text>
-                        </View>
-                      </>
-                    )}
-
-                    <Text style={styles.label}>Dietary Info</Text>
-                    <View style={styles.dietarySelector}>
-                      {['gf', 'gfa', 'v', 'va'].map(info => (
-                        <Pressable
-                          key={info}
-                          style={[
-                            styles.dietaryButton,
-                            itemDietaryInfo.includes(info) && styles.dietaryButtonActive
-                          ]}
-                          onPress={() => toggleDietaryInfo(info)}
-                        >
-                          <Text style={[
-                            styles.dietaryButtonText,
-                            itemDietaryInfo.includes(info) && styles.dietaryButtonTextActive
-                          ]}>
-                            {info.toUpperCase()}
-                          </Text>
-                        </Pressable>
-                      ))}
-                    </View>
-
-                    <Text style={styles.label}>Display Order</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={itemDisplayOrder}
-                      onChangeText={setItemDisplayOrder}
-                      placeholder="0"
-                      placeholderTextColor={colors.textSecondary}
-                      keyboardType="number-pad"
-                    />
-                  </>
-                ) : (
-                  <>
-                    <Text style={styles.label}>Category Name *</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={categoryName}
-                      onChangeText={setCategoryName}
-                      placeholder="Enter category name"
-                      placeholderTextColor={colors.textSecondary}
-                    />
-
-                    <Text style={styles.label}>Meal Type</Text>
-                    <View style={styles.mealTypeSelector}>
-                      {(['lunch', 'dinner', 'both'] as const).map(type => (
-                        <Pressable
-                          key={type}
-                          style={[
-                            styles.mealTypeButton,
-                            categoryMealType === type && styles.mealTypeButtonActive
-                          ]}
-                          onPress={() => setCategoryMealType(type)}
-                        >
-                          <Text style={[
-                            styles.mealTypeButtonText,
-                            categoryMealType === type && styles.mealTypeButtonTextActive
-                          ]}>
-                            {type.charAt(0).toUpperCase() + type.slice(1)}
-                          </Text>
-                        </Pressable>
-                      ))}
-                    </View>
-
-                    <Text style={styles.label}>Display Order</Text>
-                    <TextInput
-                      style={styles.input}
-                      value={categoryDisplayOrder}
-                      onChangeText={setCategoryDisplayOrder}
-                      placeholder="0"
-                      placeholderTextColor={colors.textSecondary}
-                      keyboardType="number-pad"
-                    />
-                  </>
-                )}
               </ScrollView>
-
-              <View style={styles.modalActions}>
-                <Pressable
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.modalButton, styles.saveButton]}
-                  onPress={editMode === 'item' ? handleSaveItem : handleSaveCategory}
-                >
-                  <Text style={styles.saveButtonText}>Save</Text>
-                </Pressable>
-              </View>
             </View>
+          )}
+
+          {/* Search Box */}
+          <View style={styles.searchContainer}>
+            <IconSymbol 
+              ios_icon_name="magnifyingglass" 
+              android_material_icon_name="search" 
+              color={colors.textSecondary} 
+              size={20} 
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search menu items..."
+              placeholderTextColor={colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <Pressable onPress={() => setSearchQuery('')}>
+                <IconSymbol 
+                  ios_icon_name="xmark.circle.fill" 
+                  android_material_icon_name="cancel" 
+                  color={colors.textSecondary} 
+                  size={20} 
+                />
+              </Pressable>
+            )}
           </View>
-        </Modal>
-      </View>
+
+          {/* View Mode Filter */}
+          <View style={styles.viewModeContainer}>
+            <Text style={styles.filterLabel}>View:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.viewModeScroll}>
+              {[
+                { key: 'all', label: 'All Items' },
+                { key: 'lunch', label: 'Lunch' },
+                { key: 'dinner', label: 'Dinner' },
+                { key: 'libations', label: 'Libations' },
+                { key: 'wine', label: 'Wine' },
+                { key: 'happyhour', label: 'Happy Hour' },
+              ].map((mode) => (
+                <Pressable
+                  key={mode.key}
+                  style={[
+                    styles.viewModeButton,
+                    viewMode === mode.key && styles.viewModeButtonActive
+                  ]}
+                  onPress={() => setViewMode(mode.key as ViewMode)}
+                >
+                  <Text style={[
+                    styles.viewModeButtonText,
+                    viewMode === mode.key && styles.viewModeButtonTextActive
+                  ]}>
+                    {mode.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Sort Options */}
+          <View style={styles.sortContainer}>
+            <Text style={styles.filterLabel}>Sort by:</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sortScroll}>
+              {[
+                { key: 'category', label: 'Category', icon: 'folder' },
+                { key: 'name', label: 'Name', icon: 'textformat' },
+                { key: 'price', label: 'Price', icon: 'dollarsign.circle' },
+                { key: 'order', label: 'Display Order', icon: 'list.number' },
+              ].map((sort) => (
+                <Pressable
+                  key={sort.key}
+                  style={[
+                    styles.sortButton,
+                    sortBy === sort.key && styles.sortButtonActive
+                  ]}
+                  onPress={() => setSortBy(sort.key as SortOption)}
+                >
+                  <IconSymbol 
+                    ios_icon_name={sort.icon} 
+                    android_material_icon_name={sort.icon === 'textformat' ? 'sort_by_alpha' : sort.icon === 'dollarsign.circle' ? 'attach_money' : sort.icon === 'list.number' ? 'format_list_numbered' : 'folder'} 
+                    color={sortBy === sort.key ? '#FFFFFF' : colors.text} 
+                    size={16} 
+                  />
+                  <Text style={[
+                    styles.sortButtonText,
+                    sortBy === sort.key && styles.sortButtonTextActive
+                  ]}>
+                    {sort.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Results Count */}
+          <View style={styles.resultsCount}>
+            <Text style={styles.resultsCountText}>
+              Showing {filteredItemsCount} {filteredItemsCount === 1 ? 'item' : 'items'}
+            </Text>
+          </View>
+
+          {/* Menu Items */}
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.managerAccent} />
+              <Text style={styles.loadingText}>Loading menu...</Text>
+            </View>
+          ) : error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>Error: {error}</Text>
+            </View>
+          ) : filteredItemsCount === 0 ? (
+            <View style={styles.emptyContainer}>
+              <IconSymbol 
+                ios_icon_name="tray" 
+                android_material_icon_name="inbox" 
+                color={colors.textSecondary} 
+                size={48} 
+              />
+              <Text style={styles.emptyText}>
+                {searchQuery ? 'No items match your search' : 'No items in this view'}
+              </Text>
+            </View>
+          ) : (
+            <ScrollView
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {sortBy === 'category' ? (
+                // Group by category when sorting by category
+                Object.entries(groupedItems).map(([categoryName, categoryItems], index) => (
+                  <View key={`${categoryName}-${index}`} style={styles.categorySection}>
+                    <View style={styles.categorySectionHeader}>
+                      <Text style={styles.categoryTitle}>{categoryName}</Text>
+                      <Text style={styles.categoryCount}>({categoryItems.length})</Text>
+                    </View>
+                    {categoryItems.map((item, itemIndex) => (
+                      <Pressable
+                        key={`${item.id}-${itemIndex}`}
+                        style={styles.menuItemCard}
+                        onPress={() => openEditItemModal(item)}
+                      >
+                        <View style={styles.menuItemContent}>
+                          {item.image_url && (
+                            <Image
+                              source={{ uri: item.image_url }}
+                              style={styles.menuItemThumbnail}
+                              resizeMode="cover"
+                            />
+                          )}
+                          <View style={styles.menuItemDetails}>
+                            <View style={styles.menuItemHeader}>
+                              <Text style={styles.menuItemName}>{item.name}</Text>
+                              <Text style={styles.menuItemPrice}>
+                                {item.price ? `$${item.price.toFixed(2)}` : 'N/A'}
+                              </Text>
+                            </View>
+                            {item.description && (
+                              <Text style={styles.menuItemDescription} numberOfLines={2}>
+                                {item.description}
+                              </Text>
+                            )}
+                            {(item as any).subcategory && (
+                              <Text style={styles.menuItemSubcategory}>
+                                {(item as any).subcategory}
+                              </Text>
+                            )}
+                            <View style={styles.menuItemFooter}>
+                              <Text style={styles.menuItemMealType}>
+                                {item.meal_type === 'both' ? 'Lunch & Dinner' : item.meal_type.charAt(0).toUpperCase() + item.meal_type.slice(1)}
+                              </Text>
+                              {item.dietary_info && item.dietary_info.length > 0 && (
+                                <Text style={styles.menuItemDietary}>
+                                  {item.dietary_info.join(', ').toUpperCase()}
+                                </Text>
+                              )}
+                              <Pressable
+                                style={styles.deleteButton}
+                                onPress={() => handleDeleteItem(item)}
+                              >
+                                <IconSymbol ios_icon_name="trash" android_material_icon_name="delete" color={colors.error} size={18} />
+                              </Pressable>
+                            </View>
+                          </View>
+                        </View>
+                      </Pressable>
+                    ))}
+                  </View>
+                ))
+              ) : (
+                // Show flat list when not sorting by category
+                <View style={styles.flatList}>
+                  {getSortedItems().map((item, index) => (
+                    <Pressable
+                      key={`${item.id}-${index}`}
+                      style={styles.menuItemCard}
+                      onPress={() => openEditItemModal(item)}
+                    >
+                      <View style={styles.menuItemContent}>
+                        {item.image_url && (
+                          <Image
+                            source={{ uri: item.image_url }}
+                            style={styles.menuItemThumbnail}
+                            resizeMode="cover"
+                          />
+                        )}
+                        <View style={styles.menuItemDetails}>
+                          <View style={styles.menuItemHeader}>
+                            <Text style={styles.menuItemName}>{item.name}</Text>
+                            <Text style={styles.menuItemPrice}>
+                              {item.price ? `$${item.price.toFixed(2)}` : 'N/A'}
+                            </Text>
+                          </View>
+                          {item.description && (
+                            <Text style={styles.menuItemDescription} numberOfLines={2}>
+                              {item.description}
+                            </Text>
+                          )}
+                          <View style={styles.menuItemMeta}>
+                            <Text style={styles.menuItemCategory}>
+                              {item.category?.name || 'Uncategorized'}
+                            </Text>
+                            {(item as any).subcategory && (
+                              <Text style={styles.menuItemSubcategory}>
+                                • {(item as any).subcategory}
+                              </Text>
+                            )}
+                          </View>
+                          <View style={styles.menuItemFooter}>
+                            <Text style={styles.menuItemMealType}>
+                              {item.meal_type === 'both' ? 'Lunch & Dinner' : item.meal_type.charAt(0).toUpperCase() + item.meal_type.slice(1)}
+                            </Text>
+                            {item.dietary_info && item.dietary_info.length > 0 && (
+                              <Text style={styles.menuItemDietary}>
+                                {item.dietary_info.join(', ').toUpperCase()}
+                              </Text>
+                            )}
+                            <Pressable
+                              style={styles.deleteButton}
+                              onPress={() => handleDeleteItem(item)}
+                            >
+                              <IconSymbol ios_icon_name="trash" android_material_icon_name="delete" color={colors.error} size={18} />
+                            </Pressable>
+                          </View>
+                        </View>
+                      </View>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </ScrollView>
+          )}
+
+          {/* Edit Modal */}
+          <Modal
+            visible={modalVisible}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <TouchableWithoutFeedback onPress={dismissKeyboard}>
+              <View style={styles.modalOverlay}>
+                <TouchableWithoutFeedback>
+                  <View style={styles.modalContent}>
+                    <View style={styles.modalHeader}>
+                      <Text style={styles.modalTitle}>
+                        {editMode === 'item' 
+                          ? (editingItem ? 'Edit Menu Item' : 'Add Menu Item')
+                          : (editingCategory ? 'Edit Category' : 'Add Category')
+                        }
+                      </Text>
+                      <Pressable onPress={() => setModalVisible(false)}>
+                        <IconSymbol ios_icon_name="xmark.circle.fill" android_material_icon_name="cancel" color={colors.textSecondary} size={28} />
+                      </Pressable>
+                    </View>
+
+                    <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
+                      {editMode === 'item' ? (
+                        <>
+                          <Text style={styles.label}>Name *</Text>
+                          <TextInput
+                            style={styles.input}
+                            value={itemName}
+                            onChangeText={setItemName}
+                            placeholder="Enter item name"
+                            placeholderTextColor={colors.textSecondary}
+                          />
+
+                          <Text style={styles.label}>Description</Text>
+                          <TextInput
+                            style={[styles.input, styles.textArea]}
+                            value={itemDescription}
+                            onChangeText={setItemDescription}
+                            placeholder="Enter description"
+                            placeholderTextColor={colors.textSecondary}
+                            multiline
+                            numberOfLines={3}
+                          />
+
+                          <Text style={styles.label}>Price</Text>
+                          <TextInput
+                            style={styles.input}
+                            value={itemPrice}
+                            onChangeText={setItemPrice}
+                            placeholder="0.00"
+                            placeholderTextColor={colors.textSecondary}
+                            keyboardType="decimal-pad"
+                          />
+
+                          <Text style={styles.label}>Thumbnail Image (Optional)</Text>
+                          {itemImageUrl ? (
+                            <View style={styles.imagePreviewContainer}>
+                              <Image
+                                source={{ uri: itemImageUrl }}
+                                style={styles.imagePreview}
+                                resizeMode="cover"
+                              />
+                              <View style={styles.imageActions}>
+                                <Pressable
+                                  style={styles.changeImageButton}
+                                  onPress={pickImage}
+                                  disabled={uploadingImage}
+                                >
+                                  <IconSymbol ios_icon_name="photo" android_material_icon_name="photo" color="#FFFFFF" size={16} />
+                                  <Text style={styles.changeImageButtonText}>Change</Text>
+                                </Pressable>
+                                <Pressable
+                                  style={styles.removeImageButton}
+                                  onPress={removeImage}
+                                  disabled={uploadingImage}
+                                >
+                                  <IconSymbol ios_icon_name="trash" android_material_icon_name="delete" color="#FFFFFF" size={16} />
+                                  <Text style={styles.removeImageButtonText}>Remove</Text>
+                                </Pressable>
+                              </View>
+                            </View>
+                          ) : (
+                            <Pressable
+                              style={styles.uploadButton}
+                              onPress={pickImage}
+                              disabled={uploadingImage}
+                            >
+                              {uploadingImage ? (
+                                <ActivityIndicator color="#FFFFFF" />
+                              ) : (
+                                <>
+                                  <IconSymbol ios_icon_name="photo.badge.plus" android_material_icon_name="add_photo_alternate" color="#FFFFFF" size={24} />
+                                  <Text style={styles.uploadButtonText}>Upload Thumbnail</Text>
+                                </>
+                              )}
+                            </Pressable>
+                          )}
+
+                          <Text style={styles.label}>Meal Type *</Text>
+                          <View style={styles.mealTypeSelector}>
+                            {(['lunch', 'dinner', 'both'] as const).map((type, index) => (
+                              <Pressable
+                                key={`${type}-${index}`}
+                                style={[
+                                  styles.mealTypeButton,
+                                  itemMealType === type && styles.mealTypeButtonActive
+                                ]}
+                                onPress={() => setItemMealType(type)}
+                              >
+                                <Text style={[
+                                  styles.mealTypeButtonText,
+                                  itemMealType === type && styles.mealTypeButtonTextActive
+                                ]}>
+                                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                                </Text>
+                              </Pressable>
+                            ))}
+                          </View>
+
+                          <Text style={styles.label}>Category *</Text>
+                          {availableCategories.length === 0 ? (
+                            <View style={styles.warningBox}>
+                              <IconSymbol ios_icon_name="exclamationmark.triangle.fill" android_material_icon_name="warning" color={colors.warning} size={20} />
+                              <Text style={styles.warningText}>
+                                No categories available for {itemMealType === 'both' ? 'this meal type' : itemMealType}. 
+                                {itemMealType !== 'both' && ' Wine, Libations, and Happy Hour can only be added with meal type "Both".'}
+                              </Text>
+                            </View>
+                          ) : (
+                            <View style={styles.pickerContainer}>
+                              {availableCategories.map((cat, index) => (
+                                <Pressable
+                                  key={`${cat.id}-${index}`}
+                                  style={[
+                                    styles.pickerOption,
+                                    itemCategoryId === cat.id && styles.pickerOptionActive
+                                  ]}
+                                  onPress={() => setItemCategoryId(cat.id)}
+                                >
+                                  <Text style={[
+                                    styles.pickerOptionText,
+                                    itemCategoryId === cat.id && styles.pickerOptionTextActive
+                                  ]}>
+                                    {cat.name}
+                                  </Text>
+                                </Pressable>
+                              ))}
+                            </View>
+                          )}
+
+                          {isSpecialCategory && (
+                            <>
+                              <Text style={styles.label}>Subcategory (for Wine/Libations/Happy Hour)</Text>
+                              <TextInput
+                                style={styles.input}
+                                value={itemSubcategory}
+                                onChangeText={setItemSubcategory}
+                                placeholder="e.g., Sparkling, Chardonnay, Signature Cocktails, Appetizers"
+                                placeholderTextColor={colors.textSecondary}
+                              />
+                              <View style={styles.infoBox}>
+                                <IconSymbol ios_icon_name="info.circle.fill" android_material_icon_name="info" color={colors.accent} size={20} />
+                                <Text style={styles.infoText}>
+                                  Wine, Libations, and Happy Hour items must have meal type set to "Both" to appear in their dedicated categories.
+                                </Text>
+                              </View>
+                            </>
+                          )}
+
+                          <Text style={styles.label}>Dietary Info</Text>
+                          <View style={styles.dietarySelector}>
+                            {['gf', 'gfa', 'v', 'va'].map((info, index) => (
+                              <Pressable
+                                key={`${info}-${index}`}
+                                style={[
+                                  styles.dietaryButton,
+                                  itemDietaryInfo.includes(info) && styles.dietaryButtonActive
+                                ]}
+                                onPress={() => toggleDietaryInfo(info)}
+                              >
+                                <Text style={[
+                                  styles.dietaryButtonText,
+                                  itemDietaryInfo.includes(info) && styles.dietaryButtonTextActive
+                                ]}>
+                                  {info.toUpperCase()}
+                                </Text>
+                              </Pressable>
+                            ))}
+                          </View>
+
+                          <Text style={styles.label}>Display Order</Text>
+                          <TextInput
+                            style={styles.input}
+                            value={itemDisplayOrder}
+                            onChangeText={setItemDisplayOrder}
+                            placeholder="0"
+                            placeholderTextColor={colors.textSecondary}
+                            keyboardType="number-pad"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <Text style={styles.label}>Category Name *</Text>
+                          <TextInput
+                            style={styles.input}
+                            value={categoryName}
+                            onChangeText={setCategoryName}
+                            placeholder="Enter category name"
+                            placeholderTextColor={colors.textSecondary}
+                          />
+
+                          <Text style={styles.label}>Meal Type</Text>
+                          <View style={styles.mealTypeSelector}>
+                            {(['lunch', 'dinner', 'both'] as const).map((type, index) => (
+                              <Pressable
+                                key={`${type}-${index}`}
+                                style={[
+                                  styles.mealTypeButton,
+                                  categoryMealType === type && styles.mealTypeButtonActive
+                                ]}
+                                onPress={() => setCategoryMealType(type)}
+                              >
+                                <Text style={[
+                                  styles.mealTypeButtonText,
+                                  categoryMealType === type && styles.mealTypeButtonTextActive
+                                ]}>
+                                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                                </Text>
+                              </Pressable>
+                            ))}
+                          </View>
+
+                          <Text style={styles.label}>Display Order</Text>
+                          <TextInput
+                            style={styles.input}
+                            value={categoryDisplayOrder}
+                            onChangeText={setCategoryDisplayOrder}
+                            placeholder="0"
+                            placeholderTextColor={colors.textSecondary}
+                            keyboardType="number-pad"
+                          />
+                        </>
+                      )}
+                    </ScrollView>
+
+                    <View style={styles.modalActions}>
+                      <Pressable
+                        style={[styles.modalButton, styles.cancelButton]}
+                        onPress={() => setModalVisible(false)}
+                      >
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                      </Pressable>
+                      <Pressable
+                        style={[styles.modalButton, styles.saveButton]}
+                        onPress={editMode === 'item' ? handleSaveItem : handleSaveCategory}
+                      >
+                        <Text style={styles.saveButtonText}>Save</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </TouchableWithoutFeedback>
+              </View>
+            </TouchableWithoutFeedback>
+          </Modal>
+        </View>
+      </TouchableWithoutFeedback>
     </>
   );
 }
@@ -880,7 +1033,8 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 12,
+    paddingBottom: 8,
     gap: 12,
   },
   addButton: {
@@ -894,13 +1048,84 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 8,
   },
-  addCategoryButton: {
+  manageCategoriesButton: {
     backgroundColor: colors.managerSecondary,
   },
   addButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  categoryManager: {
+    backgroundColor: colors.card,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  categoryManagerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  categoryManagerTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  addCategoryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.managerSecondary,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    gap: 4,
+  },
+  addCategoryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  categoriesScroll: {
+    gap: 12,
+  },
+  categoryCard: {
+    backgroundColor: colors.background,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minWidth: 140,
+  },
+  categoryCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  categoryCardName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.text,
+    flex: 1,
+    marginRight: 8,
+  },
+  categoryCardMealType: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  categoryCardOrder: {
+    fontSize: 11,
+    color: colors.textSecondary,
+  },
+  categoryDeleteButton: {
+    padding: 2,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -921,16 +1146,20 @@ const styles = StyleSheet.create({
     color: colors.text,
     padding: 0,
   },
-  filters: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  filterScroll: {
+  viewModeContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  filterLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: 8,
+  },
+  viewModeScroll: {
     gap: 8,
   },
-  filterButton: {
+  viewModeButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
@@ -938,58 +1167,60 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  filterButtonActive: {
+  viewModeButtonActive: {
     backgroundColor: colors.managerAccent,
     borderColor: colors.managerAccent,
   },
-  filterButtonText: {
+  viewModeButtonText: {
     fontSize: 14,
     fontWeight: '500',
     color: colors.text,
   },
-  filterButtonTextActive: {
+  viewModeButtonTextActive: {
     color: '#FFFFFF',
     fontWeight: '600',
   },
-  categoriesHeader: {
+  sortContainer: {
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    marginBottom: 8,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
+  sortScroll: {
+    gap: 8,
   },
-  categoriesScroll: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    gap: 12,
-  },
-  categoryCard: {
+  sortButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
     backgroundColor: colors.card,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
-    minWidth: 120,
+    gap: 6,
   },
-  categoryCardName: {
-    fontSize: 16,
-    fontWeight: '600',
+  sortButtonActive: {
+    backgroundColor: colors.managerSecondary,
+    borderColor: colors.managerSecondary,
+  },
+  sortButtonText: {
+    fontSize: 13,
+    fontWeight: '500',
     color: colors.text,
-    marginBottom: 4,
   },
-  categoryCardMealType: {
-    fontSize: 12,
+  sortButtonTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  resultsCount: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  resultsCountText: {
+    fontSize: 13,
+    fontWeight: '600',
     color: colors.textSecondary,
-    textTransform: 'capitalize',
-  },
-  categoryDeleteButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -999,11 +1230,24 @@ const styles = StyleSheet.create({
   categorySection: {
     marginBottom: 24,
   },
+  categorySectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
   categoryTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 12,
+  },
+  categoryCount: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+  flatList: {
+    gap: 12,
   },
   menuItemCard: {
     backgroundColor: colors.card,
@@ -1050,11 +1294,21 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 8,
   },
+  menuItemMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    gap: 6,
+  },
+  menuItemCategory: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.managerSecondary,
+  },
   menuItemSubcategory: {
     fontSize: 12,
     fontWeight: '600',
     color: colors.managerAccent,
-    marginBottom: 4,
   },
   menuItemFooter: {
     flexDirection: 'row',
@@ -1064,8 +1318,7 @@ const styles = StyleSheet.create({
   menuItemMealType: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.managerAccent,
-    textTransform: 'capitalize',
+    color: colors.textSecondary,
   },
   menuItemDietary: {
     fontSize: 12,
@@ -1096,6 +1349,18 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     color: colors.error,
+    textAlign: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+    gap: 16,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   modalOverlay: {
