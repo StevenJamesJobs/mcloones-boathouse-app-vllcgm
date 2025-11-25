@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image, Switch } from 'react-native';
 import { Stack, router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -28,6 +28,10 @@ export default function EmployeeProfileScreen() {
     confirmPassword: '',
   });
 
+  const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(
+    user?.push_notifications_enabled ?? true
+  );
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -36,6 +40,7 @@ export default function EmployeeProfileScreen() {
         email: user.email,
         tagline: user.tagline || '',
       });
+      setPushNotificationsEnabled(user.push_notifications_enabled ?? true);
     }
   }, [user]);
 
@@ -200,6 +205,27 @@ export default function EmployeeProfileScreen() {
       Alert.alert('Error', `Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleTogglePushNotifications = async (value: boolean) => {
+    setPushNotificationsEnabled(value);
+    
+    const result = await updateProfile({
+      push_notifications_enabled: value,
+    });
+
+    if (result.success) {
+      Alert.alert(
+        'Success',
+        value
+          ? 'Push notifications enabled. You will receive notifications for new messages.'
+          : 'Push notifications disabled. You will not receive notifications for new messages.'
+      );
+    } else {
+      // Revert on error
+      setPushNotificationsEnabled(!value);
+      Alert.alert('Error', result.message);
     }
   };
 
@@ -500,6 +526,36 @@ export default function EmployeeProfileScreen() {
                   )}
                 </>
               )}
+            </View>
+
+            {/* Notification Preferences Card */}
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardHeaderLeft}>
+                  <IconSymbol 
+                    ios_icon_name="bell.fill" 
+                    android_material_icon_name="notifications" 
+                    color={colors.employeeAccent} 
+                    size={28} 
+                  />
+                  <Text style={styles.cardTitle}>Notifications</Text>
+                </View>
+              </View>
+
+              <View style={styles.notificationRow}>
+                <View style={styles.notificationInfo}>
+                  <Text style={styles.notificationTitle}>Push Notifications</Text>
+                  <Text style={styles.notificationDescription}>
+                    Receive notifications when you get new messages
+                  </Text>
+                </View>
+                <Switch
+                  value={pushNotificationsEnabled}
+                  onValueChange={handleTogglePushNotifications}
+                  trackColor={{ false: colors.border, true: colors.employeeAccent }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
             </View>
 
             {/* Change Password Card */}
@@ -847,5 +903,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  notificationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  notificationInfo: {
+    flex: 1,
+    marginRight: 16,
+  },
+  notificationTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  notificationDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
   },
 });

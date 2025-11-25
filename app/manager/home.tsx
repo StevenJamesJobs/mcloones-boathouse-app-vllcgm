@@ -48,11 +48,12 @@ export default function ManagerHomeScreen() {
   ];
 
   const employeeTools = [
-    { id: 1, title: 'Employees', icon: 'people', route: '/manager/employees', color: colors.managerSecondary },
-    { id: 2, title: 'Announcements', icon: 'campaign', route: '/manager/announcements-editor', color: colors.managerSecondary },
-    { id: 3, title: 'Rewards', icon: 'attach-money', route: '/manager/rewards', color: colors.managerSecondary },
-    { id: 4, title: 'Schedules', icon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
-    { id: 5, title: 'Check Outs', icon: 'calculate', route: '/employee/checkouts', color: colors.managerSecondary },
+    { id: 1, title: 'Inbox', icon: 'inbox', route: '/manager/inbox', color: colors.managerSecondary },
+    { id: 2, title: 'Employees', icon: 'people', route: '/manager/employees', color: colors.managerSecondary },
+    { id: 3, title: 'Announcements', icon: 'campaign', route: '/manager/announcements-editor', color: colors.managerSecondary },
+    { id: 4, title: 'Rewards', icon: 'attach-money', route: '/manager/rewards', color: colors.managerSecondary },
+    { id: 5, title: 'Schedules', icon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
+    { id: 6, title: 'Check Outs', icon: 'calculate', route: '/employee/checkouts', color: colors.managerSecondary },
   ];
 
   const getPriorityColor = (priority: string) => {

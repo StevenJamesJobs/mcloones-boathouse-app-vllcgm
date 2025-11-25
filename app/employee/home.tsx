@@ -131,19 +131,28 @@ export default function EmployeeHomeScreen() {
           <View style={styles.quickLinks}>
             <Pressable
               style={styles.quickLinkButton}
+              onPress={() => router.push('/employee/inbox' as any)}
+            >
+              <MaterialIcons name="inbox" size={48} color="#3289a8" />
+              <Text style={styles.quickLinkText}>Inbox</Text>
+            </Pressable>
+            <Pressable
+              style={styles.quickLinkButton}
               onPress={() => router.push('/employee/training')}
             >
               <MaterialIcons name="menu-book" size={48} color="#3289a8" />
               <Text style={styles.quickLinkText}>Guides & Training</Text>
             </Pressable>
-            <Pressable
-              style={styles.quickLinkButton}
-              onPress={() => router.push('/employee/rewards')}
-            >
-              <MaterialIcons name="stars" size={48} color="#3289a8" />
-              <Text style={styles.quickLinkText}>Rewards</Text>
-            </Pressable>
           </View>
+
+          {/* Rewards Link */}
+          <Pressable
+            style={styles.rewardsButton}
+            onPress={() => router.push('/employee/rewards')}
+          >
+            <MaterialIcons name="stars" size={32} color="#3289a8" />
+            <Text style={styles.rewardsButtonText}>Rewards</Text>
+          </Pressable>
 
           {/* Check Outs Link */}
           <Pressable
@@ -311,6 +320,23 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   profileButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  rewardsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.employeeCard,
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 12,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+    gap: 12,
+  },
+  rewardsButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
