@@ -12,7 +12,7 @@ export function useMessages() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch inbox messages
+  // Fetch inbox messages using the new function
   const fetchInboxMessages = useCallback(async () => {
     if (!user?.id) return;
 
@@ -20,42 +20,36 @@ export function useMessages() {
       setLoading(true);
       setError(null);
 
-      const { data: recipientData, error: recipientError } = await supabase
-        .from('message_recipients')
-        .select(`
-          *,
-          messages:message_id (
-            *,
-            sender:sender_id (
-              id,
-              full_name,
-              job_title,
-              profile_picture_url
-            )
-          )
-        `)
-        .eq('recipient_id', user.id)
-        .eq('is_deleted', false)
-        .order('created_at', { ascending: false });
+      const { data, error: fetchError } = await supabase
+        .rpc('get_inbox_messages', { user_uuid: user.id });
 
-      if (recipientError) throw recipientError;
+      if (fetchError) throw fetchError;
 
-      const formattedMessages: InboxMessage[] = (recipientData || [])
-        .filter((item: any) => item.messages)
-        .map((item: any) => ({
-          ...item.messages,
-          sender: item.messages.sender,
-          recipient_info: {
-            id: item.id,
-            message_id: item.message_id,
-            recipient_id: item.recipient_id,
-            is_read: item.is_read,
-            is_deleted: item.is_deleted,
-            read_at: item.read_at,
-            created_at: item.created_at,
-            updated_at: item.updated_at,
-          },
-        }));
+      // Transform the flat data into the expected structure
+      const formattedMessages: InboxMessage[] = (data || []).map((row: any) => ({
+        id: row.message_id,
+        sender_id: row.sender_id,
+        subject: row.subject,
+        body: row.body,
+        created_at: row.message_created_at,
+        updated_at: row.message_updated_at,
+        sender: {
+          id: row.sender_id,
+          full_name: row.sender_full_name,
+          job_title: row.sender_job_title,
+          profile_picture_url: row.sender_profile_picture_url,
+        },
+        recipient_info: {
+          id: row.recipient_info_id,
+          message_id: row.message_id,
+          recipient_id: row.recipient_id,
+          is_read: row.is_read,
+          is_deleted: row.is_deleted,
+          read_at: row.read_at,
+          created_at: row.recipient_created_at,
+          updated_at: row.recipient_updated_at,
+        },
+      }));
 
       setInboxMessages(formattedMessages);
 
@@ -70,7 +64,7 @@ export function useMessages() {
     }
   }, [user?.id]);
 
-  // Fetch sent messages
+  // Fetch sent messages using the new function
   const fetchSentMessages = useCallback(async () => {
     if (!user?.id) return;
 
@@ -78,33 +72,46 @@ export function useMessages() {
       setLoading(true);
       setError(null);
 
-      const { data: messagesData, error: messagesError } = await supabase
-        .from('messages')
-        .select(`
-          *,
-          recipients:message_recipients (
-            *,
-            recipient:recipient_id (
-              id,
-              full_name,
-              job_title,
-              profile_picture_url
-            )
-          )
-        `)
-        .eq('sender_id', user.id)
-        .order('created_at', { ascending: false });
+      const { data, error: fetchError } = await supabase
+        .rpc('get_sent_messages', { user_uuid: user.id });
 
-      if (messagesError) throw messagesError;
+      if (fetchError) throw fetchError;
 
-      const formattedMessages: MessageWithRecipients[] = (messagesData || []).map((msg: any) => ({
-        ...msg,
-        recipients: (msg.recipients || []).map((r: any) => ({
-          ...r,
-          recipient: r.recipient,
-        })),
-      }));
+      // Group recipients by message_id
+      const messageMap = new Map<string, any>();
+      
+      (data || []).forEach((row: any) => {
+        if (!messageMap.has(row.message_id)) {
+          messageMap.set(row.message_id, {
+            id: row.message_id,
+            sender_id: row.sender_id,
+            subject: row.subject,
+            body: row.body,
+            created_at: row.message_created_at,
+            updated_at: row.message_updated_at,
+            recipients: [],
+          });
+        }
+        
+        messageMap.get(row.message_id).recipients.push({
+          id: row.recipient_info_id,
+          message_id: row.message_id,
+          recipient_id: row.recipient_id,
+          is_read: row.is_read,
+          is_deleted: row.is_deleted,
+          read_at: row.read_at,
+          created_at: row.recipient_created_at,
+          updated_at: row.recipient_updated_at,
+          recipient: {
+            id: row.recipient_id,
+            full_name: row.recipient_full_name,
+            job_title: row.recipient_job_title,
+            profile_picture_url: row.recipient_profile_picture_url,
+          },
+        });
+      });
 
+      const formattedMessages: MessageWithRecipients[] = Array.from(messageMap.values());
       setSentMessages(formattedMessages);
     } catch (err: any) {
       console.error('Error fetching sent messages:', err);
