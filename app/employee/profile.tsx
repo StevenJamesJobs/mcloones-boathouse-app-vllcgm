@@ -50,7 +50,7 @@ export default function EmployeeProfileScreen() {
         friction: 7,
       }).start();
 
-      // Auto-hide after 3 seconds
+      // Auto-hide after 4 seconds
       const timer = setTimeout(() => {
         Animated.timing(successAnimation, {
           toValue: 0,
@@ -59,7 +59,7 @@ export default function EmployeeProfileScreen() {
         }).start(() => {
           setShowSuccessMessage(false);
         });
-      }, 3000);
+      }, 4000);
 
       return () => clearTimeout(timer);
     }
@@ -111,7 +111,7 @@ export default function EmployeeProfileScreen() {
 
     if (result.success) {
       console.log('Password change successful, showing success message');
-      // Show success message bubble
+      // Show success message inline
       setShowSuccessMessage(true);
       setIsChangingPassword(false);
       setPasswordData({ newPassword: '', confirmPassword: '' });
@@ -540,6 +540,32 @@ export default function EmployeeProfileScreen() {
                 </View>
               </View>
 
+              {/* Success Message - Inline within Security Section */}
+              {showSuccessMessage && (
+                <Animated.View 
+                  style={[
+                    styles.inlineSuccessMessage,
+                    {
+                      opacity: successOpacity,
+                      transform: [{ scale: successScale }],
+                    }
+                  ]}
+                >
+                  <View style={styles.successIconContainer}>
+                    <IconSymbol 
+                      ios_icon_name="checkmark.circle.fill" 
+                      android_material_icon_name="check_circle" 
+                      color="#FFFFFF" 
+                      size={32} 
+                    />
+                  </View>
+                  <View style={styles.successTextContainer}>
+                    <Text style={styles.successMessageTitle}>Password Updated!</Text>
+                    <Text style={styles.successMessageText}>Your password has been changed successfully</Text>
+                  </View>
+                </Animated.View>
+              )}
+
               {isChangingPassword ? (
                 <>
                   <View style={styles.inputGroup}>
@@ -607,32 +633,6 @@ export default function EmployeeProfileScreen() {
             </View>
           </View>
         </ScrollView>
-
-        {/* Success Message Bubble with Animation */}
-        {showSuccessMessage && (
-          <Animated.View 
-            style={[
-              styles.successBubble,
-              {
-                opacity: successOpacity,
-                transform: [{ scale: successScale }],
-              }
-            ]}
-          >
-            <View style={styles.successIconContainer}>
-              <IconSymbol 
-                ios_icon_name="checkmark.circle.fill" 
-                android_material_icon_name="check_circle" 
-                color="#FFFFFF" 
-                size={28} 
-              />
-            </View>
-            <View style={styles.successTextContainer}>
-              <Text style={styles.successBubbleTitle}>Success!</Text>
-              <Text style={styles.successBubbleText}>Your password has been changed successfully</Text>
-            </View>
-          </Animated.View>
-        )}
       </View>
     </>
   );
@@ -875,29 +875,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  successBubble: {
-    position: 'absolute',
-    top: 80,
-    left: 20,
-    right: 20,
+  inlineSuccessMessage: {
     backgroundColor: colors.success,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 18,
-    borderRadius: 16,
+    paddingVertical: 20,
+    borderRadius: 14,
+    marginBottom: 20,
+    gap: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 12,
-    zIndex: 1000,
-    gap: 14,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
   successIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -905,16 +901,16 @@ const styles = StyleSheet.create({
   successTextContainer: {
     flex: 1,
   },
-  successBubbleTitle: {
+  successMessageTitle: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '800',
-    marginBottom: 2,
+    marginBottom: 4,
   },
-  successBubbleText: {
+  successMessageText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '500',
-    lineHeight: 18,
+    lineHeight: 20,
   },
 });
