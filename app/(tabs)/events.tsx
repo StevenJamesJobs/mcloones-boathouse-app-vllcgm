@@ -91,66 +91,123 @@ export default function EventsScreen() {
               <Text style={styles.emptySubtext}>Check back soon for exciting events!</Text>
             </View>
           ) : (
-            events.map((event) => (
-              <View key={event.id} style={styles.eventCard}>
-                <View style={styles.eventHeader}>
-                  <IconSymbol 
-                    ios_icon_name="calendar" 
-                    android_material_icon_name="event" 
-                    color={colors.accent} 
-                    size={24} 
-                  />
-                  <View style={styles.eventHeaderText}>
-                    <Text style={styles.eventTitle}>{event.title}</Text>
-                    <Text style={styles.eventDate}>
-                      {new Date(event.event_date).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </Text>
+            events.map((event) => {
+              if (event.display_style === 'banner') {
+                // Banner style - full width
+                return (
+                  <View key={event.id} style={styles.eventCard}>
+                    <View style={styles.eventHeader}>
+                      <IconSymbol 
+                        ios_icon_name="calendar" 
+                        android_material_icon_name="event" 
+                        color={colors.accent} 
+                        size={24} 
+                      />
+                      <View style={styles.eventHeaderText}>
+                        <Text style={styles.eventTitle}>{event.title}</Text>
+                        <Text style={styles.eventDate}>
+                          {new Date(event.event_date).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {event.image_url && (
+                      <Pressable onPress={() => setExpandedImage(event.image_url)}>
+                        <Image
+                          source={{ uri: event.image_url }}
+                          style={styles.eventThumbnail}
+                          resizeMode="cover"
+                        />
+                      </Pressable>
+                    )}
+
+                    <View style={styles.eventTime}>
+                      <IconSymbol 
+                        ios_icon_name="clock.fill" 
+                        android_material_icon_name="schedule" 
+                        color={colors.textSecondary} 
+                        size={16} 
+                      />
+                      <Text style={styles.eventTimeText}>{event.event_time}</Text>
+                    </View>
+
+                    <Text style={styles.eventDescription}>{event.description}</Text>
+
+                    {event.rsvp_link && (
+                      <Pressable
+                        style={styles.rsvpButton}
+                        onPress={() => handleRSVP(event.rsvp_link)}
+                      >
+                        <Text style={styles.rsvpButtonText}>RSVP Now</Text>
+                        <IconSymbol 
+                          ios_icon_name="arrow.right" 
+                          android_material_icon_name="arrow_forward" 
+                          color="#FFFFFF" 
+                          size={16} 
+                        />
+                      </Pressable>
+                    )}
                   </View>
-                </View>
-
-                {event.image_url && (
-                  <Pressable onPress={() => setExpandedImage(event.image_url)}>
-                    <Image
-                      source={{ uri: event.image_url }}
-                      style={styles.eventThumbnail}
-                      resizeMode="cover"
-                    />
-                  </Pressable>
-                )}
-
-                <View style={styles.eventTime}>
-                  <IconSymbol 
-                    ios_icon_name="clock.fill" 
-                    android_material_icon_name="schedule" 
-                    color={colors.textSecondary} 
-                    size={16} 
-                  />
-                  <Text style={styles.eventTimeText}>{event.event_time}</Text>
-                </View>
-
-                <Text style={styles.eventDescription}>{event.description}</Text>
-
-                {event.rsvp_link && (
-                  <Pressable
-                    style={styles.rsvpButton}
-                    onPress={() => handleRSVP(event.rsvp_link)}
-                  >
-                    <Text style={styles.rsvpButtonText}>RSVP Now</Text>
-                    <IconSymbol 
-                      ios_icon_name="arrow.right" 
-                      android_material_icon_name="arrow_forward" 
-                      color="#FFFFFF" 
-                      size={16} 
-                    />
-                  </Pressable>
-                )}
-              </View>
-            ))
+                );
+              } else {
+                // Square style - like menu items
+                return (
+                  <View key={event.id} style={styles.eventCard}>
+                    <View style={styles.eventContentSquare}>
+                      {event.image_url && (
+                        <Pressable onPress={() => setExpandedImage(event.image_url)}>
+                          <Image
+                            source={{ uri: event.image_url }}
+                            style={styles.eventThumbnailSquare}
+                            resizeMode="cover"
+                          />
+                        </Pressable>
+                      )}
+                      <View style={styles.eventDetailsSquare}>
+                        <View style={styles.eventHeaderSquare}>
+                          <IconSymbol 
+                            ios_icon_name="calendar" 
+                            android_material_icon_name="event" 
+                            color={colors.accent} 
+                            size={20} 
+                          />
+                          <Text style={styles.eventTitleSquare}>{event.title}</Text>
+                        </View>
+                        <Text style={styles.eventDateSquare}>
+                          {new Date(event.event_date).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })} at {event.event_time}
+                        </Text>
+                        <Text style={styles.eventDescriptionSquare} numberOfLines={3}>
+                          {event.description}
+                        </Text>
+                        {event.rsvp_link && (
+                          <Pressable
+                            style={styles.rsvpButtonSquare}
+                            onPress={() => handleRSVP(event.rsvp_link)}
+                          >
+                            <Text style={styles.rsvpButtonTextSquare}>RSVP</Text>
+                            <IconSymbol 
+                              ios_icon_name="arrow.right" 
+                              android_material_icon_name="arrow_forward" 
+                              color="#FFFFFF" 
+                              size={14} 
+                            />
+                          </Pressable>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+                );
+              }
+            })
           )}
 
           <View style={styles.infoCard}>
@@ -373,6 +430,57 @@ const styles = StyleSheet.create({
   rsvpButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  eventContentSquare: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  eventThumbnailSquare: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    backgroundColor: colors.border,
+  },
+  eventDetailsSquare: {
+    flex: 1,
+  },
+  eventHeaderSquare: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  eventTitleSquare: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    flex: 1,
+  },
+  eventDateSquare: {
+    fontSize: 12,
+    color: colors.accent,
+    marginBottom: 6,
+  },
+  eventDescriptionSquare: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  rsvpButtonSquare: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.accent,
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  rsvpButtonTextSquare: {
+    color: '#FFFFFF',
+    fontSize: 12,
     fontWeight: '600',
   },
   infoCard: {
