@@ -22,6 +22,8 @@ export default function EmployeeInboxScreen() {
     deleteSelectedMessages,
     refreshInbox,
     refreshSent,
+    markAsRead,
+    getInboxMessageCount,
   } = useMessages();
   const [activeTab, setActiveTab] = useState<TabType>('inbox');
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,6 +36,15 @@ export default function EmployeeInboxScreen() {
     try {
       if (activeTab === 'inbox') {
         await refreshInbox();
+        // Check if we need to show a warning about message limit
+        const count = await getInboxMessageCount();
+        if (count >= 35 && count < 40) {
+          Alert.alert(
+            'Inbox Nearly Full',
+            `You have ${count} messages in your inbox. When you reach 40 messages, the 5 oldest messages will be automatically deleted. Please consider deleting older messages to avoid losing important information.`,
+            [{ text: 'OK' }]
+          );
+        }
       } else {
         await refreshSent();
       }
@@ -41,6 +52,14 @@ export default function EmployeeInboxScreen() {
       console.error('Error refreshing messages:', error);
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleMarkAsRead = async (messageId: string) => {
+    try {
+      await markAsRead(messageId);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to mark message as read');
     }
   };
 
@@ -414,14 +433,16 @@ export default function EmployeeInboxScreen() {
                   <View style={styles.messageTextContainer}>
                     <View style={styles.messageHeader}>
                       <View style={styles.messageHeaderLeft}>
-                        {activeTab === 'inbox' && !(message as InboxMessage).recipient_info?.is_read && (
-                          <View style={styles.unreadDot} />
-                        )}
                         <Text style={styles.messageSender} numberOfLines={1}>
                           {activeTab === 'inbox'
                             ? message.sender?.full_name || 'Unknown'
                             : `To: ${(message as any).recipients?.length || 0} recipient(s)`}
                         </Text>
+                        {activeTab === 'inbox' && !(message as InboxMessage).recipient_info?.is_read && (
+                          <View style={styles.newBadge}>
+                            <Text style={styles.newBadgeText}>New</Text>
+                          </View>
+                        )}
                       </View>
                       <Text style={styles.messageDate}>
                         {new Date(message.created_at).toLocaleDateString()}
@@ -437,6 +458,17 @@ export default function EmployeeInboxScreen() {
                 </View>
                 {activeTab === 'inbox' && !selectionMode && (
                   <View style={styles.messageActions}>
+                    {!(message as InboxMessage).recipient_info?.is_read && (
+                      <Pressable
+                        style={styles.markReadButton}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          handleMarkAsRead(message.id);
+                        }}
+                      >
+                        <MaterialIcons name="mark-email-read" size={20} color={colors.employeeAccent} />
+                      </Pressable>
+                    )}
                     <Pressable
                       style={styles.deleteButton}
                       onPress={(e) => {
@@ -615,17 +647,23 @@ const styles = StyleSheet.create({
     gap: 8,
     flex: 1,
   },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  newBadge: {
     backgroundColor: colors.employeeAccent,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  newBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
   },
   messageSender: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.text,
-    flex: 1,
+    flexShrink: 1,
   },
   messageDate: {
     fontSize: 12,
@@ -645,10 +683,14 @@ const styles = StyleSheet.create({
   messageActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    gap: 8,
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: colors.border,
+  },
+  markReadButton: {
+    padding: 8,
   },
   deleteButton: {
     padding: 8,

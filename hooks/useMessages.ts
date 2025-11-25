@@ -206,15 +206,10 @@ export function useMessages() {
     if (!user?.id) return;
 
     try {
-      const { error } = await supabase
-        .from('message_recipients')
-        .update({
-          is_read: true,
-          read_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('message_id', messageId)
-        .eq('recipient_id', user.id);
+      const { error } = await supabase.rpc('mark_message_as_read', {
+        user_uuid: user.id,
+        message_uuid: messageId,
+      });
 
       if (error) throw error;
 
@@ -466,6 +461,24 @@ ${originalMessage.body}`;
     }
   };
 
+  // Get inbox message count
+  const getInboxMessageCount = async (): Promise<number> => {
+    if (!user?.id) return 0;
+
+    try {
+      const { data, error } = await supabase.rpc('get_inbox_message_count', {
+        user_uuid: user.id,
+      });
+
+      if (error) throw error;
+
+      return data || 0;
+    } catch (err: any) {
+      console.error('Error getting inbox message count:', err);
+      return 0;
+    }
+  };
+
   useEffect(() => {
     if (user?.id) {
       fetchInboxMessages();
@@ -517,5 +530,6 @@ ${originalMessage.body}`;
     fetchManagers,
     refreshInbox: fetchInboxMessages,
     refreshSent: fetchSentMessages,
+    getInboxMessageCount,
   };
 }
