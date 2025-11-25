@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useFocusEffect } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,13 +14,22 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 export default function EmployeeHomeScreen() {
   const { user, logout, isLoading } = useAuth();
   const { announcements } = useAnnouncements('employees');
-  const { unreadCount } = useMessages();
+  const { unreadCount, refreshInbox } = useMessages();
 
   useEffect(() => {
     if (!isLoading && (!user || user.role === 'customer')) {
       router.replace('/(tabs)/(home)/');
     }
   }, [user, isLoading]);
+
+  // Refresh unread count when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user?.id) {
+        refreshInbox();
+      }
+    }, [user?.id, refreshInbox])
+  );
 
   const handleLogout = async () => {
     try {

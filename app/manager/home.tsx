@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
-import { Stack, router } from 'expo-router';
+import { Stack, router, useFocusEffect } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,7 +16,7 @@ type TabType = 'customer' | 'employee';
 export default function ManagerHomeScreen() {
   const { user, logout, isLoading } = useAuth();
   const { announcements } = useAnnouncements('managers');
-  const { unreadCount } = useMessages();
+  const { unreadCount, refreshInbox } = useMessages();
   const [activeTab, setActiveTab] = useState<TabType>('customer');
 
   useEffect(() => {
@@ -24,6 +24,15 @@ export default function ManagerHomeScreen() {
       router.replace('/(tabs)/(home)/');
     }
   }, [user, isLoading]);
+
+  // Refresh unread count when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user?.id) {
+        refreshInbox();
+      }
+    }, [user?.id, refreshInbox])
+  );
 
   const handleLogout = async () => {
     try {
