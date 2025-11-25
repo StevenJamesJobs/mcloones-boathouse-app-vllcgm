@@ -6,6 +6,7 @@ import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
+import { useMessages } from '@/hooks/useMessages';
 import { WeatherDisplay } from '@/components/WeatherDisplay';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -15,6 +16,7 @@ type TabType = 'customer' | 'employee';
 export default function ManagerHomeScreen() {
   const { user, logout, isLoading } = useAuth();
   const { announcements } = useAnnouncements('managers');
+  const { unreadCount } = useMessages();
   const [activeTab, setActiveTab] = useState<TabType>('customer');
 
   useEffect(() => {
@@ -160,12 +162,19 @@ export default function ManagerHomeScreen() {
             <Text style={styles.guidesButtonText}>Guides & Training</Text>
           </Pressable>
 
-          {/* Messages - Elongated Tile */}
+          {/* Messages - Elongated Tile with Badge */}
           <Pressable
             style={styles.messagesButton}
             onPress={() => router.push('/manager/inbox' as any)}
           >
-            <MaterialIcons name="inbox" size={32} color={colors.managerAccent} />
+            <View style={styles.iconContainer}>
+              <MaterialIcons name="inbox" size={32} color={colors.managerAccent} />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                </View>
+              )}
+            </View>
             <Text style={styles.messagesButtonText}>Messages</Text>
           </Pressable>
 
@@ -358,6 +367,28 @@ const styles = StyleSheet.create({
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
     gap: 12,
+  },
+  iconContainer: {
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: colors.error,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    paddingHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.employeeCard,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   messagesButtonText: {
     fontSize: 16,

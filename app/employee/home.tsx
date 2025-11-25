@@ -6,6 +6,7 @@ import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
+import { useMessages } from '@/hooks/useMessages';
 import { WeatherDisplay } from '@/components/WeatherDisplay';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -13,6 +14,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 export default function EmployeeHomeScreen() {
   const { user, logout, isLoading } = useAuth();
   const { announcements } = useAnnouncements('employees');
+  const { unreadCount } = useMessages();
 
   useEffect(() => {
     if (!isLoading && (!user || user.role === 'customer')) {
@@ -136,7 +138,14 @@ export default function EmployeeHomeScreen() {
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/inbox' as any)}
             >
-              <MaterialIcons name="inbox" size={48} color="#3289a8" />
+              <View style={styles.iconContainer}>
+                <MaterialIcons name="inbox" size={48} color="#3289a8" />
+                {unreadCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                  </View>
+                )}
+              </View>
               <Text style={styles.quickLinkText}>Messages</Text>
             </Pressable>
             <Pressable
@@ -291,6 +300,28 @@ const styles = StyleSheet.create({
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
     gap: 12,
+  },
+  iconContainer: {
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: colors.error,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    paddingHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.employeeCard,
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   quickLinkText: {
     fontSize: 14,

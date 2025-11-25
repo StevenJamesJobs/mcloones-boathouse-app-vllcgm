@@ -17,13 +17,14 @@ import { RecipientOption, JobTitleGroup } from '@/types/messages';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function NewMessageScreen() {
-  const { sendMessage, fetchRecipients, fetchJobTitleGroups } = useMessages();
+  const { sendMessage, fetchRecipients, fetchJobTitleGroups, fetchManagers } = useMessages();
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [selectedRecipients, setSelectedRecipients] = useState<RecipientOption[]>([]);
   const [showRecipientPicker, setShowRecipientPicker] = useState(false);
   const [recipients, setRecipients] = useState<RecipientOption[]>([]);
   const [jobTitleGroups, setJobTitleGroups] = useState<JobTitleGroup[]>([]);
+  const [managers, setManagers] = useState<RecipientOption[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -34,12 +35,14 @@ export default function NewMessageScreen() {
 
   const loadRecipients = async () => {
     setLoading(true);
-    const [recipientsList, groups] = await Promise.all([
+    const [recipientsList, groups, managersList] = await Promise.all([
       fetchRecipients(),
       fetchJobTitleGroups(),
+      fetchManagers(),
     ]);
     setRecipients(recipientsList);
     setJobTitleGroups(groups);
+    setManagers(managersList);
     setLoading(false);
   };
 
@@ -60,6 +63,18 @@ export default function NewMessageScreen() {
       group.users.forEach((user) => {
         if (!newRecipients.find((r) => r.id === user.id)) {
           newRecipients.push(user);
+        }
+      });
+      return newRecipients;
+    });
+  };
+
+  const selectAllManagers = () => {
+    setSelectedRecipients((prev) => {
+      const newRecipients = [...prev];
+      managers.forEach((manager) => {
+        if (!newRecipients.find((r) => r.id === manager.id)) {
+          newRecipients.push(manager);
         }
       });
       return newRecipients;
@@ -182,6 +197,24 @@ export default function NewMessageScreen() {
                 <ActivityIndicator size="large" color={colors.employeeAccent} />
               ) : (
                 <ScrollView style={styles.recipientList} nestedScrollEnabled>
+                  {/* Quick Select: All Managers - Highlighted */}
+                  {managers.length > 0 && !searchQuery && (
+                    <>
+                      <Text style={styles.pickerSectionTitle}>Quick Select</Text>
+                      <Pressable
+                        style={styles.quickSelectItem}
+                        onPress={selectAllManagers}
+                      >
+                        <MaterialIcons name="supervisor-account" size={28} color="#FFFFFF" />
+                        <View style={styles.groupInfo}>
+                          <Text style={styles.quickSelectTitle}>All Managers</Text>
+                          <Text style={styles.quickSelectCount}>{managers.length} managers</Text>
+                        </View>
+                        <MaterialIcons name="add-circle" size={28} color="#FFFFFF" />
+                      </Pressable>
+                    </>
+                  )}
+
                   {/* Job Title Groups */}
                   <Text style={styles.pickerSectionTitle}>By Job Title</Text>
                   {filteredGroups.map((group) => (
@@ -360,6 +393,26 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 8,
     textTransform: 'uppercase',
+  },
+  quickSelectItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: colors.employeeAccent,
+    borderRadius: 12,
+    marginBottom: 12,
+    gap: 12,
+    boxShadow: '0px 3px 6px rgba(0, 0, 0, 0.15)',
+    elevation: 4,
+  },
+  quickSelectTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  quickSelectCount: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
   },
   groupItem: {
     flexDirection: 'row',

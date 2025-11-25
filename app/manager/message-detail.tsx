@@ -1,5 +1,4 @@
 
-// Identical to employee version but with manager styling
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -10,6 +9,7 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
@@ -85,6 +85,24 @@ export default function ManagerMessageDetailScreen() {
     }
   };
 
+  // Parse message body to separate current message from quoted thread
+  const parseMessageBody = (body: string) => {
+    const separator = '────────────────────────────────';
+    const parts = body.split(separator);
+    
+    if (parts.length > 1) {
+      return {
+        currentMessage: parts[0].trim(),
+        quotedThread: separator + parts.slice(1).join(separator),
+      };
+    }
+    
+    return {
+      currentMessage: body,
+      quotedThread: null,
+    };
+  };
+
   if (!message) {
     return (
       <View style={styles.container}>
@@ -105,6 +123,8 @@ export default function ManagerMessageDetailScreen() {
     );
   }
 
+  const { currentMessage, quotedThread } = parseMessageBody(message.body);
+
   return (
     <>
       <Stack.Screen
@@ -120,9 +140,21 @@ export default function ManagerMessageDetailScreen() {
       <View style={styles.container}>
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.messageHeader}>
-            <View style={styles.senderInfo}>
-              <Text style={styles.senderName}>From: {message.sender?.full_name || 'Unknown'}</Text>
-              <Text style={styles.senderJobTitle}>{message.sender?.job_title}</Text>
+            <View style={styles.senderRow}>
+              {message.sender?.profile_picture_url ? (
+                <Image
+                  source={{ uri: message.sender.profile_picture_url }}
+                  style={styles.profileImage}
+                />
+              ) : (
+                <View style={styles.profileImagePlaceholder}>
+                  <MaterialIcons name="person" size={32} color={colors.textSecondary} />
+                </View>
+              )}
+              <View style={styles.senderInfo}>
+                <Text style={styles.senderName}>From: {message.sender?.full_name || 'Unknown'}</Text>
+                <Text style={styles.senderJobTitle}>{message.sender?.job_title}</Text>
+              </View>
             </View>
             <Text style={styles.messageDate}>
               {new Date(message.created_at).toLocaleString()}
@@ -134,8 +166,14 @@ export default function ManagerMessageDetailScreen() {
           </View>
 
           <View style={styles.bodyContainer}>
-            <Text style={styles.body}>{message.body}</Text>
+            <Text style={styles.body}>{currentMessage}</Text>
           </View>
+
+          {quotedThread && (
+            <View style={styles.quotedThreadContainer}>
+              <Text style={styles.quotedThread}>{quotedThread}</Text>
+            </View>
+          )}
 
           {showReply && (
             <View style={styles.replyContainer}>
@@ -217,8 +255,28 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  senderInfo: {
+  senderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
     marginBottom: 8,
+  },
+  profileImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.border,
+  },
+  profileImagePlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  senderInfo: {
+    flex: 1,
   },
   senderName: {
     fontSize: 18,
@@ -252,6 +310,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     lineHeight: 24,
+  },
+  quotedThreadContainer: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: colors.employeeCard,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.managerAccent,
+    borderRadius: 8,
+  },
+  quotedThread: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    fontStyle: 'italic',
   },
   replyContainer: {
     margin: 16,

@@ -264,7 +264,7 @@ export function useMessages() {
     }
   };
 
-  // Reply to a message
+  // Reply to a message with threading
   const replyToMessage = async (
     originalMessage: InboxMessage,
     body: string
@@ -273,7 +273,15 @@ export function useMessages() {
       ? originalMessage.subject
       : `Re: ${originalMessage.subject}`;
 
-    return sendMessage(subject, body, [originalMessage.sender_id]);
+    // Format the reply with the original message quoted
+    const formattedBody = `${body}
+
+────────────────────────────────
+On ${new Date(originalMessage.created_at).toLocaleString()}, ${originalMessage.sender?.full_name} wrote:
+
+${originalMessage.body}`;
+
+    return sendMessage(subject, formattedBody, [originalMessage.sender_id]);
   };
 
   // Fetch all users for recipient selection
@@ -323,6 +331,26 @@ export function useMessages() {
     }
   };
 
+  // Fetch all managers for default selection
+  const fetchManagers = async (): Promise<RecipientOption[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, job_title, profile_picture_url')
+        .eq('is_active', true)
+        .in('role', ['manager', 'owner_manager'])
+        .neq('id', user?.id || '')
+        .order('full_name');
+
+      if (error) throw error;
+
+      return data || [];
+    } catch (err: any) {
+      console.error('Error fetching managers:', err);
+      return [];
+    }
+  };
+
   useEffect(() => {
     if (user?.id) {
       fetchInboxMessages();
@@ -367,6 +395,7 @@ export function useMessages() {
     replyToMessage,
     fetchRecipients,
     fetchJobTitleGroups,
+    fetchManagers,
     refreshInbox: fetchInboxMessages,
     refreshSent: fetchSentMessages,
   };

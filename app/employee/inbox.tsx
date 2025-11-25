@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { useMessages } from '@/hooks/useMessages';
@@ -50,6 +50,50 @@ export default function EmployeeInboxScreen() {
   );
 
   const currentMessages = activeTab === 'inbox' ? filteredInboxMessages : filteredSentMessages;
+
+  const renderProfileImage = (message: any) => {
+    if (activeTab === 'inbox') {
+      // Inbox: show sender's profile picture
+      const profileUrl = message.sender?.profile_picture_url;
+      if (profileUrl) {
+        return (
+          <Image
+            source={{ uri: profileUrl }}
+            style={styles.profileImage}
+          />
+        );
+      } else {
+        return (
+          <View style={styles.profileImagePlaceholder}>
+            <MaterialIcons name="person" size={24} color={colors.textSecondary} />
+          </View>
+        );
+      }
+    } else {
+      // Sent: show multiple recipients icon or single recipient
+      const recipients = message.recipients || [];
+      if (recipients.length > 1) {
+        return (
+          <View style={styles.profileImagePlaceholder}>
+            <MaterialIcons name="group" size={24} color={colors.textSecondary} />
+          </View>
+        );
+      } else if (recipients.length === 1 && recipients[0].recipient?.profile_picture_url) {
+        return (
+          <Image
+            source={{ uri: recipients[0].recipient.profile_picture_url }}
+            style={styles.profileImage}
+          />
+        );
+      } else {
+        return (
+          <View style={styles.profileImagePlaceholder}>
+            <MaterialIcons name="person" size={24} color={colors.textSecondary} />
+          </View>
+        );
+      }
+    }
+  };
 
   return (
     <>
@@ -133,27 +177,32 @@ export default function EmployeeInboxScreen() {
                   }
                 }}
               >
-                <View style={styles.messageHeader}>
-                  <View style={styles.messageHeaderLeft}>
-                    {activeTab === 'inbox' && !(message as InboxMessage).recipient_info?.is_read && (
-                      <View style={styles.unreadDot} />
-                    )}
-                    <Text style={styles.messageSender}>
-                      {activeTab === 'inbox'
-                        ? message.sender?.full_name || 'Unknown'
-                        : `To: ${(message as any).recipients?.length || 0} recipient(s)`}
+                <View style={styles.messageContent}>
+                  {renderProfileImage(message)}
+                  <View style={styles.messageTextContainer}>
+                    <View style={styles.messageHeader}>
+                      <View style={styles.messageHeaderLeft}>
+                        {activeTab === 'inbox' && !(message as InboxMessage).recipient_info?.is_read && (
+                          <View style={styles.unreadDot} />
+                        )}
+                        <Text style={styles.messageSender} numberOfLines={1}>
+                          {activeTab === 'inbox'
+                            ? message.sender?.full_name || 'Unknown'
+                            : `To: ${(message as any).recipients?.length || 0} recipient(s)`}
+                        </Text>
+                      </View>
+                      <Text style={styles.messageDate}>
+                        {new Date(message.created_at).toLocaleDateString()}
+                      </Text>
+                    </View>
+                    <Text style={styles.messageSubject} numberOfLines={1}>
+                      {message.subject}
+                    </Text>
+                    <Text style={styles.messagePreview} numberOfLines={2}>
+                      {message.body}
                     </Text>
                   </View>
-                  <Text style={styles.messageDate}>
-                    {new Date(message.created_at).toLocaleDateString()}
-                  </Text>
                 </View>
-                <Text style={styles.messageSubject} numberOfLines={1}>
-                  {message.subject}
-                </Text>
-                <Text style={styles.messagePreview} numberOfLines={2}>
-                  {message.body}
-                </Text>
                 {activeTab === 'inbox' && (
                   <View style={styles.messageActions}>
                     <Pressable
@@ -254,6 +303,27 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 2,
+  },
+  messageContent: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  profileImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.border,
+  },
+  profileImagePlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  messageTextContainer: {
+    flex: 1,
   },
   messageHeader: {
     flexDirection: 'row',
