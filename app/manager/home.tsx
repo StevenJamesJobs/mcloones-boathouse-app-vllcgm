@@ -162,14 +162,8 @@ export default function ManagerHomeScreen() {
             )}
           </CollapsibleSection>
 
-          {/* Guides and Training */}
-          <Pressable
-            style={styles.guidesButton}
-            onPress={() => router.push('/employee/training')}
-          >
-            <MaterialIcons name="menu-book" size={32} color={colors.managerAccent} />
-            <Text style={styles.guidesButtonText}>Guides & Training</Text>
-          </Pressable>
+          {/* Profile Section Header */}
+          <Text style={styles.profileHeader}>{user?.full_name}&apos;s Profile</Text>
 
           {/* Messages - Elongated Tile with Badge */}
           <Pressable
@@ -187,13 +181,22 @@ export default function ManagerHomeScreen() {
             <Text style={styles.messagesButtonText}>Messages</Text>
           </Pressable>
 
-          {/* My Profile - Elongated Tile */}
+          {/* My Profile Info - Elongated Tile */}
           <Pressable
             style={styles.profileButton}
             onPress={() => router.push('/manager/profile')}
           >
             <MaterialIcons name="person" size={32} color={colors.managerAccent} />
-            <Text style={styles.profileButtonText}>My Profile</Text>
+            <Text style={styles.profileButtonText}>My Profile Info</Text>
+          </Pressable>
+
+          {/* Guides and Training - Elongated Tile */}
+          <Pressable
+            style={styles.guidesButton}
+            onPress={() => router.push('/employee/training')}
+          >
+            <MaterialIcons name="menu-book" size={32} color={colors.managerAccent} />
+            <Text style={styles.guidesButtonText}>Guides & Training</Text>
           </Pressable>
 
           {/* Manager Tools */}
@@ -348,22 +351,12 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontStyle: 'italic',
   },
-  guidesButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.employeeCard,
-    borderRadius: 12,
-    padding: 20,
-    marginTop: 12,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
-    gap: 12,
-  },
-  guidesButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+  profileHeader: {
+    fontSize: 20,
+    fontWeight: '700',
     color: colors.text,
+    marginTop: 8,
+    marginBottom: 16,
   },
   messagesButton: {
     flexDirection: 'row',
@@ -372,7 +365,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.employeeCard,
     borderRadius: 12,
     padding: 20,
-    marginTop: 12,
+    marginBottom: 12,
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
     gap: 12,
@@ -411,12 +404,29 @@ const styles = StyleSheet.create({
     backgroundColor: colors.employeeCard,
     borderRadius: 12,
     padding: 20,
-    marginTop: 12,
+    marginBottom: 12,
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
     gap: 12,
   },
   profileButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  guidesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.employeeCard,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 12,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+    gap: 12,
+  },
+  guidesButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,

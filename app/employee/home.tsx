@@ -138,56 +138,61 @@ export default function EmployeeHomeScreen() {
             )}
           </CollapsibleSection>
 
+          {/* Profile Section Header */}
+          <Text style={styles.profileHeader}>{user?.full_name}&apos;s Profile</Text>
+
+          {/* Messages - Elongated Tile with Badge */}
+          <Pressable
+            style={styles.messagesButton}
+            onPress={() => router.push('/employee/inbox' as any)}
+          >
+            <View style={styles.iconContainer}>
+              <MaterialIcons name="inbox" size={32} color="#3289a8" />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                </View>
+              )}
+            </View>
+            <Text style={styles.messagesButtonText}>Messages</Text>
+          </Pressable>
+
+          {/* My Profile Info - Elongated */}
+          <Pressable
+            style={styles.profileButton}
+            onPress={() => router.push('/employee/profile')}
+          >
+            <MaterialIcons name="person" size={32} color="#3289a8" />
+            <Text style={styles.profileButtonText}>My Profile Info</Text>
+          </Pressable>
+
           {/* Tools Section Header */}
           <Text style={styles.toolsHeader}>{user?.full_name}&apos;s Tools</Text>
 
-          {/* Quick Links - 4 equal tiles */}
+          {/* Quick Links - 3 smaller tiles */}
           <View style={styles.quickLinksGrid}>
-            <Pressable
-              style={styles.quickLinkButton}
-              onPress={() => router.push('/employee/inbox' as any)}
-            >
-              <View style={styles.iconContainer}>
-                <MaterialIcons name="inbox" size={48} color="#3289a8" />
-                {unreadCount > 0 && (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.quickLinkText}>Messages</Text>
-            </Pressable>
             <Pressable
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/training')}
             >
-              <MaterialIcons name="menu-book" size={48} color="#3289a8" />
+              <MaterialIcons name="menu-book" size={36} color="#3289a8" />
               <Text style={styles.quickLinkText}>Guides & Training</Text>
             </Pressable>
             <Pressable
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/rewards')}
             >
-              <MaterialIcons name="stars" size={48} color="#3289a8" />
+              <MaterialIcons name="stars" size={36} color="#3289a8" />
               <Text style={styles.quickLinkText}>Rewards</Text>
             </Pressable>
             <Pressable
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/checkouts')}
             >
-              <MaterialIcons name="calculate" size={48} color="#3289a8" />
+              <MaterialIcons name="calculate" size={36} color="#3289a8" />
               <Text style={styles.quickLinkText}>Check Outs</Text>
             </Pressable>
           </View>
-
-          {/* Profile Link - Elongated */}
-          <Pressable
-            style={styles.profileButton}
-            onPress={() => router.push('/employee/profile')}
-          >
-            <MaterialIcons name="person" size={32} color="#3289a8" />
-            <Text style={styles.profileButtonText}>My Profile</Text>
-          </Pressable>
         </ScrollView>
       </View>
     </>
@@ -286,26 +291,21 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontStyle: 'italic',
   },
-  toolsHeader: {
+  profileHeader: {
     fontSize: 20,
     fontWeight: '700',
     color: colors.text,
     marginTop: 8,
     marginBottom: 16,
   },
-  quickLinksGrid: {
+  messagesButton: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  quickLinkButton: {
-    width: '48%',
-    aspectRatio: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.employeeCard,
     borderRadius: 12,
     padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: 12,
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
     gap: 12,
@@ -332,11 +332,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
-  quickLinkText: {
-    fontSize: 14,
+  messagesButtonText: {
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text,
-    textAlign: 'center',
   },
   profileButton: {
     flexDirection: 'row',
@@ -345,7 +344,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.employeeCard,
     borderRadius: 12,
     padding: 20,
-    marginTop: 12,
+    marginBottom: 12,
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
     gap: 12,
@@ -354,5 +353,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,
+  },
+  toolsHeader: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  quickLinksGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  quickLinkButton: {
+    width: '31.5%',
+    aspectRatio: 1,
+    backgroundColor: colors.employeeCard,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+    gap: 8,
+  },
+  quickLinkText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
   },
 });
