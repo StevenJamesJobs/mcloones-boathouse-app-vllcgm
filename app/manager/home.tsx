@@ -7,6 +7,7 @@ import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { WeatherDisplay } from '@/components/WeatherDisplay';
+import { CollapsibleSection } from '@/components/CollapsibleSection';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 type TabType = 'customer' | 'employee';
@@ -107,15 +108,25 @@ export default function ManagerHomeScreen() {
             <Text style={styles.welcomeSubtitle}>Here&apos;s what&apos;s going on today!</Text>
           </View>
 
-          {/* Weather Card */}
-          <WeatherDisplay variant="manager" />
+          {/* Weather Card - Collapsible */}
+          <CollapsibleSection
+            title="Today's Weather"
+            icon="wb-sunny"
+            iconColor={colors.managerAccent}
+            defaultExpanded={true}
+            variant="manager"
+          >
+            <WeatherDisplay variant="manager" />
+          </CollapsibleSection>
 
-          {/* Announcements */}
-          <View style={commonStyles.employeeCard}>
-            <View style={styles.cardHeader}>
-              <MaterialIcons name="campaign" color={colors.managerAccent} size={24} />
-              <Text style={styles.cardTitle}>Announcements</Text>
-            </View>
+          {/* Announcements - Collapsible */}
+          <CollapsibleSection
+            title="Announcements"
+            icon="campaign"
+            iconColor={colors.managerAccent}
+            defaultExpanded={true}
+            variant="manager"
+          >
             {announcements.length === 0 ? (
               <Text style={styles.noAnnouncementsText}>No announcements at this time</Text>
             ) : (
@@ -137,7 +148,7 @@ export default function ManagerHomeScreen() {
                 </View>
               ))
             )}
-          </View>
+          </CollapsibleSection>
 
           {/* Guides and Training */}
           <Pressable
@@ -270,17 +281,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: 'rgba(255, 255, 255, 0.8)',
     fontStyle: 'italic',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginLeft: 8,
   },
   announcementItem: {
     paddingVertical: 12,

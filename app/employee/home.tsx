@@ -7,6 +7,7 @@ import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { WeatherDisplay } from '@/components/WeatherDisplay';
+import { CollapsibleSection } from '@/components/CollapsibleSection';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function EmployeeHomeScreen() {
@@ -84,15 +85,25 @@ export default function EmployeeHomeScreen() {
             <Text style={styles.welcomeSubtitle}>Here&apos;s what&apos;s going on today!</Text>
           </View>
 
-          {/* Weather Card */}
-          <WeatherDisplay variant="employee" />
+          {/* Weather Card - Collapsible */}
+          <CollapsibleSection
+            title="Today's Weather"
+            icon="wb-sunny"
+            iconColor={colors.employeeAccent}
+            defaultExpanded={true}
+            variant="employee"
+          >
+            <WeatherDisplay variant="employee" />
+          </CollapsibleSection>
 
-          {/* Announcements */}
-          <View style={commonStyles.employeeCard}>
-            <View style={styles.cardHeader}>
-              <MaterialIcons name="campaign" color={colors.employeeAccent} size={24} />
-              <Text style={styles.cardTitle}>Announcements</Text>
-            </View>
+          {/* Announcements - Collapsible */}
+          <CollapsibleSection
+            title="Announcements"
+            icon="campaign"
+            iconColor={colors.employeeAccent}
+            defaultExpanded={true}
+            variant="employee"
+          >
             {announcements.length === 0 ? (
               <Text style={styles.noAnnouncementsText}>No announcements at this time</Text>
             ) : (
@@ -114,7 +125,7 @@ export default function EmployeeHomeScreen() {
                 </View>
               ))
             )}
-          </View>
+          </CollapsibleSection>
 
           {/* Quick Links */}
           <View style={styles.quickLinks}>
@@ -210,17 +221,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textSecondary,
     fontStyle: 'italic',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginLeft: 8,
   },
   announcementItem: {
     paddingVertical: 12,
