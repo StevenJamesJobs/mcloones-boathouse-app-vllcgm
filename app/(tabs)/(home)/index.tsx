@@ -12,11 +12,11 @@ import { useSpecialFeatures } from '@/hooks/useSpecialFeatures';
 import { useReviews } from '@/hooks/useReviews';
 import { useTagline } from '@/hooks/useTagline';
 import { useAboutUs } from '@/hooks/useAboutUs';
+import { useWeather } from '@/hooks/useWeather';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SwipeableImageModal } from '@/components/SwipeableImageModal';
-import { CompactWeatherDisplay } from '@/components/CompactWeatherDisplay';
 
 export default function HomeScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
@@ -31,6 +31,7 @@ export default function HomeScreen() {
   const { reviews, loading: reviewsLoading } = useReviews();
   const { tagline, loading: taglineLoading } = useTagline();
   const { sections: aboutSections, loading: aboutLoading } = useAboutUs();
+  const { weatherData, loading: weatherLoading } = useWeather();
   const insets = useSafeAreaInsets();
 
   const handleLogin = async () => {
@@ -148,24 +149,42 @@ export default function HomeScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          {/* Welcome Message with Dynamic Tagline */}
+          {/* Welcome Message with Dynamic Tagline and Weather */}
           <View style={styles.welcomeSection}>
-            <Text style={styles.welcomeTitle}>McLoone&apos;s Boathouse</Text>
-            {taglineLoading ? (
-              <View style={styles.taglineLoadingContainer}>
-                <ActivityIndicator size="small" color={colors.seccondaryaccent} />
+            <View style={styles.welcomeHeader}>
+              <View style={styles.welcomeLeft}>
+                <Text style={styles.welcomeTitle}>McLoone&apos;s Boathouse</Text>
+                {taglineLoading ? (
+                  <View style={styles.taglineLoadingContainer}>
+                    <ActivityIndicator size="small" color={colors.seccondaryaccent} />
+                  </View>
+                ) : (
+                  <Text style={styles.welcomeText}>
+                    {tagline?.tagline_text || 'Experience waterfront dining at its finest on the Shrewsbury River'}
+                  </Text>
+                )}
               </View>
-            ) : (
-              <Text style={styles.welcomeText}>
-                {tagline?.tagline_text || 'Experience waterfront dining at its finest on the Shrewsbury River'}
-              </Text>
-            )}
+              
+              {/* Compact Weather on the Right */}
+              <View style={styles.weatherRight}>
+                {weatherLoading ? (
+                  <ActivityIndicator size="small" color={colors.accent} />
+                ) : weatherData ? (
+                  <>
+                    <Text style={styles.weatherTemp}>{Math.round(weatherData.current.temp_f)}°</Text>
+                    <Image
+                      source={{ uri: `https:${weatherData.current.condition.icon}` }}
+                      style={styles.weatherIcon}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.weatherCondition}>{weatherData.current.condition.text}</Text>
+                  </>
+                ) : null}
+              </View>
+            </View>
           </View>
 
-          {/* 1. Compact Weather Banner */}
-          <CompactWeatherDisplay />
-
-          {/* 2. Upcoming Events */}
+          {/* Upcoming Events */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Upcoming Events</Text>
@@ -245,7 +264,7 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* 3. Special Features */}
+          {/* Special Features */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Special Features</Text>
             {featuresLoading ? (
@@ -345,7 +364,7 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* 4. Weekly Specials */}
+          {/* Weekly Specials */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Weekly Specials</Text>
             {specialsLoading ? (
@@ -394,7 +413,7 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* 5. Visit Us Section */}
+          {/* Visit Us Section */}
           {visitUsSection && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{visitUsSection.title}</Text>
@@ -483,7 +502,7 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {/* 6. Customer Reviews */}
+          {/* Customer Reviews */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>What Our Customers Say</Text>
             {reviewsLoading ? (
@@ -659,9 +678,18 @@ const styles = StyleSheet.create({
   },
   welcomeSection: {
     paddingHorizontal: 16,
-    paddingVertical: 24,
+    paddingVertical: 20,
     backgroundColor: colors.primary,
     marginBottom: 0,
+  },
+  welcomeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 16,
+  },
+  welcomeLeft: {
+    flex: 1,
   },
   welcomeTitle: {
     fontSize: 28,
@@ -676,6 +704,28 @@ const styles = StyleSheet.create({
   },
   taglineLoadingContainer: {
     paddingVertical: 8,
+  },
+  weatherRight: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
+  },
+  weatherTemp: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  weatherIcon: {
+    width: 48,
+    height: 48,
+    marginBottom: 4,
+  },
+  weatherCondition: {
+    fontSize: 12,
+    color: colors.text,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   section: {
     paddingHorizontal: 16,
