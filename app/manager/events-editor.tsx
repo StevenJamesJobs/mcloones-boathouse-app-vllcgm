@@ -19,6 +19,7 @@ export default function EventsEditorScreen() {
   const [eventTime, setEventTime] = useState('');
   const [rsvpLink, setRsvpLink] = useState('');
   const [displayOrder, setDisplayOrder] = useState('0');
+  const [displayStyle, setDisplayStyle] = useState<'banner' | 'square'>('banner');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [infoBubbleTextEdit, setInfoBubbleTextEdit] = useState('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -35,6 +36,7 @@ export default function EventsEditorScreen() {
     setEventTime('');
     setRsvpLink('');
     setDisplayOrder('0');
+    setDisplayStyle('banner');
     setImageUrl(null);
     setModalVisible(true);
   };
@@ -47,6 +49,7 @@ export default function EventsEditorScreen() {
     setEventTime(event.event_time);
     setRsvpLink(event.rsvp_link || '');
     setDisplayOrder(event.display_order.toString());
+    setDisplayStyle(event.display_style || 'banner');
     setImageUrl(event.image_url || null);
     setModalVisible(true);
   };
@@ -67,7 +70,7 @@ export default function EventsEditorScreen() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [16, 9],
+        aspect: displayStyle === 'banner' ? [16, 9] : [1, 1],
         quality: 0.8,
       });
 
@@ -169,6 +172,7 @@ export default function EventsEditorScreen() {
       event_time: eventTime.trim(),
       rsvp_link: rsvpLink.trim() || null,
       image_url: imageUrl || null,
+      display_style: displayStyle,
       is_active: true,
       display_order: parseInt(displayOrder) || 0,
       info_bubble_text: infoBubbleText || 'For private events and bookings, please contact us at (732) 555-0123 or email events@mcloones.com',
@@ -279,7 +283,7 @@ export default function EventsEditorScreen() {
             showsVerticalScrollIndicator={false}
           >
             <Text style={styles.infoText}>
-              Manage upcoming events and entertainment. Events will appear on the customer home screen and events page.
+              Manage upcoming events and entertainment. Events will appear on the customer home screen and events page. Choose between banner or square display styles.
             </Text>
 
             {/* Info Bubble Preview */}
@@ -308,7 +312,10 @@ export default function EventsEditorScreen() {
                     <Pressable onPress={() => setExpandedImage(event.image_url)}>
                       <Image
                         source={{ uri: event.image_url }}
-                        style={styles.eventThumbnail}
+                        style={[
+                          styles.eventThumbnail,
+                          event.display_style === 'square' && styles.eventThumbnailSquare
+                        ]}
                         resizeMode="cover"
                       />
                     </Pressable>
@@ -317,6 +324,14 @@ export default function EventsEditorScreen() {
                     <View style={styles.eventTitleContainer}>
                       <Text style={styles.eventTitle}>{event.title}</Text>
                       <View style={styles.eventMeta}>
+                        <View style={[
+                          styles.displayStyleBadge,
+                          event.display_style === 'square' && styles.displayStyleBadgeSquare
+                        ]}>
+                          <Text style={styles.displayStyleText}>
+                            {event.display_style === 'banner' ? 'Banner' : 'Square'}
+                          </Text>
+                        </View>
                         <Text style={styles.eventDate}>
                           {new Date(event.event_date).toLocaleDateString('en-US', {
                             month: 'short',
@@ -411,6 +426,50 @@ export default function EventsEditorScreen() {
                   multiline
                   numberOfLines={4}
                 />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Display Style *</Text>
+                <View style={styles.displayStyleSelector}>
+                  <Pressable
+                    style={[
+                      styles.displayStyleOption,
+                      displayStyle === 'banner' && styles.displayStyleOptionSelected
+                    ]}
+                    onPress={() => setDisplayStyle('banner')}
+                  >
+                    <IconSymbol 
+                      name="rectangle.fill" 
+                      color={displayStyle === 'banner' ? '#FFFFFF' : colors.managerAccent} 
+                      size={24} 
+                    />
+                    <Text style={[
+                      styles.displayStyleOptionText,
+                      displayStyle === 'banner' && styles.displayStyleOptionTextSelected
+                    ]}>
+                      Banner (Wide)
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={[
+                      styles.displayStyleOption,
+                      displayStyle === 'square' && styles.displayStyleOptionSelected
+                    ]}
+                    onPress={() => setDisplayStyle('square')}
+                  >
+                    <IconSymbol 
+                      name="square.fill" 
+                      color={displayStyle === 'square' ? '#FFFFFF' : colors.managerAccent} 
+                      size={24} 
+                    />
+                    <Text style={[
+                      styles.displayStyleOptionText,
+                      displayStyle === 'square' && styles.displayStyleOptionTextSelected
+                    ]}>
+                      Square
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
 
               <View style={styles.inputContainer}>
@@ -702,6 +761,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     backgroundColor: colors.border,
   },
+  eventThumbnailSquare: {
+    height: 200,
+  },
   eventHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -719,8 +781,24 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   eventMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
+    gap: 4,
+  },
+  displayStyleBadge: {
+    backgroundColor: colors.managerAccent,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+    marginBottom: 4,
+  },
+  displayStyleBadgeSquare: {
+    backgroundColor: colors.accent,
+  },
+  displayStyleText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   eventDate: {
     fontSize: 14,
@@ -840,6 +918,34 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 100,
     textAlignVertical: 'top',
+  },
+  displayStyleSelector: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  displayStyleOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: colors.managerAccent,
+    backgroundColor: colors.background,
+  },
+  displayStyleOptionSelected: {
+    backgroundColor: colors.managerAccent,
+  },
+  displayStyleOptionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.managerAccent,
+  },
+  displayStyleOptionTextSelected: {
+    color: '#FFFFFF',
   },
   uploadButton: {
     backgroundColor: colors.managerAccent,

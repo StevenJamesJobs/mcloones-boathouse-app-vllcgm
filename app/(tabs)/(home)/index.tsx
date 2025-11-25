@@ -143,7 +143,7 @@ export default function HomeScreen() {
         <ScrollView 
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingTop: bannerHeight + 16 },
+            { paddingTop: bannerHeight },
             Platform.OS !== 'ios' && styles.scrollContentWithTabBar
           ]}
           showsVerticalScrollIndicator={false}
@@ -185,29 +185,63 @@ export default function HomeScreen() {
                 <Text style={styles.noEventsText}>No upcoming events at this time</Text>
               </View>
             ) : (
-              nextTwoEvents.map((event) => (
-                <View key={event.id} style={commonStyles.card}>
-                  <Text style={styles.eventTitle}>{event.title}</Text>
-                  {event.image_url && (
-                    <Pressable onPress={() => setExpandedImage(event.image_url)}>
-                      <Image
-                        source={{ uri: event.image_url }}
-                        style={styles.eventThumbnail}
-                        resizeMode="cover"
-                      />
-                    </Pressable>
-                  )}
-                  <Text style={styles.eventDate}>
-                    {new Date(event.event_date).toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })} at {event.event_time}
-                  </Text>
-                  <Text style={styles.eventDescription}>{event.description}</Text>
-                </View>
-              ))
+              nextTwoEvents.map((event) => {
+                if (event.display_style === 'banner') {
+                  // Banner style - full width
+                  return (
+                    <View key={event.id} style={commonStyles.card}>
+                      <Text style={styles.eventTitle}>{event.title}</Text>
+                      {event.image_url && (
+                        <Pressable onPress={() => setExpandedImage(event.image_url)}>
+                          <Image
+                            source={{ uri: event.image_url }}
+                            style={styles.eventThumbnail}
+                            resizeMode="cover"
+                          />
+                        </Pressable>
+                      )}
+                      <Text style={styles.eventDate}>
+                        {new Date(event.event_date).toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })} at {event.event_time}
+                      </Text>
+                      <Text style={styles.eventDescription}>{event.description}</Text>
+                    </View>
+                  );
+                } else {
+                  // Square style - like menu items
+                  return (
+                    <View key={event.id} style={commonStyles.card}>
+                      <View style={styles.eventContentSquare}>
+                        {event.image_url && (
+                          <Pressable onPress={() => setExpandedImage(event.image_url)}>
+                            <Image
+                              source={{ uri: event.image_url }}
+                              style={styles.eventThumbnailSquare}
+                              resizeMode="cover"
+                            />
+                          </Pressable>
+                        )}
+                        <View style={styles.eventDetailsSquare}>
+                          <Text style={styles.eventTitleSquare}>{event.title}</Text>
+                          <Text style={styles.eventDateSquare}>
+                            {new Date(event.event_date).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })} at {event.event_time}
+                          </Text>
+                          <Text style={styles.eventDescriptionSquare} numberOfLines={3}>
+                            {event.description}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                }
+              })
             )}
           </View>
 
@@ -627,7 +661,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 24,
     backgroundColor: colors.primary,
-    marginBottom: 20,
+    marginBottom: 0,
   },
   welcomeTitle: {
     fontSize: 28,
@@ -646,6 +680,7 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: 16,
     marginBottom: 24,
+    marginTop: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -701,6 +736,35 @@ const styles = StyleSheet.create({
   eventDescription: {
     fontSize: 14,
     color: colors.textSecondary,
+  },
+  eventContentSquare: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  eventThumbnailSquare: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    backgroundColor: colors.border,
+  },
+  eventDetailsSquare: {
+    flex: 1,
+  },
+  eventTitleSquare: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  eventDateSquare: {
+    fontSize: 12,
+    color: colors.accent,
+    marginBottom: 4,
+  },
+  eventDescriptionSquare: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 18,
   },
   featuresContainer: {
     gap: 12,

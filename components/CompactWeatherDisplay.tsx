@@ -36,7 +36,6 @@ export function CompactWeatherDisplay() {
               resizeMode="contain"
             />
           </View>
-          <Text style={styles.condition}>{weatherData.current.condition.text}</Text>
         </View>
         <View style={styles.rightSection}>
           <View style={styles.highLowRow}>
@@ -49,6 +48,7 @@ export function CompactWeatherDisplay() {
           </View>
         </View>
       </View>
+      <Text style={styles.condition}>{weatherData.current.condition.text}</Text>
     </View>
   );
 }
@@ -56,12 +56,12 @@ export function CompactWeatherDisplay() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.primary,
-    borderRadius: 12,
-    padding: 16,
-    marginHorizontal: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: colors.accent,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+    marginBottom: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   loadingContainer: {
     alignItems: 'center',
@@ -71,34 +71,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 8,
   },
   leftSection: {
     flex: 1,
   },
   title: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: colors.accent,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   tempRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
   },
   currentTemp: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '700',
     color: colors.text,
     marginRight: 8,
   },
   weatherIcon: {
-    width: 40,
-    height: 40,
-  },
-  condition: {
-    fontSize: 14,
-    color: colors.textSecondary,
+    width: 36,
+    height: 36,
   },
   rightSection: {
     alignItems: 'flex-end',
@@ -110,18 +106,24 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   highLowLabel: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textSecondary,
     marginRight: 6,
   },
   highTemp: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.error,
   },
   lowTemp: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: colors.accent,
+  },
+  condition: {
+    fontSize: 13,
+    color: colors.text,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });

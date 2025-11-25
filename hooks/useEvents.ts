@@ -10,6 +10,7 @@ export interface Event {
   event_time: string;
   rsvp_link: string | null;
   image_url: string | null;
+  display_style: 'banner' | 'square';
   is_active: boolean;
   display_order: number;
   info_bubble_text: string | null;
