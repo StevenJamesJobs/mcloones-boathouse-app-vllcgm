@@ -8,6 +8,7 @@ import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWeeklySpecials } from '@/hooks/useWeeklySpecials';
 import { useEvents } from '@/hooks/useEvents';
+import { useSpecialFeatures } from '@/hooks/useSpecialFeatures';
 import { useReviews } from '@/hooks/useReviews';
 import { useTagline } from '@/hooks/useTagline';
 import { useAboutUs } from '@/hooks/useAboutUs';
@@ -15,6 +16,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SwipeableImageModal } from '@/components/SwipeableImageModal';
+import { CompactWeatherDisplay } from '@/components/CompactWeatherDisplay';
 
 export default function HomeScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
@@ -25,6 +27,7 @@ export default function HomeScreen() {
   const { login, user } = useAuth();
   const { specials, loading: specialsLoading } = useWeeklySpecials();
   const { events, loading: eventsLoading } = useEvents();
+  const { features, loading: featuresLoading } = useSpecialFeatures();
   const { reviews, loading: reviewsLoading } = useReviews();
   const { tagline, loading: taglineLoading } = useTagline();
   const { sections: aboutSections, loading: aboutLoading } = useAboutUs();
@@ -159,7 +162,10 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* Upcoming Events */}
+          {/* 1. Compact Weather Banner */}
+          <CompactWeatherDisplay />
+
+          {/* 2. Upcoming Events */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Upcoming Events</Text>
@@ -205,9 +211,109 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* Weekly Specials */}
+          {/* 3. Special Features */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>What's hot this week! </Text>
+            <Text style={styles.sectionTitle}>Special Features</Text>
+            {featuresLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text style={styles.loadingText}>Loading special features...</Text>
+              </View>
+            ) : features.length === 0 ? (
+              <View style={commonStyles.card}>
+                <Text style={styles.noFeaturesText}>No special features at this time</Text>
+              </View>
+            ) : (
+              <View style={styles.featuresContainer}>
+                {features.map((feature) => {
+                  if (feature.display_style === 'banner') {
+                    // Banner style - full width like events
+                    return (
+                      <View key={feature.id} style={commonStyles.card}>
+                        <Text style={styles.featureTitle}>{feature.title}</Text>
+                        {feature.image_url && (
+                          <Pressable onPress={() => setExpandedImage(feature.image_url)}>
+                            <Image
+                              source={{ uri: feature.image_url }}
+                              style={styles.featureThumbnailBanner}
+                              resizeMode="cover"
+                            />
+                          </Pressable>
+                        )}
+                        <Text style={styles.featureDescription}>{feature.description}</Text>
+                        {feature.start_date && (
+                          <Text style={styles.featureDate}>
+                            {feature.end_date 
+                              ? `${new Date(feature.start_date).toLocaleDateString()} - ${new Date(feature.end_date).toLocaleDateString()}`
+                              : `Starting ${new Date(feature.start_date).toLocaleDateString()}`
+                            }
+                          </Text>
+                        )}
+                        {feature.link_url && (
+                          <Pressable
+                            style={styles.featureLinkButton}
+                            onPress={() => Linking.openURL(feature.link_url!).catch(err => {
+                              console.error('Failed to open URL:', err);
+                              Alert.alert('Error', 'Could not open link');
+                            })}
+                          >
+                            <Text style={styles.featureLinkButtonText}>Learn More</Text>
+                            <MaterialIcons name="arrow-forward" size={20} color="#FFFFFF" />
+                          </Pressable>
+                        )}
+                      </View>
+                    );
+                  } else {
+                    // Square style - like menu items
+                    return (
+                      <View key={feature.id} style={commonStyles.card}>
+                        <View style={styles.featureContentSquare}>
+                          {feature.image_url && (
+                            <Pressable onPress={() => setExpandedImage(feature.image_url)}>
+                              <Image
+                                source={{ uri: feature.image_url }}
+                                style={styles.featureThumbnailSquare}
+                                resizeMode="cover"
+                              />
+                            </Pressable>
+                          )}
+                          <View style={styles.featureDetailsSquare}>
+                            <Text style={styles.featureTitleSquare}>{feature.title}</Text>
+                            <Text style={styles.featureDescriptionSquare} numberOfLines={3}>
+                              {feature.description}
+                            </Text>
+                            {feature.start_date && (
+                              <Text style={styles.featureDateSquare}>
+                                {feature.end_date 
+                                  ? `${new Date(feature.start_date).toLocaleDateString()} - ${new Date(feature.end_date).toLocaleDateString()}`
+                                  : `Starting ${new Date(feature.start_date).toLocaleDateString()}`
+                                }
+                              </Text>
+                            )}
+                            {feature.link_url && (
+                              <Pressable
+                                style={styles.featureLinkButtonSquare}
+                                onPress={() => Linking.openURL(feature.link_url!).catch(err => {
+                                  console.error('Failed to open URL:', err);
+                                  Alert.alert('Error', 'Could not open link');
+                                })}
+                              >
+                                <Text style={styles.featureLinkButtonTextSquare}>Learn More</Text>
+                              </Pressable>
+                            )}
+                          </View>
+                        </View>
+                      </View>
+                    );
+                  }
+                })}
+              </View>
+            )}
+          </View>
+
+          {/* 4. Weekly Specials */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Weekly Specials</Text>
             {specialsLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color={colors.accent} />
@@ -254,45 +360,7 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* Customer Reviews */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>What Our Customers Say</Text>
-            {reviewsLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color={colors.accent} />
-                <Text style={styles.loadingText}>Loading reviews...</Text>
-              </View>
-            ) : reviews.length === 0 ? (
-              <View style={commonStyles.card}>
-                <Text style={styles.noReviewsText}>No reviews yet</Text>
-              </View>
-            ) : (
-              <>
-                {reviews.map((review) => (
-                  <View key={review.id} style={commonStyles.card}>
-                    <View style={styles.reviewHeader}>
-                      <Text style={styles.reviewAuthor}>{review.author_name}</Text>
-                      {renderStars(review.rating)}
-                    </View>
-                    <Text style={styles.reviewText}>{review.review_text}</Text>
-                    <Text style={styles.reviewDate}>
-                      {new Date(review.review_date).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </Text>
-                  </View>
-                ))}
-                <Pressable style={styles.leaveReviewButton} onPress={handleLeaveReview}>
-                  <MaterialIcons name="star" size={20} color="#fff" />
-                  <Text style={styles.leaveReviewText}>Leave a Review on Google</Text>
-                </Pressable>
-              </>
-            )}
-          </View>
-
-          {/* Visit Us Section - Replacing Contact Us */}
+          {/* 5. Visit Us Section */}
           {visitUsSection && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{visitUsSection.title}</Text>
@@ -380,6 +448,44 @@ export default function HomeScreen() {
               )}
             </View>
           )}
+
+          {/* 6. Customer Reviews */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>What Our Customers Say</Text>
+            {reviewsLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.accent} />
+                <Text style={styles.loadingText}>Loading reviews...</Text>
+              </View>
+            ) : reviews.length === 0 ? (
+              <View style={commonStyles.card}>
+                <Text style={styles.noReviewsText}>No reviews yet</Text>
+              </View>
+            ) : (
+              <>
+                {reviews.map((review) => (
+                  <View key={review.id} style={commonStyles.card}>
+                    <View style={styles.reviewHeader}>
+                      <Text style={styles.reviewAuthor}>{review.author_name}</Text>
+                      {renderStars(review.rating)}
+                    </View>
+                    <Text style={styles.reviewText}>{review.review_text}</Text>
+                    <Text style={styles.reviewDate}>
+                      {new Date(review.review_date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </Text>
+                  </View>
+                ))}
+                <Pressable style={styles.leaveReviewButton} onPress={handleLeaveReview}>
+                  <MaterialIcons name="star" size={20} color="#fff" />
+                  <Text style={styles.leaveReviewText}>Leave a Review on Google</Text>
+                </Pressable>
+              </>
+            )}
+          </View>
 
           {/* Bottom Padding/Footer */}
           <View style={styles.bottomPadding} />
@@ -595,6 +701,97 @@ const styles = StyleSheet.create({
   eventDescription: {
     fontSize: 14,
     color: colors.textSecondary,
+  },
+  featuresContainer: {
+    gap: 12,
+  },
+  noFeaturesText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  featureTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  featureThumbnailBanner: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: colors.border,
+  },
+  featureDescription: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  featureDate: {
+    fontSize: 12,
+    color: colors.accent,
+    fontStyle: 'italic',
+    marginBottom: 8,
+  },
+  featureLinkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accent,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    gap: 8,
+  },
+  featureLinkButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  featureContentSquare: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  featureThumbnailSquare: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    backgroundColor: colors.border,
+  },
+  featureDetailsSquare: {
+    flex: 1,
+  },
+  featureTitleSquare: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  featureDescriptionSquare: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  featureDateSquare: {
+    fontSize: 11,
+    color: colors.accent,
+    fontStyle: 'italic',
+    marginBottom: 6,
+  },
+  featureLinkButtonSquare: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.accent,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  featureLinkButtonTextSquare: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   noSpecialsText: {
     fontSize: 14,

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Boathouse Connect",
-    "slug": "Boathouse Connect",
+    "name": "mcloones-boathouse-app-vllcgm",
+    "slug": "mcloones-boathouse-app-vllcgm",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/28600af8-1827-4f83-9ab6-9789ab30694a.png",
@@ -27,7 +27,7 @@
       },
       "icon": "./assets/images/28600af8-1827-4f83-9ab6-9789ab30694a.png",
       "edgeToEdgeEnabled": true,
-      "package": "com.mcloones.boathouse"
+      "package": "com.mcloonesboathouseapp.boathouseapp"
     },
     "web": {
       "favicon": "./assets/images/28600af8-1827-4f83-9ab6-9789ab30694a.png",
