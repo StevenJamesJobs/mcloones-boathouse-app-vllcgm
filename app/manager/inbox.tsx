@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image, RefreshControl } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { colors } from '@/styles/commonStyles';
 import { useMessages } from '@/hooks/useMessages';
@@ -10,9 +10,39 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 type TabType = 'inbox' | 'sent';
 
 export default function ManagerInboxScreen() {
-  const { inboxMessages, sentMessages, unreadCount, loading, deleteMessage } = useMessages();
+  const { 
+    inboxMessages, 
+    sentMessages, 
+    unreadCount, 
+    loading, 
+    deleteMessage,
+    markAllAsRead,
+    deleteAllMessages,
+    markSelectedAsRead,
+    deleteSelectedMessages,
+    refreshInbox,
+    refreshSent,
+  } = useMessages();
   const [activeTab, setActiveTab] = useState<TabType>('inbox');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set());
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      if (activeTab === 'inbox') {
+        await refreshInbox();
+      } else {
+        await refreshSent();
+      }
+    } catch (error) {
+      console.error('Error refreshing messages:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleDeleteMessage = async (messageId: string) => {
     Alert.alert(
@@ -29,6 +59,106 @@ export default function ManagerInboxScreen() {
               Alert.alert('Success', 'Message deleted successfully');
             } catch (error) {
               Alert.alert('Error', 'Failed to delete message');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllAsRead();
+      Alert.alert('Success', 'All messages marked as read');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to mark messages as read');
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    Alert.alert(
+      'Delete All Messages',
+      'Are you sure you want to delete all messages? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete All',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAllMessages();
+              Alert.alert('Success', 'All messages deleted successfully');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete messages');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const toggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    setSelectedMessages(new Set());
+  };
+
+  const toggleMessageSelection = (messageId: string) => {
+    const newSelection = new Set(selectedMessages);
+    if (newSelection.has(messageId)) {
+      newSelection.delete(messageId);
+    } else {
+      newSelection.add(messageId);
+    }
+    setSelectedMessages(newSelection);
+  };
+
+  const selectAllMessages = () => {
+    const allIds = new Set(currentMessages.map(msg => msg.id));
+    setSelectedMessages(allIds);
+  };
+
+  const deselectAllMessages = () => {
+    setSelectedMessages(new Set());
+  };
+
+  const handleMarkSelectedAsRead = async () => {
+    if (selectedMessages.size === 0) {
+      Alert.alert('No Selection', 'Please select messages to mark as read');
+      return;
+    }
+
+    try {
+      await markSelectedAsRead(Array.from(selectedMessages));
+      Alert.alert('Success', `${selectedMessages.size} message(s) marked as read`);
+      setSelectionMode(false);
+      setSelectedMessages(new Set());
+    } catch (error) {
+      Alert.alert('Error', 'Failed to mark messages as read');
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedMessages.size === 0) {
+      Alert.alert('No Selection', 'Please select messages to delete');
+      return;
+    }
+
+    Alert.alert(
+      'Delete Selected Messages',
+      `Are you sure you want to delete ${selectedMessages.size} message(s)?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteSelectedMessages(Array.from(selectedMessages));
+              Alert.alert('Success', `${selectedMessages.size} message(s) deleted successfully`);
+              setSelectionMode(false);
+              setSelectedMessages(new Set());
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete messages');
             }
           },
         },
@@ -114,7 +244,7 @@ export default function ManagerInboxScreen() {
             style={styles.newMessageButton}
             onPress={() => router.push('/manager/new-message' as any)}
           >
-            <MaterialIcons name="edit" size={20} color="#FFFFFF" />
+            <MaterialIcons name="edit" size={20} color={colors.managerPrimary} />
             <Text style={styles.newMessageButtonText}>New Message</Text>
           </Pressable>
         </View>
@@ -135,7 +265,11 @@ export default function ManagerInboxScreen() {
         <View style={styles.tabContainer}>
           <Pressable
             style={[styles.tab, activeTab === 'inbox' && styles.tabActive]}
-            onPress={() => setActiveTab('inbox')}
+            onPress={() => {
+              setActiveTab('inbox');
+              setSelectionMode(false);
+              setSelectedMessages(new Set());
+            }}
           >
             <Text style={[styles.tabText, activeTab === 'inbox' && styles.tabTextActive]}>
               Inbox {unreadCount > 0 && `(${unreadCount})`}
@@ -143,7 +277,11 @@ export default function ManagerInboxScreen() {
           </Pressable>
           <Pressable
             style={[styles.tab, activeTab === 'sent' && styles.tabActive]}
-            onPress={() => setActiveTab('sent')}
+            onPress={() => {
+              setActiveTab('sent');
+              setSelectionMode(false);
+              setSelectedMessages(new Set());
+            }}
           >
             <Text style={[styles.tabText, activeTab === 'sent' && styles.tabTextActive]}>
               Sent
@@ -151,9 +289,78 @@ export default function ManagerInboxScreen() {
           </Pressable>
         </View>
 
+        {/* Action Buttons - Only show for inbox */}
+        {activeTab === 'inbox' && currentMessages.length > 0 && (
+          <View style={styles.actionBar}>
+            {!selectionMode ? (
+              <>
+                <Pressable style={styles.actionButton} onPress={toggleSelectionMode}>
+                  <MaterialIcons name="check-box" size={18} color={colors.managerAccent} />
+                  <Text style={styles.actionButtonText}>Select</Text>
+                </Pressable>
+                <Pressable style={styles.actionButton} onPress={handleMarkAllAsRead}>
+                  <MaterialIcons name="done-all" size={18} color={colors.managerAccent} />
+                  <Text style={styles.actionButtonText}>Mark All Read</Text>
+                </Pressable>
+                <Pressable style={styles.actionButton} onPress={handleDeleteAll}>
+                  <MaterialIcons name="delete-sweep" size={18} color={colors.error} />
+                  <Text style={[styles.actionButtonText, { color: colors.error }]}>Delete All</Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <Pressable style={styles.actionButton} onPress={toggleSelectionMode}>
+                  <MaterialIcons name="close" size={18} color={colors.textSecondary} />
+                  <Text style={styles.actionButtonText}>Cancel</Text>
+                </Pressable>
+                <Pressable 
+                  style={styles.actionButton} 
+                  onPress={selectedMessages.size === currentMessages.length ? deselectAllMessages : selectAllMessages}
+                >
+                  <MaterialIcons 
+                    name={selectedMessages.size === currentMessages.length ? "check-box" : "check-box-outline-blank"} 
+                    size={18} 
+                    color={colors.managerAccent} 
+                  />
+                  <Text style={styles.actionButtonText}>
+                    {selectedMessages.size === currentMessages.length ? 'Deselect All' : 'Select All'}
+                  </Text>
+                </Pressable>
+                <Pressable style={styles.actionButton} onPress={handleMarkSelectedAsRead}>
+                  <MaterialIcons name="done-all" size={18} color={colors.managerAccent} />
+                  <Text style={styles.actionButtonText}>Mark Read</Text>
+                </Pressable>
+                <Pressable style={styles.actionButton} onPress={handleDeleteSelected}>
+                  <MaterialIcons name="delete" size={18} color={colors.error} />
+                  <Text style={[styles.actionButtonText, { color: colors.error }]}>Delete</Text>
+                </Pressable>
+              </>
+            )}
+          </View>
+        )}
+
+        {selectionMode && (
+          <View style={styles.selectionInfo}>
+            <Text style={styles.selectionInfoText}>
+              {selectedMessages.size} of {currentMessages.length} selected
+            </Text>
+          </View>
+        )}
+
         {/* Messages List */}
-        <ScrollView style={styles.messagesList} showsVerticalScrollIndicator={false}>
-          {loading ? (
+        <ScrollView 
+          style={styles.messagesList} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={colors.managerAccent}
+              colors={[colors.managerAccent]}
+            />
+          }
+        >
+          {loading && !refreshing ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>Loading messages...</Text>
             </View>
@@ -163,21 +370,46 @@ export default function ManagerInboxScreen() {
               <Text style={styles.emptyText}>
                 {searchQuery ? 'No messages found' : 'No messages yet'}
               </Text>
+              <Text style={styles.emptySubtext}>
+                Pull down to refresh
+              </Text>
             </View>
           ) : (
             currentMessages.map((message) => (
               <Pressable
                 key={message.id}
-                style={styles.messageCard}
+                style={[
+                  styles.messageCard,
+                  selectedMessages.has(message.id) && styles.messageCardSelected,
+                ]}
                 onPress={() => {
-                  if (activeTab === 'inbox') {
-                    router.push(`/manager/message-detail?id=${message.id}` as any);
+                  if (selectionMode) {
+                    toggleMessageSelection(message.id);
                   } else {
-                    router.push(`/manager/sent-message-detail?id=${message.id}` as any);
+                    if (activeTab === 'inbox') {
+                      router.push(`/manager/message-detail?id=${message.id}` as any);
+                    } else {
+                      router.push(`/manager/sent-message-detail?id=${message.id}` as any);
+                    }
+                  }
+                }}
+                onLongPress={() => {
+                  if (activeTab === 'inbox' && !selectionMode) {
+                    setSelectionMode(true);
+                    toggleMessageSelection(message.id);
                   }
                 }}
               >
                 <View style={styles.messageContent}>
+                  {selectionMode && activeTab === 'inbox' && (
+                    <View style={styles.checkboxContainer}>
+                      <MaterialIcons
+                        name={selectedMessages.has(message.id) ? "check-box" : "check-box-outline-blank"}
+                        size={24}
+                        color={selectedMessages.has(message.id) ? colors.managerAccent : colors.textSecondary}
+                      />
+                    </View>
+                  )}
                   {renderProfileImage(message)}
                   <View style={styles.messageTextContainer}>
                     <View style={styles.messageHeader}>
@@ -203,7 +435,7 @@ export default function ManagerInboxScreen() {
                     </Text>
                   </View>
                 </View>
-                {activeTab === 'inbox' && (
+                {activeTab === 'inbox' && !selectionMode && (
                   <View style={styles.messageActions}>
                     <Pressable
                       style={styles.deleteButton}
@@ -271,7 +503,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: colors.employeeCard,
     marginHorizontal: 16,
-    marginBottom: 16,
+    marginBottom: 8,
     borderRadius: 8,
     padding: 4,
   },
@@ -292,6 +524,44 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: '#FFFFFF',
   },
+  actionBar: {
+    flexDirection: 'row',
+    backgroundColor: colors.employeeCard,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 8,
+    padding: 8,
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    backgroundColor: colors.employeeBackground,
+    gap: 4,
+  },
+  actionButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  selectionInfo: {
+    backgroundColor: colors.managerAccent,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  selectionInfoText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
   messagesList: {
     flex: 1,
     paddingHorizontal: 16,
@@ -304,9 +574,17 @@ const styles = StyleSheet.create({
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 2,
   },
+  messageCardSelected: {
+    backgroundColor: colors.managerAccent + '20',
+    borderWidth: 2,
+    borderColor: colors.managerAccent,
+  },
   messageContent: {
     flexDirection: 'row',
     gap: 12,
+  },
+  checkboxContainer: {
+    justifyContent: 'center',
   },
   profileImage: {
     width: 48,
@@ -385,5 +663,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
     marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 8,
+    fontStyle: 'italic',
   },
 });

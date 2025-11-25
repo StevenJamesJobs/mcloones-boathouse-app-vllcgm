@@ -264,6 +264,121 @@ export function useMessages() {
     }
   };
 
+  // Mark all messages as read
+  const markAllAsRead = async (): Promise<void> => {
+    if (!user?.id) return;
+
+    try {
+      const { error } = await supabase.rpc('mark_all_messages_as_read', {
+        user_uuid: user.id,
+      });
+
+      if (error) throw error;
+
+      // Update local state
+      setInboxMessages((prev) =>
+        prev.map((msg) => ({
+          ...msg,
+          recipient_info: {
+            ...msg.recipient_info,
+            is_read: true,
+            read_at: msg.recipient_info.is_read ? msg.recipient_info.read_at : new Date().toISOString(),
+          },
+        }))
+      );
+
+      setUnreadCount(0);
+    } catch (err: any) {
+      console.error('Error marking all messages as read:', err);
+      throw err;
+    }
+  };
+
+  // Delete all messages
+  const deleteAllMessages = async (): Promise<void> => {
+    if (!user?.id) return;
+
+    try {
+      const { error } = await supabase.rpc('delete_all_messages', {
+        user_uuid: user.id,
+      });
+
+      if (error) throw error;
+
+      // Update local state
+      setInboxMessages([]);
+      setUnreadCount(0);
+    } catch (err: any) {
+      console.error('Error deleting all messages:', err);
+      throw err;
+    }
+  };
+
+  // Mark selected messages as read
+  const markSelectedAsRead = async (messageIds: string[]): Promise<void> => {
+    if (!user?.id || messageIds.length === 0) return;
+
+    try {
+      const { error } = await supabase.rpc('mark_messages_as_read', {
+        user_uuid: user.id,
+        message_ids: messageIds,
+      });
+
+      if (error) throw error;
+
+      // Update local state
+      setInboxMessages((prev) =>
+        prev.map((msg) =>
+          messageIds.includes(msg.id)
+            ? {
+                ...msg,
+                recipient_info: {
+                  ...msg.recipient_info,
+                  is_read: true,
+                  read_at: msg.recipient_info.is_read ? msg.recipient_info.read_at : new Date().toISOString(),
+                },
+              }
+            : msg
+        )
+      );
+
+      // Recalculate unread count
+      const unread = inboxMessages.filter(
+        (msg) => !messageIds.includes(msg.id) && !msg.recipient_info.is_read
+      ).length;
+      setUnreadCount(unread);
+    } catch (err: any) {
+      console.error('Error marking selected messages as read:', err);
+      throw err;
+    }
+  };
+
+  // Delete selected messages
+  const deleteSelectedMessages = async (messageIds: string[]): Promise<void> => {
+    if (!user?.id || messageIds.length === 0) return;
+
+    try {
+      const { error } = await supabase.rpc('delete_messages', {
+        user_uuid: user.id,
+        message_ids: messageIds,
+      });
+
+      if (error) throw error;
+
+      // Update local state
+      setInboxMessages((prev) => prev.filter((msg) => !messageIds.includes(msg.id)));
+
+      // Recalculate unread count
+      const unread = inboxMessages.filter(
+        (msg) => !messageIds.includes(msg.id) && !msg.recipient_info.is_read
+      ).length;
+      setUnreadCount(unread);
+    } catch (err: any) {
+      console.error('Error deleting selected messages:', err);
+      throw err;
+    }
+  };
+
   // Reply to a message with threading
   const replyToMessage = async (
     originalMessage: InboxMessage,
@@ -392,6 +507,10 @@ ${originalMessage.body}`;
     sendMessage,
     markAsRead,
     deleteMessage,
+    markAllAsRead,
+    deleteAllMessages,
+    markSelectedAsRead,
+    deleteSelectedMessages,
     replyToMessage,
     fetchRecipients,
     fetchJobTitleGroups,
