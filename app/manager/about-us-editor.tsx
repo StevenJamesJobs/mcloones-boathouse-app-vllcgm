@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Modal, Alert, ActivityIndicator, Platform, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAboutUsEditor, AboutUsSection } from '@/hooks/useAboutUs';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function AboutUsEditorScreen() {
   const { sections, loading, error, addSection, updateSection, deleteSection } = useAboutUsEditor();
@@ -17,6 +18,9 @@ export default function AboutUsEditorScreen() {
   const [content, setContent] = useState('');
   const [sectionOrder, setSectionOrder] = useState('0');
   const [isActive, setIsActive] = useState(true);
+  const [websiteUrl, setWebsiteUrl] = useState('');
+  const [facebookUrl, setFacebookUrl] = useState('');
+  const [instagramUrl, setInstagramUrl] = useState('');
 
   const openAddModal = () => {
     setEditingSection(null);
@@ -24,6 +28,9 @@ export default function AboutUsEditorScreen() {
     setContent('');
     setSectionOrder('0');
     setIsActive(true);
+    setWebsiteUrl('');
+    setFacebookUrl('');
+    setInstagramUrl('');
     setModalVisible(true);
   };
 
@@ -33,6 +40,9 @@ export default function AboutUsEditorScreen() {
     setContent(section.content);
     setSectionOrder(section.section_order.toString());
     setIsActive(section.is_active);
+    setWebsiteUrl(section.website_url || '');
+    setFacebookUrl(section.facebook_url || '');
+    setInstagramUrl(section.instagram_url || '');
     setModalVisible(true);
   };
 
@@ -52,6 +62,9 @@ export default function AboutUsEditorScreen() {
       content: content.trim(),
       section_order: parseInt(sectionOrder) || 0,
       is_active: isActive,
+      website_url: websiteUrl.trim() || null,
+      facebook_url: facebookUrl.trim() || null,
+      instagram_url: instagramUrl.trim() || null,
     };
 
     if (editingSection) {
@@ -100,6 +113,11 @@ export default function AboutUsEditorScreen() {
     if (error) {
       Alert.alert('Error', error);
     }
+  };
+
+  // Check if this is the "Visit Us" section
+  const isVisitUsSection = (section: AboutUsSection) => {
+    return section.title.toLowerCase().includes('visit') || section.title.toLowerCase().includes('contact');
   };
 
   return (
@@ -161,6 +179,12 @@ export default function AboutUsEditorScreen() {
                           <Text style={styles.inactiveBadgeText}>Inactive</Text>
                         </View>
                       )}
+                      {isVisitUsSection(section) && (
+                        <View style={styles.socialBadge}>
+                          <MaterialIcons name="link" size={12} color="#FFFFFF" />
+                          <Text style={styles.socialBadgeText}>Social Links</Text>
+                        </View>
+                      )}
                     </View>
                     <Text style={styles.sectionOrder}>Order: {section.section_order}</Text>
                   </View>
@@ -168,6 +192,31 @@ export default function AboutUsEditorScreen() {
                   <Text style={styles.sectionContent} numberOfLines={3}>
                     {section.content}
                   </Text>
+                  
+                  {/* Show social media links if this is Visit Us section */}
+                  {isVisitUsSection(section) && (section.website_url || section.facebook_url || section.instagram_url) && (
+                    <View style={styles.socialLinksPreview}>
+                      <Text style={styles.socialLinksTitle}>Social Media Links:</Text>
+                      {section.website_url && (
+                        <View style={styles.socialLinkRow}>
+                          <MaterialIcons name="language" size={16} color={colors.managerAccent} />
+                          <Text style={styles.socialLinkText} numberOfLines={1}>{section.website_url}</Text>
+                        </View>
+                      )}
+                      {section.facebook_url && (
+                        <View style={styles.socialLinkRow}>
+                          <MaterialIcons name="facebook" size={16} color={colors.managerAccent} />
+                          <Text style={styles.socialLinkText} numberOfLines={1}>{section.facebook_url}</Text>
+                        </View>
+                      )}
+                      {section.instagram_url && (
+                        <View style={styles.socialLinkRow}>
+                          <MaterialIcons name="camera-alt" size={16} color={colors.managerAccent} />
+                          <Text style={styles.socialLinkText} numberOfLines={1}>{section.instagram_url}</Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
                   
                   <View style={styles.sectionActions}>
                     <Pressable
@@ -205,79 +254,129 @@ export default function AboutUsEditorScreen() {
           transparent={true}
           onRequestClose={() => setModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>
-                  {editingSection ? 'Edit Section' : 'Add Section'}
-                </Text>
-                <Pressable onPress={() => setModalVisible(false)}>
-                  <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
-                </Pressable>
-              </View>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalOverlay}>
+              <TouchableWithoutFeedback>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>
+                      {editingSection ? 'Edit Section' : 'Add Section'}
+                    </Text>
+                    <Pressable onPress={() => setModalVisible(false)}>
+                      <IconSymbol name="xmark.circle.fill" color={colors.textSecondary} size={28} />
+                    </Pressable>
+                  </View>
 
-              <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
-                <Text style={styles.label}>Title *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={title}
-                  onChangeText={setTitle}
-                  placeholder="Enter section title"
-                  placeholderTextColor={colors.textSecondary}
-                />
-
-                <Text style={styles.label}>Content *</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={content}
-                  onChangeText={setContent}
-                  placeholder="Enter section content"
-                  placeholderTextColor={colors.textSecondary}
-                  multiline
-                  numberOfLines={6}
-                />
-
-                <Text style={styles.label}>Section Order</Text>
-                <TextInput
-                  style={styles.input}
-                  value={sectionOrder}
-                  onChangeText={setSectionOrder}
-                  placeholder="0"
-                  placeholderTextColor={colors.textSecondary}
-                  keyboardType="number-pad"
-                />
-
-                <View style={styles.checkboxContainer}>
-                  <Pressable
-                    style={styles.checkbox}
-                    onPress={() => setIsActive(!isActive)}
-                  >
-                    <IconSymbol 
-                      name={isActive ? "checkmark.square.fill" : "square"} 
-                      color={isActive ? colors.managerAccent : colors.textSecondary} 
-                      size={24} 
+                  <ScrollView style={styles.modalScroll} showsVerticalScrollIndicator={false}>
+                    <Text style={styles.label}>Title *</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={title}
+                      onChangeText={setTitle}
+                      placeholder="Enter section title"
+                      placeholderTextColor={colors.textSecondary}
                     />
-                    <Text style={styles.checkboxLabel}>Active (visible to customers)</Text>
-                  </Pressable>
-                </View>
-              </ScrollView>
 
-              <View style={styles.modalActions}>
-                <Pressable
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.modalButton, styles.saveButton]}
-                  onPress={handleSave}
-                >
-                  <Text style={styles.saveButtonText}>Save</Text>
-                </Pressable>
-              </View>
+                    <Text style={styles.label}>Content *</Text>
+                    <TextInput
+                      style={[styles.input, styles.textArea]}
+                      value={content}
+                      onChangeText={setContent}
+                      placeholder="Enter section content"
+                      placeholderTextColor={colors.textSecondary}
+                      multiline
+                      numberOfLines={6}
+                    />
+
+                    <Text style={styles.label}>Section Order</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={sectionOrder}
+                      onChangeText={setSectionOrder}
+                      placeholder="0"
+                      placeholderTextColor={colors.textSecondary}
+                      keyboardType="number-pad"
+                    />
+
+                    {/* Social Media Links Section - Only show for Visit Us sections */}
+                    {(editingSection && isVisitUsSection(editingSection)) || title.toLowerCase().includes('visit') || title.toLowerCase().includes('contact') ? (
+                      <View style={styles.socialMediaSection}>
+                        <View style={styles.socialMediaHeader}>
+                          <MaterialIcons name="link" size={20} color={colors.managerAccent} />
+                          <Text style={styles.socialMediaTitle}>Social Media Links</Text>
+                        </View>
+                        <Text style={styles.socialMediaSubtitle}>
+                          These links will appear at the bottom of the Visit Us section
+                        </Text>
+
+                        <Text style={styles.label}>Website URL</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={websiteUrl}
+                          onChangeText={setWebsiteUrl}
+                          placeholder="https://www.mcloonesboathouse.com"
+                          placeholderTextColor={colors.textSecondary}
+                          autoCapitalize="none"
+                          keyboardType="url"
+                        />
+
+                        <Text style={styles.label}>Facebook URL</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={facebookUrl}
+                          onChangeText={setFacebookUrl}
+                          placeholder="https://www.facebook.com/mcloonesboathouse/"
+                          placeholderTextColor={colors.textSecondary}
+                          autoCapitalize="none"
+                          keyboardType="url"
+                        />
+
+                        <Text style={styles.label}>Instagram URL</Text>
+                        <TextInput
+                          style={styles.input}
+                          value={instagramUrl}
+                          onChangeText={setInstagramUrl}
+                          placeholder="https://www.instagram.com/mcloones_boathouse/"
+                          placeholderTextColor={colors.textSecondary}
+                          autoCapitalize="none"
+                          keyboardType="url"
+                        />
+                      </View>
+                    ) : null}
+
+                    <View style={styles.checkboxContainer}>
+                      <Pressable
+                        style={styles.checkbox}
+                        onPress={() => setIsActive(!isActive)}
+                      >
+                        <IconSymbol 
+                          name={isActive ? "checkmark.square.fill" : "square"} 
+                          color={isActive ? colors.managerAccent : colors.textSecondary} 
+                          size={24} 
+                        />
+                        <Text style={styles.checkboxLabel}>Active (visible to customers)</Text>
+                      </Pressable>
+                    </View>
+                  </ScrollView>
+
+                  <View style={styles.modalActions}>
+                    <Pressable
+                      style={[styles.modalButton, styles.cancelButton]}
+                      onPress={() => setModalVisible(false)}
+                    >
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.modalButton, styles.saveButton]}
+                      onPress={handleSave}
+                    >
+                      <Text style={styles.saveButtonText}>Save</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              </TouchableWithoutFeedback>
             </View>
-          </View>
+          </TouchableWithoutFeedback>
         </Modal>
       </View>
     </>
@@ -334,6 +433,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     gap: 8,
+    flexWrap: 'wrap',
   },
   sectionTitle: {
     fontSize: 18,
@@ -354,6 +454,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
+  socialBadge: {
+    backgroundColor: colors.managerAccent,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  socialBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
   sectionOrder: {
     fontSize: 14,
     fontWeight: '600',
@@ -365,6 +479,30 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 20,
     marginBottom: 8,
+  },
+  socialLinksPreview: {
+    backgroundColor: colors.background,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  socialLinksTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+  socialLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  socialLinkText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    flex: 1,
   },
   sectionActions: {
     flexDirection: 'row',
@@ -499,6 +637,29 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 120,
     textAlignVertical: 'top',
+  },
+  socialMediaSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  socialMediaHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  socialMediaTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  socialMediaSubtitle: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginBottom: 12,
+    fontStyle: 'italic',
   },
   checkboxContainer: {
     marginTop: 16,

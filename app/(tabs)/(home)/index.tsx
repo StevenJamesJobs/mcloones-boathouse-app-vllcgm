@@ -330,6 +330,52 @@ export default function HomeScreen() {
                       </View>
                     );
                   })}
+                  
+                  {/* Social Media Links */}
+                  {(visitUsSection.website_url || visitUsSection.facebook_url || visitUsSection.instagram_url) && (
+                    <View style={styles.socialMediaContainer}>
+                      <View style={styles.socialMediaDivider} />
+                      <Text style={styles.socialMediaTitle}>Connect With Us</Text>
+                      <View style={styles.socialMediaLinks}>
+                        {visitUsSection.website_url && (
+                          <Pressable
+                            style={styles.socialButton}
+                            onPress={() => Linking.openURL(visitUsSection.website_url!).catch(err => {
+                              console.error('Failed to open URL:', err);
+                              Alert.alert('Error', 'Could not open website');
+                            })}
+                          >
+                            <MaterialIcons name="language" size={32} color={colors.accent} />
+                            <Text style={styles.socialButtonLabel}>Website</Text>
+                          </Pressable>
+                        )}
+                        {visitUsSection.facebook_url && (
+                          <Pressable
+                            style={styles.socialButton}
+                            onPress={() => Linking.openURL(visitUsSection.facebook_url!).catch(err => {
+                              console.error('Failed to open URL:', err);
+                              Alert.alert('Error', 'Could not open Facebook');
+                            })}
+                          >
+                            <MaterialIcons name="facebook" size={32} color="#1877F2" />
+                            <Text style={styles.socialButtonLabel}>Facebook</Text>
+                          </Pressable>
+                        )}
+                        {visitUsSection.instagram_url && (
+                          <Pressable
+                            style={styles.socialButton}
+                            onPress={() => Linking.openURL(visitUsSection.instagram_url!).catch(err => {
+                              console.error('Failed to open URL:', err);
+                              Alert.alert('Error', 'Could not open Instagram');
+                            })}
+                          >
+                            <MaterialIcons name="camera-alt" size={32} color="#E4405F" />
+                            <Text style={styles.socialButtonLabel}>Instagram</Text>
+                          </Pressable>
+                        )}
+                      </View>
+                    </View>
+                  )}
                 </View>
               )}
             </View>
@@ -656,6 +702,44 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     flex: 1,
     lineHeight: 22,
+  },
+  socialMediaContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+  },
+  socialMediaDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginBottom: 16,
+  },
+  socialMediaTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  socialMediaLinks: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    gap: 12,
+  },
+  socialButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minWidth: 90,
+  },
+  socialButtonLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 6,
   },
   bottomPadding: {
     height: 80,

@@ -8,6 +8,9 @@ export interface AboutUsSection {
   content: string;
   section_order: number;
   is_active: boolean;
+  website_url?: string | null;
+  facebook_url?: string | null;
+  instagram_url?: string | null;
   created_at: string;
   updated_at: string;
 }

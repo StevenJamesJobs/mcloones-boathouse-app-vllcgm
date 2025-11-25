@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Platform, Modal, TextInput, Pressable, Alert, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform, Modal, TextInput, Pressable, Alert, ActivityIndicator, Image, Linking } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
@@ -82,9 +82,11 @@ export default function AboutScreen() {
       );
     }
     
-    // Special rendering for "Visit Us" section with contact info
+    // Special rendering for "Visit Us" section with contact info and social media
     if (title.includes('visit') || title.includes('contact')) {
       const lines = section.content.split('•').filter((l: string) => l.trim());
+      const hasSocialLinks = section.website_url || section.facebook_url || section.instagram_url;
+      
       return (
         <View style={commonStyles.card}>
           {lines.map((line: string, index: number) => {
@@ -106,6 +108,52 @@ export default function AboutScreen() {
               </View>
             );
           })}
+          
+          {/* Social Media Links */}
+          {hasSocialLinks && (
+            <View style={styles.socialMediaContainer}>
+              <View style={styles.socialMediaDivider} />
+              <Text style={styles.socialMediaTitle}>Connect With Us</Text>
+              <View style={styles.socialMediaLinks}>
+                {section.website_url && (
+                  <Pressable
+                    style={styles.socialButton}
+                    onPress={() => Linking.openURL(section.website_url).catch(err => {
+                      console.error('Failed to open URL:', err);
+                      Alert.alert('Error', 'Could not open website');
+                    })}
+                  >
+                    <MaterialIcons name="language" size={32} color={colors.accent} />
+                    <Text style={styles.socialButtonLabel}>Website</Text>
+                  </Pressable>
+                )}
+                {section.facebook_url && (
+                  <Pressable
+                    style={styles.socialButton}
+                    onPress={() => Linking.openURL(section.facebook_url).catch(err => {
+                      console.error('Failed to open URL:', err);
+                      Alert.alert('Error', 'Could not open Facebook');
+                    })}
+                  >
+                    <MaterialIcons name="facebook" size={32} color="#1877F2" />
+                    <Text style={styles.socialButtonLabel}>Facebook</Text>
+                  </Pressable>
+                )}
+                {section.instagram_url && (
+                  <Pressable
+                    style={styles.socialButton}
+                    onPress={() => Linking.openURL(section.instagram_url).catch(err => {
+                      console.error('Failed to open URL:', err);
+                      Alert.alert('Error', 'Could not open Instagram');
+                    })}
+                  >
+                    <MaterialIcons name="camera-alt" size={32} color="#E4405F" />
+                    <Text style={styles.socialButtonLabel}>Instagram</Text>
+                  </Pressable>
+                )}
+              </View>
+            </View>
+          )}
         </View>
       );
     }
@@ -487,6 +535,44 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     flex: 1,
     lineHeight: 22,
+  },
+  socialMediaContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+  },
+  socialMediaDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginBottom: 16,
+  },
+  socialMediaTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  socialMediaLinks: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    gap: 12,
+  },
+  socialButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    minWidth: 90,
+  },
+  socialButtonLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 6,
   },
   galleryIntro: {
     fontSize: 14,
