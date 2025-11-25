@@ -127,14 +127,17 @@ export default function EmployeeHomeScreen() {
             )}
           </CollapsibleSection>
 
-          {/* Quick Links */}
-          <View style={styles.quickLinks}>
+          {/* Tools Section Header */}
+          <Text style={styles.toolsHeader}>{user?.full_name}&apos;s Tools</Text>
+
+          {/* Quick Links - 4 equal tiles */}
+          <View style={styles.quickLinksGrid}>
             <Pressable
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/inbox' as any)}
             >
               <MaterialIcons name="inbox" size={48} color="#3289a8" />
-              <Text style={styles.quickLinkText}>Inbox</Text>
+              <Text style={styles.quickLinkText}>Messages</Text>
             </Pressable>
             <Pressable
               style={styles.quickLinkButton}
@@ -143,27 +146,23 @@ export default function EmployeeHomeScreen() {
               <MaterialIcons name="menu-book" size={48} color="#3289a8" />
               <Text style={styles.quickLinkText}>Guides & Training</Text>
             </Pressable>
+            <Pressable
+              style={styles.quickLinkButton}
+              onPress={() => router.push('/employee/rewards')}
+            >
+              <MaterialIcons name="stars" size={48} color="#3289a8" />
+              <Text style={styles.quickLinkText}>Rewards</Text>
+            </Pressable>
+            <Pressable
+              style={styles.quickLinkButton}
+              onPress={() => router.push('/employee/checkouts')}
+            >
+              <MaterialIcons name="calculate" size={48} color="#3289a8" />
+              <Text style={styles.quickLinkText}>Check Outs</Text>
+            </Pressable>
           </View>
 
-          {/* Rewards Link */}
-          <Pressable
-            style={styles.rewardsButton}
-            onPress={() => router.push('/employee/rewards')}
-          >
-            <MaterialIcons name="stars" size={32} color="#3289a8" />
-            <Text style={styles.rewardsButtonText}>Rewards</Text>
-          </Pressable>
-
-          {/* Check Outs Link */}
-          <Pressable
-            style={styles.checkOutsButton}
-            onPress={() => router.push('/employee/checkouts')}
-          >
-            <MaterialIcons name="calculate" size={32} color="#3289a8" />
-            <Text style={styles.checkOutsButtonText}>Check Outs</Text>
-          </Pressable>
-
-          {/* Profile Link */}
+          {/* Profile Link - Elongated */}
           <Pressable
             style={styles.profileButton}
             onPress={() => router.push('/employee/profile')}
@@ -269,43 +268,35 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontStyle: 'italic',
   },
-  quickLinks: {
-    flexDirection: 'row',
-    gap: 12,
+  toolsHeader: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
     marginTop: 8,
+    marginBottom: 16,
+  },
+  quickLinksGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
   },
   quickLinkButton: {
-    flex: 1,
+    width: '48%',
+    aspectRatio: 1,
     backgroundColor: colors.employeeCard,
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
+    justifyContent: 'center',
     boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
     elevation: 3,
     gap: 12,
   },
   quickLinkText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
-  },
-  checkOutsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.employeeCard,
-    borderRadius: 12,
-    padding: 20,
-    marginTop: 12,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
-    gap: 12,
-  },
-  checkOutsButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
   },
   profileButton: {
     flexDirection: 'row',
@@ -320,23 +311,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   profileButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  rewardsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.employeeCard,
-    borderRadius: 12,
-    padding: 20,
-    marginTop: 12,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
-    gap: 12,
-  },
-  rewardsButtonText: {
     fontSize: 16,
     fontWeight: '600',
     color: colors.text,

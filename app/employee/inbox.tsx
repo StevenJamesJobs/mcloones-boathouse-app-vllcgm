@@ -55,7 +55,7 @@ export default function EmployeeInboxScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Inbox',
+          title: 'Messages',
           headerStyle: {
             backgroundColor: colors.employeeBackground,
           },

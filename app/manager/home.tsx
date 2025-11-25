@@ -48,7 +48,6 @@ export default function ManagerHomeScreen() {
   ];
 
   const employeeTools = [
-    { id: 1, title: 'Inbox', icon: 'inbox', route: '/manager/inbox', color: colors.managerSecondary },
     { id: 2, title: 'Employees', icon: 'people', route: '/manager/employees', color: colors.managerSecondary },
     { id: 3, title: 'Announcements', icon: 'campaign', route: '/manager/announcements-editor', color: colors.managerSecondary },
     { id: 4, title: 'Rewards', icon: 'attach-money', route: '/manager/rewards', color: colors.managerSecondary },
@@ -161,6 +160,24 @@ export default function ManagerHomeScreen() {
             <Text style={styles.guidesButtonText}>Guides & Training</Text>
           </Pressable>
 
+          {/* Messages - Elongated Tile */}
+          <Pressable
+            style={styles.messagesButton}
+            onPress={() => router.push('/manager/inbox' as any)}
+          >
+            <MaterialIcons name="inbox" size={32} color={colors.managerAccent} />
+            <Text style={styles.messagesButtonText}>Messages</Text>
+          </Pressable>
+
+          {/* My Profile - Elongated Tile */}
+          <Pressable
+            style={styles.profileButton}
+            onPress={() => router.push('/manager/profile')}
+          >
+            <MaterialIcons name="person" size={32} color={colors.managerAccent} />
+            <Text style={styles.profileButtonText}>My Profile</Text>
+          </Pressable>
+
           {/* Manager Tools */}
           <View style={styles.toolsSection}>
             <Text style={styles.sectionTitle}>Management Tools</Text>
@@ -215,15 +232,6 @@ export default function ManagerHomeScreen() {
               ))}
             </View>
           </View>
-
-          {/* My Profile */}
-          <Pressable
-            style={styles.profileButton}
-            onPress={() => router.push('/manager/profile')}
-          >
-            <MaterialIcons name="person" size={32} color={colors.managerAccent} />
-            <Text style={styles.profileButtonText}>My Profile</Text>
-          </Pressable>
         </ScrollView>
       </View>
     </>
@@ -339,6 +347,40 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
   },
+  messagesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.employeeCard,
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 12,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+    gap: 12,
+  },
+  messagesButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  profileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.employeeCard,
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 12,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+    gap: 12,
+  },
+  profileButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
   toolsSection: {
     marginTop: 20,
   },
@@ -398,22 +440,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginTop: 8,
     textAlign: 'center',
-  },
-  profileButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.employeeCard,
-    borderRadius: 12,
-    padding: 20,
-    marginTop: 12,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
-    gap: 12,
-  },
-  profileButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
   },
 });

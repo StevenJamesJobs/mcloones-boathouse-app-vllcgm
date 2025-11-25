@@ -55,7 +55,7 @@ export default function ManagerInboxScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Inbox',
+          title: 'Messages',
           headerStyle: {
             backgroundColor: colors.managerPrimary,
           },
