@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image, Animated } from 'react-native';
 import { Stack } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -15,6 +15,7 @@ export default function ManagerProfileScreen() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successAnimation] = useState(new Animated.Value(0));
   
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
@@ -45,9 +46,25 @@ export default function ManagerProfileScreen() {
 
   useEffect(() => {
     if (showSuccessMessage) {
+      // Animate in
+      Animated.spring(successAnimation, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7,
+      }).start();
+
+      // Auto-hide after 3 seconds
       const timer = setTimeout(() => {
-        setShowSuccessMessage(false);
+        Animated.timing(successAnimation, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }).start(() => {
+          setShowSuccessMessage(false);
+        });
       }, 3000);
+
       return () => clearTimeout(timer);
     }
   }, [showSuccessMessage]);
@@ -99,6 +116,7 @@ export default function ManagerProfileScreen() {
     const result = await changePassword(passwordData.newPassword);
 
     if (result.success) {
+      console.log('Password change successful, showing success message');
       // Show success message bubble
       setShowSuccessMessage(true);
       setIsChangingPassword(false);
@@ -215,6 +233,13 @@ export default function ManagerProfileScreen() {
       </View>
     );
   }
+
+  const successScale = successAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.8, 1],
+  });
+
+  const successOpacity = successAnimation;
 
   return (
     <>
@@ -612,17 +637,30 @@ export default function ManagerProfileScreen() {
           </View>
         </ScrollView>
 
-        {/* Success Message Bubble */}
+        {/* Success Message Bubble with Animation */}
         {showSuccessMessage && (
-          <View style={styles.successBubble}>
-            <IconSymbol 
-              ios_icon_name="checkmark.circle.fill" 
-              android_material_icon_name="check_circle" 
-              color="#FFFFFF" 
-              size={24} 
-            />
-            <Text style={styles.successBubbleText}>Password changed successfully!</Text>
-          </View>
+          <Animated.View 
+            style={[
+              styles.successBubble,
+              {
+                opacity: successOpacity,
+                transform: [{ scale: successScale }],
+              }
+            ]}
+          >
+            <View style={styles.successIconContainer}>
+              <IconSymbol 
+                ios_icon_name="checkmark.circle.fill" 
+                android_material_icon_name="check_circle" 
+                color="#FFFFFF" 
+                size={28} 
+              />
+            </View>
+            <View style={styles.successTextContainer}>
+              <Text style={styles.successBubbleTitle}>Success!</Text>
+              <Text style={styles.successBubbleText}>Your password has been changed successfully</Text>
+            </View>
+          </Animated.View>
         )}
       </View>
     </>
@@ -868,25 +906,44 @@ const styles = StyleSheet.create({
   },
   successBubble: {
     position: 'absolute',
-    top: 100,
-    alignSelf: 'center',
+    top: 80,
+    left: 20,
+    right: 20,
     backgroundColor: colors.success,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 30,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 12,
     zIndex: 1000,
-    gap: 10,
+    gap: 14,
+  },
+  successIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  successTextContainer: {
+    flex: 1,
+  },
+  successBubbleTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 2,
   },
   successBubbleText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '500',
+    lineHeight: 18,
   },
 });
