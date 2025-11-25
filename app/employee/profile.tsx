@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image } from 'react-native';
 import { Stack, router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -14,8 +14,7 @@ export default function EmployeeProfileScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [successAnimation] = useState(new Animated.Value(0));
+  const [passwordChanged, setPasswordChanged] = useState(false);
   
   const [formData, setFormData] = useState({
     phone_number: user?.phone_number || '',
@@ -41,29 +40,14 @@ export default function EmployeeProfileScreen() {
   }, [user]);
 
   useEffect(() => {
-    if (showSuccessMessage) {
-      // Animate in
-      Animated.spring(successAnimation, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 50,
-        friction: 7,
-      }).start();
-
-      // Auto-hide after 4 seconds
+    if (passwordChanged) {
       const timer = setTimeout(() => {
-        Animated.timing(successAnimation, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start(() => {
-          setShowSuccessMessage(false);
-        });
-      }, 4000);
+        setPasswordChanged(false);
+      }, 5000);
 
       return () => clearTimeout(timer);
     }
-  }, [showSuccessMessage]);
+  }, [passwordChanged]);
 
   const handleSave = async () => {
     if (!formData.email) {
@@ -111,8 +95,7 @@ export default function EmployeeProfileScreen() {
 
     if (result.success) {
       console.log('Password change successful, showing success message');
-      // Show success message inline
-      setShowSuccessMessage(true);
+      setPasswordChanged(true);
       setIsChangingPassword(false);
       setPasswordData({ newPassword: '', confirmPassword: '' });
     } else {
@@ -227,13 +210,6 @@ export default function EmployeeProfileScreen() {
       </View>
     );
   }
-
-  const successScale = successAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.8, 1],
-  });
-
-  const successOpacity = successAnimation;
 
   return (
     <>
@@ -537,34 +513,19 @@ export default function EmployeeProfileScreen() {
                     size={28} 
                   />
                   <Text style={styles.cardTitle}>Security</Text>
+                  {passwordChanged && (
+                    <View style={styles.successIndicator}>
+                      <Text style={styles.successText}>Password Changed</Text>
+                      <IconSymbol 
+                        ios_icon_name="checkmark.circle.fill" 
+                        android_material_icon_name="check_circle" 
+                        color={colors.success} 
+                        size={20} 
+                      />
+                    </View>
+                  )}
                 </View>
               </View>
-
-              {/* Success Message - Inline within Security Section */}
-              {showSuccessMessage && (
-                <Animated.View 
-                  style={[
-                    styles.inlineSuccessMessage,
-                    {
-                      opacity: successOpacity,
-                      transform: [{ scale: successScale }],
-                    }
-                  ]}
-                >
-                  <View style={styles.successIconContainer}>
-                    <IconSymbol 
-                      ios_icon_name="checkmark.circle.fill" 
-                      android_material_icon_name="check_circle" 
-                      color="#FFFFFF" 
-                      size={32} 
-                    />
-                  </View>
-                  <View style={styles.successTextContainer}>
-                    <Text style={styles.successMessageTitle}>Password Updated!</Text>
-                    <Text style={styles.successMessageText}>Your password has been changed successfully</Text>
-                  </View>
-                </Animated.View>
-              )}
 
               {isChangingPassword ? (
                 <>
@@ -745,11 +706,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
   },
   cardTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: colors.text,
+  },
+  successIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginLeft: 12,
+  },
+  successText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.success,
   },
   editIconButton: {
     padding: 8,
@@ -874,43 +847,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
-  },
-  inlineSuccessMessage: {
-    backgroundColor: colors.success,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderRadius: 14,
-    marginBottom: 20,
-    gap: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  successIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  successTextContainer: {
-    flex: 1,
-  },
-  successMessageTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  successMessageText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
-    lineHeight: 20,
   },
 });
