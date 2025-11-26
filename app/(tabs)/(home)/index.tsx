@@ -185,15 +185,15 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* OpenTable Reservation Widget */}
+          {/* OpenTable Reservation Widget - Compact Style */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Make a Reservation</Text>
             <OpenTableWidget 
               restaurantId="69187"
-              theme="wide"
+              theme="standard"
               color="1"
               dark={false}
-              height={350}
+              height={180}
             />
           </View>
 

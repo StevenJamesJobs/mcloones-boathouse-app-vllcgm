@@ -17,9 +17,9 @@ export function OpenTableWidget({
   theme = 'wide',
   color = '1',
   dark = false,
-  height = 350,
+  height = 200,
 }: OpenTableWidgetProps) {
-  // Construct the OpenTable widget HTML
+  // Construct the OpenTable widget HTML with custom styling to match the image
   const widgetHTML = `
     <!DOCTYPE html>
     <html>
@@ -33,17 +33,63 @@ export function OpenTableWidget({
           }
           body {
             overflow: hidden;
-            background-color: transparent;
+            background-color: #f5f5f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           }
           #ot-widget-container {
             width: 100%;
             height: 100%;
+            padding: 16px;
+          }
+          /* Override OpenTable widget styles to match the image */
+          .ot-dtp-picker,
+          .ot-dtp-picker-selector {
+            background-color: #f5f5f5 !important;
+          }
+          .ot-dtp-picker-selector {
+            border: none !important;
+            box-shadow: none !important;
+          }
+          .ot-dtp-picker-selector select,
+          .ot-dtp-picker-selector input {
+            background-color: white !important;
+            border: 1px solid #d0d0d0 !important;
+            border-radius: 4px !important;
+            padding: 12px !important;
+            font-size: 16px !important;
+            color: #333 !important;
+          }
+          .ot-dtp-picker-button,
+          .ot-button,
+          button[type="submit"] {
+            background-color: #da3743 !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 4px !important;
+            padding: 12px 24px !important;
+            font-size: 16px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            transition: background-color 0.2s !important;
+          }
+          .ot-dtp-picker-button:hover,
+          .ot-button:hover,
+          button[type="submit"]:hover {
+            background-color: #c02a35 !important;
+          }
+          /* Compact layout */
+          .ot-dtp-picker {
+            max-height: 180px !important;
+          }
+          /* Hide unnecessary elements for compact view */
+          .ot-dtp-picker-logo {
+            display: none !important;
           }
         </style>
       </head>
       <body>
         <div id="ot-widget-container"></div>
-        <script type='text/javascript' src='//www.opentable.com/widget/reservation/loader?rid=${restaurantId}&type=${theme}&theme=wide&color=${color}&dark=${dark}&iframe=true&domain=com&lang=en-US&newtab=false&ot_source=McLoones%20Boathouse%20App&cfe=true'></script>
+        <script type='text/javascript' src='//www.opentable.com/widget/reservation/loader?rid=${restaurantId}&type=standard&theme=wide&color=1&dark=false&iframe=true&domain=com&lang=en-US&newtab=false&ot_source=McLoones%20Boathouse%20App&cfe=true'></script>
       </body>
     </html>
   `;
@@ -59,7 +105,7 @@ export function OpenTableWidget({
         startInLoadingState={true}
         renderLoading={() => (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.accent} />
+            <ActivityIndicator size="large" color="#da3743" />
           </View>
         )}
         scrollEnabled={false}
@@ -67,7 +113,6 @@ export function OpenTableWidget({
         scalesPageToFit={Platform.OS === 'android'}
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
-        // Allow the widget to open links in external browser
         onShouldStartLoadWithRequest={(request) => {
           // Allow OpenTable domains
           if (
@@ -87,21 +132,21 @@ export function OpenTableWidget({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    backgroundColor: colors.background,
-    borderRadius: 12,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        shadowRadius: 2,
       },
       android: {
-        elevation: 3,
+        elevation: 2,
       },
       web: {
-        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.08)',
       },
     }),
   },
@@ -116,6 +161,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: '#f5f5f5',
   },
 });
