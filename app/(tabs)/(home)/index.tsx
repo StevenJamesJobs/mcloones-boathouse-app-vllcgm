@@ -17,6 +17,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SwipeableImageModal } from '@/components/SwipeableImageModal';
+import { OpenTableWidget } from '@/components/OpenTableWidget';
 
 export default function HomeScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
@@ -182,6 +183,18 @@ export default function HomeScreen() {
                 ) : null}
               </View>
             </View>
+          </View>
+
+          {/* OpenTable Reservation Widget */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Make a Reservation</Text>
+            <OpenTableWidget 
+              restaurantId="69187"
+              theme="wide"
+              color="1"
+              dark={false}
+              height={350}
+            />
           </View>
 
           {/* Upcoming Events */}
