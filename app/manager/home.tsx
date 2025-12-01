@@ -281,7 +281,7 @@ export default function ManagerHomeScreen() {
                 {events.length > 3 && (
                   <Pressable
                     style={styles.viewAllButton}
-                    onPress={() => router.push('/(tabs)/events' as any)}
+                    onPress={() => router.push('/manager/full-events' as any)}
                   >
                     <Text style={styles.viewAllText}>View All Events</Text>
                     <MaterialIcons name="arrow-forward" size={18} color={colors.managerAccent} />
@@ -291,10 +291,15 @@ export default function ManagerHomeScreen() {
             )}
           </CollapsibleSection>
 
-          {/* Special Features Section */}
+          {/* Special Features Section - Now Collapsible */}
           {topFeatures.length > 0 && (
-            <View style={styles.specialFeaturesSection}>
-              <Text style={styles.sectionTitle}>Special Features</Text>
+            <CollapsibleSection
+              title="Special Features"
+              icon="auto-awesome"
+              iconColor={colors.managerAccent}
+              defaultExpanded={true}
+              variant="manager"
+            >
               {topFeatures.map((feature) => (
                 <Pressable
                   key={feature.id}
@@ -324,13 +329,18 @@ export default function ManagerHomeScreen() {
                   )}
                 </Pressable>
               ))}
-            </View>
+            </CollapsibleSection>
           )}
 
-          {/* Weekly Specials Section */}
+          {/* Weekly Specials Section - Now Collapsible */}
           {specials.length > 0 && (
-            <View style={styles.weeklySpecialsSection}>
-              <Text style={styles.sectionTitle}>Weekly Specials</Text>
+            <CollapsibleSection
+              title="Weekly Specials"
+              icon="star"
+              iconColor={colors.managerAccent}
+              defaultExpanded={true}
+              variant="manager"
+            >
               {specials.map((special) => (
                 <View key={special.id} style={styles.specialItem}>
                   {special.image_url && (
@@ -356,7 +366,7 @@ export default function ManagerHomeScreen() {
                   )}
                 </View>
               ))}
-            </View>
+            </CollapsibleSection>
           )}
 
           {/* Profile Section Header */}
@@ -625,20 +635,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.managerAccent,
   },
-  specialFeaturesSection: {
-    backgroundColor: colors.managerCard,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
-  },
   featureItem: {
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -680,14 +676,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     fontStyle: 'italic',
-  },
-  weeklySpecialsSection: {
-    backgroundColor: colors.managerCard,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
   },
   specialItem: {
     paddingVertical: 12,

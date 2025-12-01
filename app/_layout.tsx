@@ -101,7 +101,10 @@ export default function RootLayout() {
               <Stack.Screen name="employee/profile" options={{ headerShown: true }} />
               <Stack.Screen name="employee/training" options={{ headerShown: true }} />
               <Stack.Screen name="employee/rewards" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/rewards-and-reviews" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/tools" options={{ headerShown: true }} />
               <Stack.Screen name="employee/checkouts" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/full-events" options={{ headerShown: true }} />
               <Stack.Screen name="employee/message-detail" options={{ headerShown: true }} />
               <Stack.Screen name="employee/sent-message-detail" options={{ headerShown: true }} />
               <Stack.Screen name="employee/new-message" options={{ headerShown: true }} />
@@ -125,6 +128,7 @@ export default function RootLayout() {
               <Stack.Screen name="manager/reviews-editor" options={{ headerShown: true }} />
               <Stack.Screen name="manager/tagline-editor" options={{ headerShown: true }} />
               <Stack.Screen name="manager/guides-editor" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/full-events" options={{ headerShown: true }} />
               <Stack.Screen name="manager/message-detail" options={{ headerShown: true }} />
               <Stack.Screen name="manager/sent-message-detail" options={{ headerShown: true }} />
               <Stack.Screen name="manager/new-message" options={{ headerShown: true }} />

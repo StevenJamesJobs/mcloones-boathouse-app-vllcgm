@@ -152,12 +152,16 @@ export default function EmployeeHomeScreen() {
             <Text style={styles.welcomeTitle}>Welcome, {user?.full_name}!</Text>
             <Text style={styles.welcomeJobTitle}>{user?.job_title}</Text>
             
-            {/* McLoone's Bucks */}
-            <View style={styles.bucksContainer}>
+            {/* McLoone's Bucks - Now clickable with better color */}
+            <Pressable 
+              style={styles.bucksContainer}
+              onPress={() => router.push('/employee/rewards-and-reviews' as any)}
+            >
               <MaterialIcons name="stars" size={20} color="#FFD700" />
               <Text style={styles.bucksText}>McLoone&apos;s Bucks: </Text>
               <Text style={styles.bucksAmount}>${mcloonesBucks.toFixed(2)}</Text>
-            </View>
+              <MaterialIcons name="chevron-right" size={20} color="#1E88E5" />
+            </Pressable>
 
             {/* Messages Indicator */}
             <Pressable
@@ -267,7 +271,7 @@ export default function EmployeeHomeScreen() {
                 {events.length > 3 && (
                   <Pressable
                     style={styles.viewAllButton}
-                    onPress={() => router.push('/(tabs)/events' as any)}
+                    onPress={() => router.push('/employee/full-events' as any)}
                   >
                     <Text style={styles.viewAllText}>View All Events</Text>
                     <MaterialIcons name="arrow-forward" size={18} color={colors.employeeAccent} />
@@ -277,10 +281,15 @@ export default function EmployeeHomeScreen() {
             )}
           </CollapsibleSection>
 
-          {/* Special Features Section */}
+          {/* Special Features Section - Now Collapsible */}
           {topFeatures.length > 0 && (
-            <View style={styles.specialFeaturesSection}>
-              <Text style={styles.sectionTitle}>Special Features</Text>
+            <CollapsibleSection
+              title="Special Features"
+              icon="auto-awesome"
+              iconColor={colors.employeeAccent}
+              defaultExpanded={true}
+              variant="employee"
+            >
               {topFeatures.map((feature) => (
                 <Pressable
                   key={feature.id}
@@ -310,13 +319,18 @@ export default function EmployeeHomeScreen() {
                   )}
                 </Pressable>
               ))}
-            </View>
+            </CollapsibleSection>
           )}
 
-          {/* Weekly Specials Section */}
+          {/* Weekly Specials Section - Now Collapsible */}
           {specials.length > 0 && (
-            <View style={styles.weeklySpecialsSection}>
-              <Text style={styles.sectionTitle}>Weekly Specials</Text>
+            <CollapsibleSection
+              title="Weekly Specials"
+              icon="star"
+              iconColor={colors.employeeAccent}
+              defaultExpanded={true}
+              variant="employee"
+            >
               {specials.map((special) => (
                 <View key={special.id} style={styles.specialItem}>
                   {special.image_url && (
@@ -342,48 +356,8 @@ export default function EmployeeHomeScreen() {
                   )}
                 </View>
               ))}
-            </View>
+            </CollapsibleSection>
           )}
-
-          {/* Profile Section Header */}
-          <Text style={styles.profileHeader}>{user?.full_name}&apos;s Profile</Text>
-
-          {/* My Profile Info - Elongated */}
-          <Pressable
-            style={styles.profileButton}
-            onPress={() => router.push('/employee/profile')}
-          >
-            <MaterialIcons name="person" size={32} color={colors.employeeAccent} />
-            <Text style={styles.profileButtonText}>My Profile Info</Text>
-          </Pressable>
-
-          {/* Tools Section Header */}
-          <Text style={styles.toolsHeader}>{user?.full_name}&apos;s Tools</Text>
-
-          {/* Quick Links - 3 smaller tiles */}
-          <View style={styles.quickLinksGrid}>
-            <Pressable
-              style={styles.quickLinkButton}
-              onPress={() => router.push('/employee/training')}
-            >
-              <MaterialIcons name="menu-book" size={36} color={colors.employeeAccent} />
-              <Text style={styles.quickLinkText}>Guides & Training</Text>
-            </Pressable>
-            <Pressable
-              style={styles.quickLinkButton}
-              onPress={() => router.push('/employee/rewards')}
-            >
-              <MaterialIcons name="stars" size={36} color={colors.employeeAccent} />
-              <Text style={styles.quickLinkText}>Rewards</Text>
-            </Pressable>
-            <Pressable
-              style={styles.quickLinkButton}
-              onPress={() => router.push('/employee/checkouts')}
-            >
-              <MaterialIcons name="calculate" size={36} color={colors.employeeAccent} />
-              <Text style={styles.quickLinkText}>Check Outs</Text>
-            </Pressable>
-          </View>
         </ScrollView>
       </View>
 
@@ -455,12 +429,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.3)',
+    borderWidth: 2,
+    borderColor: '#1E88E5',
   },
   bucksText: {
     fontSize: 16,
@@ -471,7 +445,8 @@ const styles = StyleSheet.create({
   bucksAmount: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFD700',
+    color: '#1E88E5',
+    flex: 1,
   },
   messagesIndicator: {
     flexDirection: 'row',
@@ -597,20 +572,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.employeeAccent,
   },
-  specialFeaturesSection: {
-    backgroundColor: colors.employeeCard,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
-  },
   featureItem: {
     paddingVertical: 12,
     borderBottomWidth: 1,
@@ -652,14 +613,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     fontStyle: 'italic',
-  },
-  weeklySpecialsSection: {
-    backgroundColor: colors.employeeCard,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
   },
   specialItem: {
     paddingVertical: 12,
@@ -707,59 +660,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     fontStyle: 'italic',
-  },
-  profileHeader: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  profileButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.employeeCard,
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 12,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
-    gap: 12,
-  },
-  profileButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  toolsHeader: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  quickLinksGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  quickLinkButton: {
-    width: '31.5%',
-    aspectRatio: 1,
-    backgroundColor: colors.employeeCard,
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
-    gap: 8,
-  },
-  quickLinkText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.text,
-    textAlign: 'center',
   },
 });
