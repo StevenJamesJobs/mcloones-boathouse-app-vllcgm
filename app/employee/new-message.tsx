@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -29,11 +29,7 @@ export default function NewMessageScreen() {
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadRecipients();
-  }, []);
-
-  const loadRecipients = async () => {
+  const loadRecipients = useCallback(async () => {
     setLoading(true);
     const [recipientsList, groups, managersList] = await Promise.all([
       fetchRecipients(),
@@ -44,7 +40,11 @@ export default function NewMessageScreen() {
     setJobTitleGroups(groups);
     setManagers(managersList);
     setLoading(false);
-  };
+  }, [fetchRecipients, fetchJobTitleGroups, fetchManagers]);
+
+  useEffect(() => {
+    loadRecipients();
+  }, [loadRecipients]);
 
   const toggleRecipient = (recipient: RecipientOption) => {
     setSelectedRecipients((prev) => {

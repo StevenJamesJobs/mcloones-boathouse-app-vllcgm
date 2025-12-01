@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Modal, View, Image, Pressable, StyleSheet, Animated, PanResponder } from 'react-native';
 import { IconSymbol } from '@/components/IconSymbol';
 
@@ -72,12 +72,12 @@ export function SwipeableImageModal({ visible, imageUrl, onClose }: SwipeableIma
   ).current;
 
   // Reset animations when modal closes
-  React.useEffect(() => {
+  useEffect(() => {
     if (!visible) {
       translateY.setValue(0);
       opacity.setValue(1);
     }
-  }, [visible]);
+  }, [visible, translateY, opacity]);
 
   return (
     <Modal

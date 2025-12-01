@@ -7,7 +7,7 @@ import FloatingTabBar, { TabBarItem } from '@/components/FloatingTabBar';
 import { colors } from '@/styles/commonStyles';
 
 export default function TabLayout() {
-  // Define the tabs configuration for customer-facing app (Gallery removed)
+  // Define the tabs configuration for customer-facing app
   const tabs: TabBarItem[] = [
     {
       name: '(home)',
@@ -22,6 +22,12 @@ export default function TabLayout() {
       label: 'Menu',
     },
     {
+      name: 'order',
+      route: '/(tabs)/order',
+      icon: 'cart.fill',
+      label: 'Order',
+    },
+    {
       name: 'events',
       route: '/(tabs)/events',
       icon: 'calendar',
@@ -31,13 +37,7 @@ export default function TabLayout() {
       name: 'about',
       route: '/(tabs)/about',
       icon: 'info.circle.fill',
-      label: 'About Us',
-    },
-    {
-      name: 'reviews',
-      route: '/(tabs)/reviews',
-      icon: 'star.fill',
-      label: 'Reviews',
+      label: 'About',
     },
   ];
 
@@ -53,15 +53,19 @@ export default function TabLayout() {
           <Icon sf="book.fill" drawable="ic_menu" />
           <Label>Menu</Label>
         </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="order">
+          <Icon sf="cart.fill" drawable="ic_shopping_cart" />
+          <Label>Order</Label>
+        </NativeTabs.Trigger>
         <NativeTabs.Trigger name="events">
           <Icon sf="calendar" drawable="ic_calendar" />
           <Label>Events</Label>
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="about">
           <Icon sf="info.circle.fill" drawable="ic_info" />
-          <Label>About Us</Label>
+          <Label>About</Label>
         </NativeTabs.Trigger>
-        <NativeTabs.Trigger name="reviews">
+        <NativeTabs.Trigger name="reviews" hidden>
           <Icon sf="star.fill" drawable="ic_star" />
           <Label>Reviews</Label>
         </NativeTabs.Trigger>
@@ -84,9 +88,10 @@ export default function TabLayout() {
       >
         <Stack.Screen name="(home)" />
         <Stack.Screen name="menu" />
+        <Stack.Screen name="order" />
         <Stack.Screen name="events" />
         <Stack.Screen name="about" />
-        <Stack.Screen name="reviews" />
+        <Stack.Screen name="reviews" options={{ href: null }} />
         <Stack.Screen name="gallery" options={{ href: null }} />
       </Stack>
       <FloatingTabBar tabs={tabs} />

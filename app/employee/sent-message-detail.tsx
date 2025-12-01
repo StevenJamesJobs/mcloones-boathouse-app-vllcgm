@@ -1,4 +1,5 @@
 
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
@@ -104,8 +105,6 @@ export default function SentMessageDetailScreen() {
     </>
   );
 }
-
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 const styles = StyleSheet.create({
   container: {
