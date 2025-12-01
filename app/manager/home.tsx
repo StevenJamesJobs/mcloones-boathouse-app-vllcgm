@@ -20,8 +20,15 @@ export default function ManagerHomeScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('customer');
 
   useEffect(() => {
-    if (!isLoading && (!user || (user.role !== 'manager' && user.role !== 'owner_manager'))) {
-      router.replace('/(tabs)/(home)/');
+    if (!isLoading && !user) {
+      router.replace('/login');
+    } else if (!isLoading && user && user.role !== 'manager' && user.role !== 'owner_manager') {
+      // If user is an employee, redirect to employee portal
+      if (user.role === 'employee') {
+        router.replace('/employee/home');
+      } else {
+        router.replace('/login');
+      }
     }
   }, [user, isLoading]);
 
@@ -37,9 +44,9 @@ export default function ManagerHomeScreen() {
   const handleLogout = async () => {
     try {
       await logout();
-      // Force navigation to home page
+      // Force navigation to login page
       setTimeout(() => {
-        router.replace('/(tabs)/(home)/');
+        router.replace('/login');
       }, 100);
     } catch (error) {
       console.error('Logout error:', error);
@@ -87,6 +94,10 @@ export default function ManagerHomeScreen() {
         </View>
       </View>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   const currentTools = activeTab === 'customer' ? customerTools : employeeTools;

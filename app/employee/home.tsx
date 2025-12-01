@@ -17,8 +17,15 @@ export default function EmployeeHomeScreen() {
   const { unreadCount, refreshInbox } = useMessages();
 
   useEffect(() => {
-    if (!isLoading && (!user || user.role === 'customer')) {
-      router.replace('/(tabs)/(home)/');
+    if (!isLoading && !user) {
+      router.replace('/login');
+    } else if (!isLoading && user && user.role !== 'employee') {
+      // If user is a manager, redirect to manager portal
+      if (user.role === 'manager' || user.role === 'owner_manager') {
+        router.replace('/manager/home');
+      } else {
+        router.replace('/login');
+      }
     }
   }, [user, isLoading]);
 
@@ -34,9 +41,9 @@ export default function EmployeeHomeScreen() {
   const handleLogout = async () => {
     try {
       await logout();
-      // Force navigation to home page
+      // Force navigation to login page
       setTimeout(() => {
-        router.replace('/(tabs)/(home)/');
+        router.replace('/login');
       }, 100);
     } catch (error) {
       console.error('Logout error:', error);
@@ -65,6 +72,10 @@ export default function EmployeeHomeScreen() {
         </View>
       </View>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (

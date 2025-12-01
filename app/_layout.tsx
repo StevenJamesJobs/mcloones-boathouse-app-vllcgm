@@ -1,3 +1,4 @@
+
 import "react-native-reanimated";
 import React, { useEffect } from "react";
 import { useFonts } from "expo-font";
@@ -22,7 +23,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  initialRouteName: "(tabs)",
+  initialRouteName: "splash",
 };
 
 export default function RootLayout() {
@@ -87,9 +88,49 @@ export default function RootLayout() {
           <AuthProvider>
             <WidgetProvider>
               <GestureHandlerRootView>
-            <Stack>
-              {/* Main app with tabs */}
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack screenOptions={{ headerShown: false }}>
+              {/* Splash Screen - Initial Route */}
+              <Stack.Screen name="splash" options={{ headerShown: false }} />
+              
+              {/* Login Screen */}
+              <Stack.Screen name="login" options={{ headerShown: false }} />
+
+              {/* Employee Portal */}
+              <Stack.Screen name="employee/home" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/inbox" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/profile" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/training" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/rewards" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/checkouts" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/message-detail" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/sent-message-detail" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/new-message" options={{ headerShown: true }} />
+
+              {/* Manager Portal */}
+              <Stack.Screen name="manager/home" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/inbox" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/profile" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/employees" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/announcements" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/announcements-editor" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/rewards" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/schedule" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/menu-editor" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/weekly-specials-editor" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/events-editor" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/special-features-editor" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/gallery-editor" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/about-us-editor" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/contact-us-editor" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/reviews-editor" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/tagline-editor" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/guides-editor" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/message-detail" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/sent-message-detail" options={{ headerShown: true }} />
+              <Stack.Screen name="manager/new-message" options={{ headerShown: true }} />
+
+              {/* Keep customer tabs hidden but accessible for future use */}
+              <Stack.Screen name="(tabs)" options={{ href: null }} />
 
               {/* Modal Demo Screens */}
               <Stack.Screen
