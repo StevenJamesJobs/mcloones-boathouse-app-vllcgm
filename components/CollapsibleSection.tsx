@@ -34,11 +34,13 @@ export function CollapsibleSection({
   };
 
   const accentColor = variant === 'manager' ? colors.managerAccent : colors.employeeAccent;
+  const headerBgColor = variant === 'manager' ? colors.managerSectionHeader : colors.employeeSectionHeader;
+  const cardBgColor = variant === 'manager' ? colors.managerCard : colors.employeeCard;
 
   return (
     <View style={styles.container}>
       <Pressable
-        style={styles.header}
+        style={[styles.header, { backgroundColor: headerBgColor }]}
         onPress={toggleExpanded}
         android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
       >
@@ -60,7 +62,7 @@ export function CollapsibleSection({
       </Pressable>
       
       {isExpanded && (
-        <View style={styles.content}>
+        <View style={[styles.content, { backgroundColor: cardBgColor }]}>
           {children}
         </View>
       )}
@@ -70,7 +72,6 @@ export function CollapsibleSection({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
     borderRadius: 12,
     marginBottom: 16,
     overflow: 'hidden',
@@ -82,7 +83,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    backgroundColor: colors.card,
   },
   headerLeft: {
     flexDirection: 'row',

@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Linking, Image } from 'react-native';
 import { Stack, router, useFocusEffect } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
@@ -12,6 +12,7 @@ import { useSpecialFeatures } from '@/hooks/useSpecialFeatures';
 import { useWeeklySpecials } from '@/hooks/useWeeklySpecials';
 import { CompactWeatherDisplay } from '@/components/CompactWeatherDisplay';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
+import { SwipeableImageModal } from '@/components/SwipeableImageModal';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function EmployeeHomeScreen() {
@@ -22,6 +23,7 @@ export default function EmployeeHomeScreen() {
   const { features } = useSpecialFeatures();
   const { specials } = useWeeklySpecials();
   const [mcloonesBucks, setMcloonesBucks] = useState<number>(0);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -238,6 +240,15 @@ export default function EmployeeHomeScreen() {
                     style={styles.eventItem}
                     onPress={() => handleEventPress(event)}
                   >
+                    {event.image_url && (
+                      <Pressable onPress={() => setExpandedImage(event.image_url)}>
+                        <Image
+                          source={{ uri: event.image_url }}
+                          style={event.display_style === 'banner' ? styles.eventImageWide : styles.eventImageSquare}
+                          resizeMode="cover"
+                        />
+                      </Pressable>
+                    )}
                     <View style={styles.eventHeader}>
                       <Text style={styles.eventTitle}>{event.title}</Text>
                       {event.rsvp_link && (
@@ -276,6 +287,15 @@ export default function EmployeeHomeScreen() {
                   style={styles.featureItem}
                   onPress={() => handleFeaturePress(feature)}
                 >
+                  {feature.image_url && (
+                    <Pressable onPress={() => setExpandedImage(feature.image_url)}>
+                      <Image
+                        source={{ uri: feature.image_url }}
+                        style={feature.display_style === 'banner' ? styles.featureImageWide : styles.featureImageSquare}
+                        resizeMode="cover"
+                      />
+                    </Pressable>
+                  )}
                   <View style={styles.featureHeader}>
                     <Text style={styles.featureTitle}>{feature.title}</Text>
                     {feature.link_url && (
@@ -299,6 +319,15 @@ export default function EmployeeHomeScreen() {
               <Text style={styles.sectionTitle}>Weekly Specials</Text>
               {specials.map((special) => (
                 <View key={special.id} style={styles.specialItem}>
+                  {special.image_url && (
+                    <Pressable onPress={() => setExpandedImage(special.image_url)}>
+                      <Image
+                        source={{ uri: special.image_url }}
+                        style={special.display_style === 'banner' ? styles.specialImageWide : styles.specialImageSquare}
+                        resizeMode="cover"
+                      />
+                    </Pressable>
+                  )}
                   <View style={styles.specialHeader}>
                     <Text style={styles.specialTitle}>{special.title}</Text>
                     {special.price && (
@@ -324,7 +353,7 @@ export default function EmployeeHomeScreen() {
             style={styles.profileButton}
             onPress={() => router.push('/employee/profile')}
           >
-            <MaterialIcons name="person" size={32} color="#3289a8" />
+            <MaterialIcons name="person" size={32} color={colors.employeeAccent} />
             <Text style={styles.profileButtonText}>My Profile Info</Text>
           </Pressable>
 
@@ -337,26 +366,33 @@ export default function EmployeeHomeScreen() {
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/training')}
             >
-              <MaterialIcons name="menu-book" size={36} color="#3289a8" />
+              <MaterialIcons name="menu-book" size={36} color={colors.employeeAccent} />
               <Text style={styles.quickLinkText}>Guides & Training</Text>
             </Pressable>
             <Pressable
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/rewards')}
             >
-              <MaterialIcons name="stars" size={36} color="#3289a8" />
+              <MaterialIcons name="stars" size={36} color={colors.employeeAccent} />
               <Text style={styles.quickLinkText}>Rewards</Text>
             </Pressable>
             <Pressable
               style={styles.quickLinkButton}
               onPress={() => router.push('/employee/checkouts')}
             >
-              <MaterialIcons name="calculate" size={36} color="#3289a8" />
+              <MaterialIcons name="calculate" size={36} color={colors.employeeAccent} />
               <Text style={styles.quickLinkText}>Check Outs</Text>
             </Pressable>
           </View>
         </ScrollView>
       </View>
+
+      {/* Expanded Image Modal with Swipe-Down Gesture */}
+      <SwipeableImageModal
+        visible={expandedImage !== null}
+        imageUrl={expandedImage}
+        onClose={() => setExpandedImage(null)}
+      />
     </>
   );
 }
@@ -442,7 +478,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: colors.card,
+    backgroundColor: colors.employeeCard,
     borderRadius: 8,
     gap: 8,
   },
@@ -506,6 +542,20 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  eventImageWide: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: colors.border,
+  },
+  eventImageSquare: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: colors.border,
+  },
   eventHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -548,7 +598,7 @@ const styles = StyleSheet.create({
     color: colors.employeeAccent,
   },
   specialFeaturesSection: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.employeeCard,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -565,6 +615,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  featureImageWide: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: colors.border,
+  },
+  featureImageSquare: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: colors.border,
   },
   featureHeader: {
     flexDirection: 'row',
@@ -590,7 +654,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   weeklySpecialsSection: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.employeeCard,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -601,6 +665,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  specialImageWide: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: colors.border,
+  },
+  specialImageSquare: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: colors.border,
   },
   specialHeader: {
     flexDirection: 'row',
