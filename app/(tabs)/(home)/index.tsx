@@ -17,6 +17,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { SwipeableImageModal } from '@/components/SwipeableImageModal';
+import { OpenTableReservationButton } from '@/components/OpenTableReservationButton';
 
 export default function HomeScreen() {
   const [loginModalVisible, setLoginModalVisible] = useState(false);
@@ -182,6 +183,14 @@ export default function HomeScreen() {
                 ) : null}
               </View>
             </View>
+          </View>
+
+          {/* OpenTable Reservation Button - No Card, Direct Below Tagline */}
+          <View style={styles.reservationSection}>
+            <OpenTableReservationButton 
+              restaurantUrl="https://www.opentable.com/restaurant/profile/69187?shareReferrer=ios-share"
+              restaurantName="McLoone's Boathouse"
+            />
           </View>
 
           {/* Upcoming Events */}
@@ -726,6 +735,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
     fontWeight: '500',
+  },
+  reservationSection: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   section: {
     paddingHorizontal: 16,

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
@@ -12,11 +12,16 @@ export default function RewardsScreen() {
   const { transactions, topEmployees, loading, getEmployeeTotalBucks } = useRewards();
   const [userBucks, setUserBucks] = useState(0);
 
-  useEffect(() => {
+  const updateUserBucks = useCallback(async () => {
     if (user?.id) {
-      getEmployeeTotalBucks(user.id).then(setUserBucks);
+      const bucks = await getEmployeeTotalBucks(user.id);
+      setUserBucks(bucks);
     }
-  }, [user?.id, transactions]);
+  }, [user?.id, getEmployeeTotalBucks]);
+
+  useEffect(() => {
+    updateUserBucks();
+  }, [updateUserBucks, transactions]);
 
   // Filter out hidden transactions for employees
   const visibleTransactions = transactions.filter(t => !t.hidden_from_employees);

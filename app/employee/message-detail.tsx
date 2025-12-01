@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -25,16 +25,20 @@ export default function MessageDetailScreen() {
   const [replyBody, setReplyBody] = useState('');
   const [sending, setSending] = useState(false);
 
+  const handleMarkAsRead = useCallback(() => {
+    const foundMessage = inboxMessages.find((msg) => msg.id === id);
+    if (foundMessage && !foundMessage.recipient_info.is_read) {
+      markAsRead(foundMessage.id);
+    }
+  }, [id, inboxMessages, markAsRead]);
+
   useEffect(() => {
     const foundMessage = inboxMessages.find((msg) => msg.id === id);
     if (foundMessage) {
       setMessage(foundMessage);
-      // Mark as read if not already read
-      if (!foundMessage.recipient_info.is_read) {
-        markAsRead(foundMessage.id);
-      }
+      handleMarkAsRead();
     }
-  }, [id, inboxMessages]);
+  }, [id, inboxMessages, handleMarkAsRead]);
 
   const handleDelete = () => {
     Alert.alert('Delete Message', 'Are you sure you want to delete this message?', [

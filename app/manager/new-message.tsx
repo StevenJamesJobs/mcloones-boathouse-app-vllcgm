@@ -1,6 +1,5 @@
 
-// This file is identical to employee/new-message.tsx but with manager styling
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -29,11 +28,7 @@ export default function ManagerNewMessageScreen() {
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadRecipients();
-  }, []);
-
-  const loadRecipients = async () => {
+  const loadRecipients = useCallback(async () => {
     setLoading(true);
     const [recipientsList, groups] = await Promise.all([
       fetchRecipients(),
@@ -42,7 +37,11 @@ export default function ManagerNewMessageScreen() {
     setRecipients(recipientsList);
     setJobTitleGroups(groups);
     setLoading(false);
-  };
+  }, [fetchRecipients, fetchJobTitleGroups]);
+
+  useEffect(() => {
+    loadRecipients();
+  }, [loadRecipients]);
 
   const toggleRecipient = (recipient: RecipientOption) => {
     setSelectedRecipients((prev) => {
