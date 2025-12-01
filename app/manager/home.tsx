@@ -54,6 +54,11 @@ export default function ManagerHomeScreen() {
     }
   };
 
+  const handleBackPress = () => {
+    // Navigate back to login screen instead of splash
+    router.replace('/login');
+  };
+
   const customerTools = [
     { id: 1, title: 'Menu Editor', icon: 'restaurant', route: '/manager/menu-editor', color: colors.managerAccent },
     { id: 2, title: 'Weekly Specials Editor', icon: 'star', route: '/manager/weekly-specials-editor', color: colors.managerAccent },
@@ -111,6 +116,11 @@ export default function ManagerHomeScreen() {
             backgroundColor: colors.managerPrimary,
           },
           headerTintColor: '#FFFFFF',
+          headerLeft: () => (
+            <Pressable onPress={handleBackPress} style={styles.backButton}>
+              <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
+            </Pressable>
+          ),
           headerRight: () => (
             <Pressable onPress={handleLogout} style={styles.logoutButton}>
               <Text style={styles.logoutButtonText}>Logout</Text>
@@ -288,6 +298,11 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: colors.textSecondary,
+  },
+  backButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginLeft: 8,
   },
   logoutButton: {
     paddingHorizontal: 16,
