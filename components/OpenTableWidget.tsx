@@ -106,7 +106,7 @@ export function OpenTableWidget({
         <div id="ot-widget-container">
           <!-- OpenTable widget will load here -->
         </div>
-        <script type='text/javascript' src='//www.opentable.com/widget/reservation/loader?rid=${restaurantId}&type=${theme}&theme=${theme}&color=${color}&dark=${dark}&iframe=true&domain=com&lang=en-US&newtab=false&ot_source=Restaurant%20App&cfe=true'></script>
+        <script type='text/javascript' src='//www.opentable.com/widget/reservation/loader?rid=69187&type=standard&theme=wide&color=5&dark=false&iframe=false&domain=com&lang=en-US&newtab=false&ot_source=Restaurant%20website&cfe=true'></script>
       </body>
     </html>
   `;
