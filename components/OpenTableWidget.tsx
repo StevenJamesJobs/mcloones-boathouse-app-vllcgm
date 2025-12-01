@@ -14,12 +14,12 @@ interface OpenTableWidgetProps {
 
 export function OpenTableWidget({
   restaurantId = '69187',
-  theme = 'wide',
-  color = '1',
+  theme = 'standard',
+  color = '5',
   dark = false,
-  height = 200,
+  height = 180,
 }: OpenTableWidgetProps) {
-  // Construct the OpenTable widget HTML with custom styling to match the image
+  // Construct the OpenTable widget HTML with proper script loading
   const widgetHTML = `
     <!DOCTYPE html>
     <html>
@@ -31,65 +31,82 @@ export function OpenTableWidget({
             padding: 0;
             box-sizing: border-box;
           }
-          body {
+          html, body {
+            width: 100%;
+            height: 100%;
             overflow: hidden;
-            background-color: #f5f5f5;
+            background-color: transparent;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           }
           #ot-widget-container {
             width: 100%;
             height: 100%;
-            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
-          /* Override OpenTable widget styles to match the image */
+          /* OpenTable widget styling overrides */
           .ot-dtp-picker,
           .ot-dtp-picker-selector {
-            background-color: #f5f5f5 !important;
-          }
-          .ot-dtp-picker-selector {
+            background-color: transparent !important;
             border: none !important;
             box-shadow: none !important;
           }
           .ot-dtp-picker-selector select,
-          .ot-dtp-picker-selector input {
+          .ot-dtp-picker-selector input,
+          .ot-dtp-picker-selector button {
             background-color: white !important;
             border: 1px solid #d0d0d0 !important;
             border-radius: 4px !important;
-            padding: 12px !important;
-            font-size: 16px !important;
+            padding: 10px 12px !important;
+            font-size: 14px !important;
             color: #333 !important;
+            margin: 4px !important;
           }
           .ot-dtp-picker-button,
           .ot-button,
-          button[type="submit"] {
+          button[type="submit"],
+          .ot-button--primary {
             background-color: #da3743 !important;
             color: white !important;
             border: none !important;
             border-radius: 4px !important;
-            padding: 12px 24px !important;
-            font-size: 16px !important;
+            padding: 12px 20px !important;
+            font-size: 14px !important;
             font-weight: 600 !important;
             cursor: pointer !important;
             transition: background-color 0.2s !important;
+            margin: 4px !important;
           }
           .ot-dtp-picker-button:hover,
           .ot-button:hover,
-          button[type="submit"]:hover {
+          button[type="submit"]:hover,
+          .ot-button--primary:hover {
             background-color: #c02a35 !important;
           }
           /* Compact layout */
           .ot-dtp-picker {
-            max-height: 180px !important;
+            max-height: 160px !important;
+            padding: 8px !important;
           }
-          /* Hide unnecessary elements for compact view */
-          .ot-dtp-picker-logo {
+          /* Hide logo for compact view */
+          .ot-dtp-picker-logo,
+          .ot-logo {
             display: none !important;
+          }
+          /* Ensure proper sizing */
+          iframe {
+            border: none !important;
+            width: 100% !important;
+            height: 100% !important;
           }
         </style>
       </head>
       <body>
-        <div id="ot-widget-container"></div>
-        <script type='text/javascript' src='//www.opentable.com/widget/reservation/loader?rid=${restaurantId}&type=standard&theme=wide&color=1&dark=false&iframe=true&domain=com&lang=en-US&newtab=false&ot_source=McLoones%20Boathouse%20App&cfe=true'></script>
+        <div id="ot-widget-container">
+          <!-- OpenTable widget will load here -->
+        </div>
+        <script type='text/javascript' src='//www.opentable.com/widget/reservation/loader?rid=${restaurantId}&type=${theme}&theme=${theme}&color=${color}&dark=${dark}&iframe=true&domain=com&lang=en-US&newtab=false&ot_source=Restaurant%20App&cfe=true'></script>
       </body>
     </html>
   `;
@@ -114,16 +131,30 @@ export function OpenTableWidget({
         showsVerticalScrollIndicator={false}
         showsHorizontalScrollIndicator={false}
         onShouldStartLoadWithRequest={(request) => {
-          // Allow OpenTable domains
+          // Allow OpenTable domains and data URIs
           if (
             request.url.includes('opentable.com') ||
             request.url.startsWith('about:blank') ||
-            request.url.startsWith('data:')
+            request.url.startsWith('data:') ||
+            request.url.startsWith('http')
           ) {
             return true;
           }
           return true;
         }}
+        onError={(syntheticEvent) => {
+          const { nativeEvent } = syntheticEvent;
+          console.warn('WebView error: ', nativeEvent);
+        }}
+        onHttpError={(syntheticEvent) => {
+          const { nativeEvent } = syntheticEvent;
+          console.warn('WebView HTTP error: ', nativeEvent.statusCode);
+        }}
+        mixedContentMode="always"
+        allowsInlineMediaPlayback={true}
+        mediaPlaybackRequiresUserAction={false}
+        thirdPartyCookiesEnabled={true}
+        sharedCookiesEnabled={true}
       />
     </View>
   );
