@@ -241,6 +241,16 @@ export default function EmployeeProfileScreen() {
     }
   };
 
+  const handleMessagesPress = () => {
+    console.log('Employee Profile Messages button pressed, navigating to inbox...');
+    router.push('/employee/inbox');
+  };
+
+  const handleNewMessagePress = () => {
+    console.log('Employee Profile New Message button pressed, navigating to new message...');
+    router.push('/employee/new-message');
+  };
+
   if (!user) {
     return (
       <View style={styles.container}>
@@ -336,7 +346,7 @@ export default function EmployeeProfileScreen() {
 
               <Pressable
                 style={styles.messagesButton}
-                onPress={() => router.push('/employee/inbox' as any)}
+                onPress={handleMessagesPress}
               >
                 <MaterialIcons 
                   name="inbox" 
@@ -368,7 +378,7 @@ export default function EmployeeProfileScreen() {
               {/* New Message Button */}
               <Pressable
                 style={styles.newMessageButton}
-                onPress={() => router.push('/employee/new-message' as any)}
+                onPress={handleNewMessagePress}
               >
                 <MaterialIcons name="edit" size={20} color="#FFFFFF" />
                 <Text style={styles.newMessageButtonText}>Compose New Message</Text>

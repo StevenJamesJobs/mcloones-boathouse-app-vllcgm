@@ -28,18 +28,39 @@ export default function NewMessageScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadRecipients = useCallback(async () => {
+    console.log('Employee New Message: Starting to load recipients...');
     setLoading(true);
-    const [recipientsList, groups, managersList] = await Promise.all([
-      fetchRecipients(),
-      fetchJobTitleGroups(),
-      fetchManagers(),
-    ]);
-    setRecipients(recipientsList);
-    setJobTitleGroups(groups);
-    setManagers(managersList);
-    setLoading(false);
+    setLoadError(null);
+    
+    try {
+      const [recipientsList, groups, managersList] = await Promise.all([
+        fetchRecipients(),
+        fetchJobTitleGroups(),
+        fetchManagers(),
+      ]);
+      
+      console.log('Employee New Message: Recipients loaded:', {
+        recipientsCount: recipientsList.length,
+        groupsCount: groups.length,
+        managersCount: managersList.length,
+      });
+      
+      setRecipients(recipientsList);
+      setJobTitleGroups(groups);
+      setManagers(managersList);
+      
+      if (recipientsList.length === 0) {
+        setLoadError('No recipients available. Please contact your manager.');
+      }
+    } catch (error) {
+      console.error('Employee New Message: Error loading recipients:', error);
+      setLoadError('Failed to load recipients. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }, [fetchRecipients, fetchJobTitleGroups, fetchManagers]);
 
   useEffect(() => {
@@ -194,7 +215,19 @@ export default function NewMessageScreen() {
               </View>
 
               {loading ? (
-                <ActivityIndicator size="large" color={colors.employeeAccent} />
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={colors.employeeAccent} />
+                  <Text style={styles.loadingText}>Loading recipients...</Text>
+                </View>
+              ) : loadError ? (
+                <View style={styles.errorContainer}>
+                  <MaterialIcons name="error-outline" size={48} color={colors.error} />
+                  <Text style={styles.errorText}>{loadError}</Text>
+                  <Pressable style={styles.retryButton} onPress={loadRecipients}>
+                    <MaterialIcons name="refresh" size={20} color="#FFFFFF" />
+                    <Text style={styles.retryButtonText}>Retry</Text>
+                  </Pressable>
+                </View>
               ) : (
                 <ScrollView style={styles.recipientList} nestedScrollEnabled>
                   {/* Quick Select: All Managers - Highlighted */}
@@ -216,42 +249,66 @@ export default function NewMessageScreen() {
                   )}
 
                   {/* Job Title Groups */}
-                  <Text style={styles.pickerSectionTitle}>By Job Title</Text>
-                  {filteredGroups.map((group) => (
-                    <Pressable
-                      key={group.job_title}
-                      style={styles.groupItem}
-                      onPress={() => selectJobTitleGroup(group)}
-                    >
-                      <MaterialIcons name="group" size={24} color={colors.employeeAccent} />
-                      <View style={styles.groupInfo}>
-                        <Text style={styles.groupTitle}>{group.job_title}</Text>
-                        <Text style={styles.groupCount}>{group.count} employees</Text>
-                      </View>
-                      <MaterialIcons name="add-circle" size={24} color={colors.employeeAccent} />
-                    </Pressable>
-                  ))}
+                  {filteredGroups.length > 0 && (
+                    <>
+                      <Text style={styles.pickerSectionTitle}>By Job Title</Text>
+                      {filteredGroups.map((group) => (
+                        <Pressable
+                          key={group.job_title}
+                          style={styles.groupItem}
+                          onPress={() => selectJobTitleGroup(group)}
+                        >
+                          <MaterialIcons name="group" size={24} color={colors.employeeAccent} />
+                          <View style={styles.groupInfo}>
+                            <Text style={styles.groupTitle}>{group.job_title}</Text>
+                            <Text style={styles.groupCount}>{group.count} employees</Text>
+                          </View>
+                          <MaterialIcons name="add-circle" size={24} color={colors.employeeAccent} />
+                        </Pressable>
+                      ))}
+                    </>
+                  )}
 
                   {/* Individual Users */}
-                  <Text style={styles.pickerSectionTitle}>Individual Users</Text>
-                  {filteredRecipients.map((recipient) => {
-                    const isSelected = selectedRecipients.find((r) => r.id === recipient.id);
-                    return (
-                      <Pressable
-                        key={recipient.id}
-                        style={[styles.recipientItem, isSelected && styles.recipientItemSelected]}
-                        onPress={() => toggleRecipient(recipient)}
-                      >
-                        <View style={styles.recipientInfo}>
-                          <Text style={styles.recipientName}>{recipient.full_name}</Text>
-                          <Text style={styles.recipientJobTitle}>{recipient.job_title}</Text>
-                        </View>
-                        {isSelected && (
-                          <MaterialIcons name="check-circle" size={24} color={colors.employeeAccent} />
-                        )}
-                      </Pressable>
-                    );
-                  })}
+                  {filteredRecipients.length > 0 && (
+                    <>
+                      <Text style={styles.pickerSectionTitle}>Individual Users</Text>
+                      {filteredRecipients.map((recipient) => {
+                        const isSelected = selectedRecipients.find((r) => r.id === recipient.id);
+                        return (
+                          <Pressable
+                            key={recipient.id}
+                            style={[styles.recipientItem, isSelected && styles.recipientItemSelected]}
+                            onPress={() => toggleRecipient(recipient)}
+                          >
+                            <View style={styles.recipientInfo}>
+                              <Text style={styles.recipientName}>{recipient.full_name}</Text>
+                              <Text style={styles.recipientJobTitle}>{recipient.job_title}</Text>
+                            </View>
+                            {isSelected && (
+                              <MaterialIcons name="check-circle" size={24} color={colors.employeeAccent} />
+                            )}
+                          </Pressable>
+                        );
+                      })}
+                    </>
+                  )}
+
+                  {/* No Results */}
+                  {filteredRecipients.length === 0 && filteredGroups.length === 0 && searchQuery && (
+                    <View style={styles.noResultsContainer}>
+                      <MaterialIcons name="search-off" size={48} color={colors.textSecondary} />
+                      <Text style={styles.noResultsText}>No results found for &quot;{searchQuery}&quot;</Text>
+                    </View>
+                  )}
+
+                  {/* No Recipients Available */}
+                  {recipients.length === 0 && !searchQuery && (
+                    <View style={styles.noResultsContainer}>
+                      <MaterialIcons name="people-outline" size={48} color={colors.textSecondary} />
+                      <Text style={styles.noResultsText}>No recipients available</Text>
+                    </View>
+                  )}
                 </ScrollView>
               )}
             </View>
@@ -383,6 +440,42 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
   },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 12,
+  },
+  errorContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  errorText: {
+    fontSize: 14,
+    color: colors.error,
+    marginTop: 12,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.employeeAccent,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    gap: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   recipientList: {
     maxHeight: 300,
   },
@@ -458,6 +551,17 @@ const styles = StyleSheet.create({
   recipientJobTitle: {
     fontSize: 14,
     color: colors.textSecondary,
+  },
+  noResultsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  noResultsText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginTop: 12,
+    textAlign: 'center',
   },
   input: {
     backgroundColor: colors.employeeCard,

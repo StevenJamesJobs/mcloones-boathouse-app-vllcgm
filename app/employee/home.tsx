@@ -96,6 +96,11 @@ export default function EmployeeHomeScreen() {
     }
   };
 
+  const handleMessagesPress = () => {
+    console.log('Employee Messages button pressed, navigating to inbox...');
+    router.push('/employee/inbox');
+  };
+
   if (isLoading) {
     return (
       <View style={[commonStyles.employeeContainer, styles.container]}>
@@ -162,7 +167,7 @@ export default function EmployeeHomeScreen() {
             {/* Messages Indicator - Always visible and clickable */}
             <Pressable
               style={styles.messagesIndicator}
-              onPress={() => router.push('/employee/inbox' as any)}
+              onPress={handleMessagesPress}
             >
               <MaterialIcons 
                 name="inbox" 
