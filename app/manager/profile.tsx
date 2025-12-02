@@ -332,7 +332,7 @@ export default function ManagerProfileScreen() {
             </View>
           </LinearGradient>
 
-          {/* Messages Card - Always visible */}
+          {/* Messages Card - Always visible with New Message button */}
           <View style={styles.cardContainer}>
             <View style={styles.card}>
               <View style={styles.cardHeader}>
@@ -380,6 +380,15 @@ export default function ManagerProfileScreen() {
                   )}
                 </View>
                 <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
+              </Pressable>
+
+              {/* New Message Button */}
+              <Pressable
+                style={styles.newMessageButton}
+                onPress={() => router.push('/manager/new-message' as any)}
+              >
+                <MaterialIcons name="edit" size={20} color="#FFFFFF" />
+                <Text style={styles.newMessageButtonText}>Compose New Message</Text>
               </Pressable>
             </View>
 
@@ -894,6 +903,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     gap: 12,
+    marginBottom: 12,
   },
   messagesButtonContent: {
     flex: 1,
@@ -907,6 +917,21 @@ const styles = StyleSheet.create({
   messagesButtonSubtitle: {
     fontSize: 14,
     color: colors.textSecondary,
+  },
+  newMessageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.managerAccent,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    gap: 8,
+  },
+  newMessageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
   },
   successIndicator: {
     flexDirection: 'row',
