@@ -17,9 +17,9 @@ export default function EmployeeTabLayout() {
     },
     {
       name: 'menu',
-      route: '/(tabs)/menu',
+      route: '/employee/menu',
       icon: 'book.fill',
-      label: 'Menus',
+      label: 'Menu',
     },
     {
       name: 'tools',
@@ -31,7 +31,7 @@ export default function EmployeeTabLayout() {
       name: 'rewards-and-reviews',
       route: '/employee/rewards-and-reviews',
       icon: 'star.fill',
-      label: 'Rewards',
+      label: 'Reviews',
     },
     {
       name: 'profile',
@@ -51,7 +51,7 @@ export default function EmployeeTabLayout() {
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="menu">
           <Icon sf="book.fill" drawable="ic_menu" />
-          <Label>Menus</Label>
+          <Label>Menu</Label>
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="tools">
           <Icon sf="wrench.fill" drawable="ic_build" />
@@ -59,7 +59,7 @@ export default function EmployeeTabLayout() {
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="rewards-and-reviews">
           <Icon sf="star.fill" drawable="ic_star" />
-          <Label>Rewards</Label>
+          <Label>Reviews</Label>
         </NativeTabs.Trigger>
         <NativeTabs.Trigger name="profile">
           <Icon sf="person.fill" drawable="ic_person" />
@@ -112,7 +112,7 @@ export default function EmployeeTabLayout() {
         }}
       >
         <Stack.Screen name="home" />
-        <Stack.Screen name="menu" options={{ href: null }} />
+        <Stack.Screen name="menu" />
         <Stack.Screen name="tools" />
         <Stack.Screen name="rewards-and-reviews" />
         <Stack.Screen name="profile" />

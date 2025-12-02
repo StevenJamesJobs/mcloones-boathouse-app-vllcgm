@@ -122,8 +122,8 @@ export default function RootLayout() {
               <Stack.Screen name="manager/sent-message-detail" options={{ headerShown: true }} />
               <Stack.Screen name="manager/new-message" options={{ headerShown: true }} />
 
-              {/* Keep customer tabs hidden but accessible for future use */}
-              <Stack.Screen name="(tabs)" options={{ href: null }} />
+              {/* Hide customer tabs - not accessible from initial flow */}
+              <Stack.Screen name="(tabs)" options={{ href: null, headerShown: false }} />
 
               {/* Modal Demo Screens */}
               <Stack.Screen
