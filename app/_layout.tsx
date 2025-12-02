@@ -95,8 +95,19 @@ export default function RootLayout() {
               {/* Login Screen */}
               <Stack.Screen name="login" options={{ headerShown: false }} />
 
-              {/* Employee Portal - Now with tab navigation */}
-              <Stack.Screen name="employee" options={{ headerShown: false }} />
+              {/* Employee Portal */}
+              <Stack.Screen name="employee/home" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/inbox" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/profile" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/training" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/rewards" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/rewards-and-reviews" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/tools" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/checkouts" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/full-events" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/message-detail" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/sent-message-detail" options={{ headerShown: true }} />
+              <Stack.Screen name="employee/new-message" options={{ headerShown: true }} />
 
               {/* Manager Portal */}
               <Stack.Screen name="manager/home" options={{ headerShown: true }} />
@@ -122,8 +133,8 @@ export default function RootLayout() {
               <Stack.Screen name="manager/sent-message-detail" options={{ headerShown: true }} />
               <Stack.Screen name="manager/new-message" options={{ headerShown: true }} />
 
-              {/* Hide customer tabs - not accessible from initial flow */}
-              <Stack.Screen name="(tabs)" options={{ href: null, headerShown: false }} />
+              {/* Keep customer tabs hidden but accessible for future use */}
+              <Stack.Screen name="(tabs)" options={{ href: null }} />
 
               {/* Modal Demo Screens */}
               <Stack.Screen

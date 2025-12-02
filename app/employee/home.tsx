@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Linking, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Linking, Image } from 'react-native';
 import { Stack, router, useFocusEffect } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
@@ -13,7 +13,6 @@ import { useWeeklySpecials } from '@/hooks/useWeeklySpecials';
 import { CompactWeatherDisplay } from '@/components/CompactWeatherDisplay';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { SwipeableImageModal } from '@/components/SwipeableImageModal';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function EmployeeHomeScreen() {
@@ -25,8 +24,6 @@ export default function EmployeeHomeScreen() {
   const { specials } = useWeeklySpecials();
   const [mcloonesBucks, setMcloonesBucks] = useState<number>(0);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
-  const insets = useSafeAreaInsets();
-  const bannerHeight = insets.top + 60;
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -65,6 +62,11 @@ export default function EmployeeHomeScreen() {
     }
   };
 
+  const handleBackPress = () => {
+    // Navigate back to login screen instead of splash
+    router.replace('/login');
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -96,11 +98,6 @@ export default function EmployeeHomeScreen() {
     }
   };
 
-  const handleMessagesPress = () => {
-    console.log('Employee Messages button pressed, navigating to inbox...');
-    router.push('/employee/inbox');
-  };
-
   if (isLoading) {
     return (
       <View style={[commonStyles.employeeContainer, styles.container]}>
@@ -127,25 +124,27 @@ export default function EmployeeHomeScreen() {
     <>
       <Stack.Screen
         options={{
-          headerShown: false,
+          title: 'Employee Portal',
+          headerStyle: {
+            backgroundColor: colors.employeeBackground,
+          },
+          headerTintColor: colors.text,
+          headerLeft: () => (
+            <Pressable onPress={handleBackPress} style={styles.backButton}>
+              <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+            </Pressable>
+          ),
+          headerRight: () => (
+            <Pressable onPress={handleLogout} style={styles.logoutButton}>
+              <Text style={styles.logoutButtonText}>Logout</Text>
+            </Pressable>
+          ),
         }}
       />
       
       <View style={[commonStyles.employeeContainer, styles.container]}>
-        {/* Floating Header Banner */}
-        <View style={[styles.banner, { paddingTop: insets.top + 8 }]}>
-          <Image 
-            source={require('@/assets/images/08405405-7ef4-4671-9758-a7220430497a.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <Pressable onPress={handleLogout} style={styles.logoutButton}>
-            <MaterialIcons name="logout" size={20} color={colors.employeeAccent} />
-          </Pressable>
-        </View>
-
         <ScrollView
-          contentContainerStyle={[styles.scrollContent, { paddingTop: bannerHeight + 20 }]}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           {/* Welcome Section */}
@@ -164,31 +163,23 @@ export default function EmployeeHomeScreen() {
               <MaterialIcons name="chevron-right" size={20} color="#1E88E5" />
             </Pressable>
 
-            {/* Messages Indicator - Always visible and clickable */}
+            {/* Messages Indicator */}
             <Pressable
               style={styles.messagesIndicator}
-              onPress={handleMessagesPress}
+              onPress={() => router.push('/employee/inbox' as any)}
             >
               <MaterialIcons 
                 name="inbox" 
                 size={20} 
                 color={unreadCount > 0 ? colors.employeeAccent : colors.textSecondary} 
               />
-              <View style={styles.messagesContent}>
-                {unreadCount > 0 ? (
-                  <>
-                    <Text style={styles.messagesIndicatorText}>
-                      {unreadCount} New Message{unreadCount !== 1 ? 's' : ''}
-                    </Text>
-                    <Text style={styles.messagesSubtext}>Tap to view your inbox</Text>
-                  </>
-                ) : (
-                  <>
-                    <Text style={styles.noMessagesText}>Messages</Text>
-                    <Text style={styles.messagesSubtext}>View your inbox</Text>
-                  </>
-                )}
-              </View>
+              {unreadCount > 0 ? (
+                <Text style={styles.messagesIndicatorText}>
+                  {unreadCount} New Message{unreadCount !== 1 ? 's' : ''}
+                </Text>
+              ) : (
+                <Text style={styles.noMessagesText}>No New Messages</Text>
+              )}
               <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
             </Pressable>
           </View>
@@ -277,13 +268,15 @@ export default function EmployeeHomeScreen() {
                     </View>
                   </Pressable>
                 ))}
-                <Pressable
-                  style={styles.viewAllButton}
-                  onPress={() => router.push('/employee/full-events' as any)}
-                >
-                  <Text style={styles.viewAllText}>View All Events</Text>
-                  <MaterialIcons name="arrow-forward" size={18} color={colors.employeeAccent} />
-                </Pressable>
+                {events.length > 3 && (
+                  <Pressable
+                    style={styles.viewAllButton}
+                    onPress={() => router.push('/employee/full-events' as any)}
+                  >
+                    <Text style={styles.viewAllText}>View All Events</Text>
+                    <MaterialIcons name="arrow-forward" size={18} color={colors.employeeAccent} />
+                  </Pressable>
+                )}
               </>
             )}
           </CollapsibleSection>
@@ -382,44 +375,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.employeeBackground,
   },
-  banner: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    backgroundColor: colors.employeeBackground,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    zIndex: 1000,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-      web: {
-        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
-      },
-    }),
-  },
-  logo: {
-    height: 40,
-    width: 200,
-  },
-  logoutButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: colors.employeeCard,
-  },
   scrollContent: {
     paddingHorizontal: 16,
     paddingVertical: 20,
@@ -434,6 +389,23 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: colors.textSecondary,
+  },
+  backButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginLeft: 8,
+  },
+  logoutButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginRight: 8,
+    backgroundColor: colors.employeeAccent,
+    borderRadius: 20,
+  },
+  logoutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   welcomeSection: {
     backgroundColor: colors.employeePrimary,
@@ -485,23 +457,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 8,
   },
-  messagesContent: {
-    flex: 1,
-  },
   messagesIndicatorText: {
+    flex: 1,
     fontSize: 15,
     fontWeight: '600',
     color: colors.employeeAccent,
   },
   noMessagesText: {
+    flex: 1,
     fontSize: 15,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  messagesSubtext: {
-    fontSize: 13,
+    fontWeight: '500',
     color: colors.textSecondary,
-    marginTop: 2,
   },
   announcementItem: {
     paddingVertical: 12,

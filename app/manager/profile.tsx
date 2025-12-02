@@ -1,19 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, Alert, Image, Switch } from 'react-native';
-import { Stack, router, useFocusEffect } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMessages } from '@/hooks/useMessages';
 import { supabase } from '@/app/integrations/supabase/client';
 import { LinearGradient } from 'expo-linear-gradient';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function ManagerProfileScreen() {
   const { user, updateProfile, changePassword, refreshProfile } = useAuth();
-  const { unreadCount, refreshInbox } = useMessages();
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -35,15 +32,6 @@ export default function ManagerProfileScreen() {
 
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(
     user?.push_notifications_enabled ?? true
-  );
-
-  // Refresh unread count when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      if (user?.id) {
-        refreshInbox();
-      }
-    }, [user?.id, refreshInbox])
   );
 
   useEffect(() => {
@@ -332,67 +320,8 @@ export default function ManagerProfileScreen() {
             </View>
           </LinearGradient>
 
-          {/* Messages Card - Always visible with New Message button */}
+          {/* Profile Info Card */}
           <View style={styles.cardContainer}>
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <View style={styles.cardHeaderLeft}>
-                  <MaterialIcons 
-                    name="inbox" 
-                    color={colors.managerAccent} 
-                    size={28} 
-                  />
-                  <Text style={styles.cardTitle}>Messages</Text>
-                  {unreadCount > 0 && (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{unreadCount}</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-
-              <Pressable
-                style={styles.messagesButton}
-                onPress={() => router.push('/manager/inbox' as any)}
-              >
-                <MaterialIcons 
-                  name="inbox" 
-                  size={24} 
-                  color={unreadCount > 0 ? colors.managerAccent : colors.textSecondary} 
-                />
-                <View style={styles.messagesButtonContent}>
-                  {unreadCount > 0 ? (
-                    <>
-                      <Text style={styles.messagesButtonTitle}>
-                        {unreadCount} New Message{unreadCount !== 1 ? 's' : ''}
-                      </Text>
-                      <Text style={styles.messagesButtonSubtitle}>
-                        Tap to view your inbox
-                      </Text>
-                    </>
-                  ) : (
-                    <>
-                      <Text style={styles.messagesButtonTitle}>No New Messages</Text>
-                      <Text style={styles.messagesButtonSubtitle}>
-                        Your inbox is all caught up
-                      </Text>
-                    </>
-                  )}
-                </View>
-                <MaterialIcons name="chevron-right" size={24} color={colors.textSecondary} />
-              </Pressable>
-
-              {/* New Message Button */}
-              <Pressable
-                style={styles.newMessageButton}
-                onPress={() => router.push('/manager/new-message' as any)}
-              >
-                <MaterialIcons name="edit" size={20} color="#FFFFFF" />
-                <Text style={styles.newMessageButtonText}>Compose New Message</Text>
-              </Pressable>
-            </View>
-
-            {/* Profile Info Card */}
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <View style={styles.cardHeaderLeft}>
@@ -883,55 +812,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: colors.text,
-  },
-  badge: {
-    backgroundColor: colors.managerAccent,
-    borderRadius: 12,
-    minWidth: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  messagesButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    gap: 12,
-    marginBottom: 12,
-  },
-  messagesButtonContent: {
-    flex: 1,
-  },
-  messagesButtonTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 2,
-  },
-  messagesButtonSubtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  newMessageButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.managerAccent,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    gap: 8,
-  },
-  newMessageButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
   },
   successIndicator: {
     flexDirection: 'row',

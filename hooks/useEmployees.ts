@@ -17,19 +17,13 @@ export function useEmployees() {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      console.log('Fetching employees...');
-      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .order('full_name', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching employees:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log(`Successfully fetched ${data?.length || 0} employees`);
       setEmployees(data || []);
       setError(null);
     } catch (err) {
