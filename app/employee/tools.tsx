@@ -45,7 +45,7 @@ export default function ToolsScreen() {
           <View style={styles.toolsGrid}>
             <Pressable
               style={styles.toolCard}
-              onPress={() => router.push('/employee/training')}
+              onPress={() => router.push('/employee/training' as any)}
             >
               <MaterialIcons name="menu-book" size={48} color={colors.employeeAccent} />
               <Text style={styles.toolTitle}>Guides & Training</Text>
@@ -56,7 +56,7 @@ export default function ToolsScreen() {
 
             <Pressable
               style={styles.toolCard}
-              onPress={() => router.push('/employee/checkouts')}
+              onPress={() => router.push('/employee/checkouts' as any)}
             >
               <MaterialIcons name="calculate" size={48} color={colors.employeeAccent} />
               <Text style={styles.toolTitle}>Check Outs</Text>

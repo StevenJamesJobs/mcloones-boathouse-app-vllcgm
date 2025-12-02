@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Linking, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Linking, Image, Platform } from 'react-native';
 import { Stack, router, useFocusEffect } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
@@ -13,6 +13,7 @@ import { useWeeklySpecials } from '@/hooks/useWeeklySpecials';
 import { CompactWeatherDisplay } from '@/components/CompactWeatherDisplay';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
 import { SwipeableImageModal } from '@/components/SwipeableImageModal';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function EmployeeHomeScreen() {
@@ -24,6 +25,8 @@ export default function EmployeeHomeScreen() {
   const { specials } = useWeeklySpecials();
   const [mcloonesBucks, setMcloonesBucks] = useState<number>(0);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
+  const bannerHeight = insets.top + 60;
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -119,23 +122,25 @@ export default function EmployeeHomeScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Employee Portal',
-          headerStyle: {
-            backgroundColor: colors.employeeAccent,
-          },
-          headerTintColor: '#FFFFFF',
-          headerRight: () => (
-            <Pressable onPress={handleLogout} style={styles.logoutButton}>
-              <MaterialIcons name="logout" size={20} color="#FFFFFF" />
-              <Text style={styles.logoutButtonText}>Logout</Text>
-            </Pressable>
-          ),
+          headerShown: false,
         }}
       />
       
       <View style={[commonStyles.employeeContainer, styles.container]}>
+        {/* Floating Header Banner */}
+        <View style={[styles.banner, { paddingTop: insets.top + 8 }]}>
+          <Image 
+            source={require('@/assets/images/08405405-7ef4-4671-9758-a7220430497a.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Pressable onPress={handleLogout} style={styles.logoutButton}>
+            <MaterialIcons name="logout" size={20} color={colors.employeeAccent} />
+          </Pressable>
+        </View>
+
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingTop: bannerHeight + 20 }]}
           showsVerticalScrollIndicator={false}
         >
           {/* Welcome Section */}
@@ -154,7 +159,7 @@ export default function EmployeeHomeScreen() {
               <MaterialIcons name="chevron-right" size={20} color="#1E88E5" />
             </Pressable>
 
-            {/* Messages Indicator - Always visible */}
+            {/* Messages Indicator - Always visible and clickable */}
             <Pressable
               style={styles.messagesIndicator}
               onPress={() => router.push('/employee/inbox' as any)}
@@ -372,6 +377,44 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.employeeBackground,
   },
+  banner: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    backgroundColor: colors.employeeBackground,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    zIndex: 1000,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+      },
+    }),
+  },
+  logo: {
+    height: 40,
+    width: 200,
+  },
+  logoutButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: colors.employeeCard,
+  },
   scrollContent: {
     paddingHorizontal: 16,
     paddingVertical: 20,
@@ -386,21 +429,6 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: colors.textSecondary,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 20,
-    gap: 6,
-  },
-  logoutButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
   },
   welcomeSection: {
     backgroundColor: colors.employeePrimary,
