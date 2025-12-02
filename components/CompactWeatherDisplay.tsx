@@ -25,16 +25,16 @@ export function CompactWeatherDisplay() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
+      <View style={styles.topRow}>
         <View style={styles.leftSection}>
           <Text style={styles.title}>McLoone&apos;s Boathouse Weather</Text>
           <View style={styles.tempRow}>
-            <Text style={styles.currentTemp}>{Math.round(weatherData.current.temp_f)}°F</Text>
             <Image
               source={{ uri: `https:${weatherData.current.condition.icon}` }}
               style={styles.weatherIcon}
               resizeMode="contain"
             />
+            <Text style={styles.currentTemp}>{Math.round(weatherData.current.temp_f)}°F</Text>
           </View>
         </View>
         <View style={styles.rightSection}>
@@ -48,30 +48,29 @@ export function CompactWeatherDisplay() {
           </View>
         </View>
       </View>
-      <Text style={styles.condition}>{weatherData.current.condition.text}</Text>
+      <View style={styles.forecastSection}>
+        <Text style={styles.condition}>{weatherData.current.condition.text}</Text>
+        <Text style={styles.forecast}>{today.day.condition.text}</Text>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 16,
+    paddingHorizontal: 0,
     paddingTop: 12,
     paddingBottom: 16,
-    marginBottom: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   loadingContainer: {
     alignItems: 'center',
     paddingVertical: 10,
   },
-  content: {
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   leftSection: {
     flex: 1,
@@ -79,22 +78,22 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.accent,
-    marginBottom: 6,
+    color: colors.employeeAccent,
+    marginBottom: 8,
   },
   tempRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  currentTemp: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.text,
+  weatherIcon: {
+    width: 48,
+    height: 48,
     marginRight: 8,
   },
-  weatherIcon: {
-    width: 36,
-    height: 36,
+  currentTemp: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: colors.text,
   },
   rightSection: {
     alignItems: 'flex-end',
@@ -106,7 +105,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   highLowLabel: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
     marginRight: 6,
   },
@@ -120,10 +119,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.accent,
   },
+  forecastSection: {
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.1)',
+  },
   condition: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.text,
-    fontWeight: '500',
-    textAlign: 'center',
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  forecast: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
   },
 });
