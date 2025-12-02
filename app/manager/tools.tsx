@@ -16,33 +16,36 @@ export default function ManagerToolsScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('employee');
 
   const employeeTools = [
-    { id: 1, title: 'Menu Editor', icon: 'restaurant', route: 'menu-editor', color: colors.managerAccent },
-    { id: 2, title: 'Weekly Specials Editor', icon: 'star', route: 'weekly-specials-editor', color: colors.managerAccent },
-    { id: 3, title: 'Events Editor', icon: 'event', route: 'events-editor', color: colors.managerAccent },
-    { id: 4, title: 'Special Features Editor', icon: 'auto-awesome', route: 'special-features-editor', color: colors.managerAccent },
-    { id: 5, title: 'Reviews Editor', icon: 'star-rate', route: 'reviews-editor', color: colors.managerAccent },
+    { id: 1, title: 'Menu Editor', icon: 'restaurant', route: '/manager/menu-editor', color: colors.managerAccent },
+    { id: 2, title: 'Weekly Specials Editor', icon: 'star', route: '/manager/weekly-specials-editor', color: colors.managerAccent },
+    { id: 3, title: 'Events Editor', icon: 'event', route: '/manager/events-editor', color: colors.managerAccent },
+    { id: 4, title: 'Special Features Editor', icon: 'auto-awesome', route: '/manager/special-features-editor', color: colors.managerAccent },
+    { id: 5, title: 'Reviews Editor', icon: 'star-rate', route: '/manager/reviews-editor', color: colors.managerAccent },
   ];
 
   const managementTools = [
-    { id: 1, title: 'Employees', icon: 'people', route: 'employees', color: colors.managerSecondary },
-    { id: 2, title: 'Announcements', icon: 'campaign', route: 'announcements-editor', color: colors.managerSecondary },
-    { id: 3, title: 'Rewards', icon: 'attach-money', route: 'rewards', color: colors.managerSecondary },
-    { id: 4, title: 'Schedules', icon: 'schedule', route: 'schedule', color: colors.managerSecondary },
+    { id: 1, title: 'Employees', icon: 'people', route: '/manager/employees', color: colors.managerSecondary },
+    { id: 2, title: 'Announcements', icon: 'campaign', route: '/manager/announcements-editor', color: colors.managerSecondary },
+    { id: 3, title: 'Rewards', icon: 'attach-money', route: '/manager/rewards', color: colors.managerSecondary },
+    { id: 4, title: 'Schedules', icon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
     { id: 5, title: 'Check Outs', icon: 'calculate', route: '/employee/checkouts', color: colors.managerSecondary },
-    { id: 6, title: 'Training & Guides', icon: 'menu-book', route: 'guides-editor', color: colors.managerSecondary },
+    { id: 6, title: 'Training & Guides', icon: 'menu-book', route: '/manager/guides-editor', color: colors.managerSecondary },
   ];
 
   const currentTools = activeTab === 'employee' ? employeeTools : managementTools;
 
   const handleToolPress = (route: string) => {
-    console.log('Navigating to:', route);
+    console.log('=== NAVIGATION DEBUG ===');
+    console.log('Attempting to navigate to:', route);
+    console.log('Route type:', typeof route);
+    console.log('Route starts with /:', route.startsWith('/'));
     
-    // Handle absolute paths (like /employee/checkouts)
-    if (route.startsWith('/')) {
+    try {
+      // Use the route directly as it's already a full path
       router.push(route as any);
-    } else {
-      // Handle relative paths within manager portal
-      router.push(`/manager/${route}` as any);
+      console.log('Navigation initiated successfully');
+    } catch (error) {
+      console.error('Navigation error:', error);
     }
   };
 
@@ -78,7 +81,7 @@ export default function ManagerToolsScreen() {
           {/* Guides and Training - Elongated Tile */}
           <Pressable
             style={styles.guidesButton}
-            onPress={() => router.push('/employee/training' as any)}
+            onPress={() => handleToolPress('/employee/training')}
           >
             <MaterialIcons name="menu-book" size={32} color={colors.managerAccent} />
             <Text style={styles.guidesButtonText}>Guides & Training</Text>
