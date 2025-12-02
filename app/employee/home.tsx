@@ -1,29 +1,20 @@
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Alert, Linking, Image } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { Stack, router, useFocusEffect } from 'expo-router';
 import { IconSymbol } from '@/components/IconSymbol';
 import { colors, commonStyles } from '@/styles/commonStyles';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { useMessages } from '@/hooks/useMessages';
-import { useEvents } from '@/hooks/useEvents';
-import { useSpecialFeatures } from '@/hooks/useSpecialFeatures';
-import { useWeeklySpecials } from '@/hooks/useWeeklySpecials';
-import { CompactWeatherDisplay } from '@/components/CompactWeatherDisplay';
+import { WeatherDisplay } from '@/components/WeatherDisplay';
 import { CollapsibleSection } from '@/components/CollapsibleSection';
-import { SwipeableImageModal } from '@/components/SwipeableImageModal';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 export default function EmployeeHomeScreen() {
   const { user, logout, isLoading } = useAuth();
   const { announcements } = useAnnouncements('employees');
   const { unreadCount, refreshInbox } = useMessages();
-  const { events } = useEvents();
-  const { features } = useSpecialFeatures();
-  const { specials } = useWeeklySpecials();
-  const [mcloonesBucks, setMcloonesBucks] = useState<number>(0);
-  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -38,15 +29,13 @@ export default function EmployeeHomeScreen() {
     }
   }, [user, isLoading]);
 
-  // Refresh unread count and McLoone's Bucks when screen comes into focus
+  // Refresh unread count when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       if (user?.id) {
         refreshInbox();
-        // Get McLoone's Bucks from user profile
-        setMcloonesBucks(user.mcloones_bucks || 0);
       }
-    }, [user?.id, user?.mcloones_bucks, refreshInbox])
+    }, [user?.id, refreshInbox])
   );
 
   const handleLogout = async () => {
@@ -80,24 +69,6 @@ export default function EmployeeHomeScreen() {
     }
   };
 
-  const handleEventPress = (event: any) => {
-    if (event.rsvp_link) {
-      Linking.openURL(event.rsvp_link).catch((err) => {
-        console.error('Failed to open RSVP link:', err);
-        Alert.alert('Error', 'Could not open RSVP link');
-      });
-    }
-  };
-
-  const handleFeaturePress = (feature: any) => {
-    if (feature.link_url) {
-      Linking.openURL(feature.link_url).catch((err) => {
-        console.error('Failed to open feature link:', err);
-        Alert.alert('Error', 'Could not open link');
-      });
-    }
-  };
-
   if (isLoading) {
     return (
       <View style={[commonStyles.employeeContainer, styles.container]}>
@@ -111,14 +82,6 @@ export default function EmployeeHomeScreen() {
   if (!user) {
     return null;
   }
-
-  // Get top 3 upcoming events
-  const upcomingEvents = events
-    .filter(event => new Date(event.event_date) >= new Date())
-    .slice(0, 3);
-
-  // Get top 5 special features
-  const topFeatures = features.slice(0, 5);
 
   return (
     <>
@@ -151,40 +114,10 @@ export default function EmployeeHomeScreen() {
           <View style={styles.welcomeSection}>
             <Text style={styles.welcomeTitle}>Welcome, {user?.full_name}!</Text>
             <Text style={styles.welcomeJobTitle}>{user?.job_title}</Text>
-            
-            {/* McLoone's Bucks - Now clickable with better color */}
-            <Pressable 
-              style={styles.bucksContainer}
-              onPress={() => router.push('/employee/rewards-and-reviews' as any)}
-            >
-              <MaterialIcons name="stars" size={20} color="#FFD700" />
-              <Text style={styles.bucksText}>McLoone&apos;s Bucks: </Text>
-              <Text style={styles.bucksAmount}>${mcloonesBucks.toFixed(2)}</Text>
-              <MaterialIcons name="chevron-right" size={20} color="#1E88E5" />
-            </Pressable>
-
-            {/* Messages Indicator */}
-            <Pressable
-              style={styles.messagesIndicator}
-              onPress={() => router.push('/employee/inbox' as any)}
-            >
-              <MaterialIcons 
-                name="inbox" 
-                size={20} 
-                color={unreadCount > 0 ? colors.employeeAccent : colors.textSecondary} 
-              />
-              {unreadCount > 0 ? (
-                <Text style={styles.messagesIndicatorText}>
-                  {unreadCount} New Message{unreadCount !== 1 ? 's' : ''}
-                </Text>
-              ) : (
-                <Text style={styles.noMessagesText}>No New Messages</Text>
-              )}
-              <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
-            </Pressable>
+            <Text style={styles.welcomeSubtitle}>Here&apos;s what&apos;s going on today!</Text>
           </View>
 
-          {/* Compact Weather - Collapsible */}
+          {/* Weather Card - Collapsible */}
           <CollapsibleSection
             title="Today's Weather"
             icon="wb-sunny"
@@ -192,7 +125,7 @@ export default function EmployeeHomeScreen() {
             defaultExpanded={true}
             variant="employee"
           >
-            <CompactWeatherDisplay />
+            <WeatherDisplay variant="employee" />
           </CollapsibleSection>
 
           {/* Announcements - Collapsible */}
@@ -226,147 +159,63 @@ export default function EmployeeHomeScreen() {
             )}
           </CollapsibleSection>
 
-          {/* Upcoming Events - Collapsible */}
-          <CollapsibleSection
-            title="Upcoming Events"
-            icon="event"
-            iconColor={colors.employeeAccent}
-            defaultExpanded={true}
-            variant="employee"
+          {/* Profile Section Header */}
+          <Text style={styles.profileHeader}>{user?.full_name}&apos;s Profile</Text>
+
+          {/* Messages - Elongated Tile with Badge */}
+          <Pressable
+            style={styles.messagesButton}
+            onPress={() => router.push('/employee/inbox' as any)}
           >
-            {upcomingEvents.length === 0 ? (
-              <Text style={styles.noEventsText}>No upcoming events at this time</Text>
-            ) : (
-              <>
-                {upcomingEvents.map((event) => (
-                  <Pressable
-                    key={event.id}
-                    style={styles.eventItem}
-                    onPress={() => handleEventPress(event)}
-                  >
-                    {event.image_url && (
-                      <Pressable onPress={() => setExpandedImage(event.image_url)}>
-                        <Image
-                          source={{ uri: event.image_url }}
-                          style={event.display_style === 'banner' ? styles.eventImageWide : styles.eventImageSquare}
-                          resizeMode="cover"
-                        />
-                      </Pressable>
-                    )}
-                    <View style={styles.eventHeader}>
-                      <Text style={styles.eventTitle}>{event.title}</Text>
-                      {event.rsvp_link && (
-                        <MaterialIcons name="open-in-new" size={18} color={colors.employeeAccent} />
-                      )}
-                    </View>
-                    <Text style={styles.eventDescription}>{event.description}</Text>
-                    <View style={styles.eventDateRow}>
-                      <MaterialIcons name="calendar-today" size={14} color={colors.textSecondary} />
-                      <Text style={styles.eventDate}>
-                        {new Date(event.event_date).toLocaleDateString()} at {event.event_time}
-                      </Text>
-                    </View>
-                  </Pressable>
-                ))}
-                {events.length > 3 && (
-                  <Pressable
-                    style={styles.viewAllButton}
-                    onPress={() => router.push('/employee/full-events' as any)}
-                  >
-                    <Text style={styles.viewAllText}>View All Events</Text>
-                    <MaterialIcons name="arrow-forward" size={18} color={colors.employeeAccent} />
-                  </Pressable>
-                )}
-              </>
-            )}
-          </CollapsibleSection>
-
-          {/* Special Features Section - Now Collapsible */}
-          {topFeatures.length > 0 && (
-            <CollapsibleSection
-              title="Special Features"
-              icon="auto-awesome"
-              iconColor={colors.employeeAccent}
-              defaultExpanded={true}
-              variant="employee"
-            >
-              {topFeatures.map((feature) => (
-                <Pressable
-                  key={feature.id}
-                  style={styles.featureItem}
-                  onPress={() => handleFeaturePress(feature)}
-                >
-                  {feature.image_url && (
-                    <Pressable onPress={() => setExpandedImage(feature.image_url)}>
-                      <Image
-                        source={{ uri: feature.image_url }}
-                        style={feature.display_style === 'banner' ? styles.featureImageWide : styles.featureImageSquare}
-                        resizeMode="cover"
-                      />
-                    </Pressable>
-                  )}
-                  <View style={styles.featureHeader}>
-                    <Text style={styles.featureTitle}>{feature.title}</Text>
-                    {feature.link_url && (
-                      <MaterialIcons name="open-in-new" size={18} color={colors.employeeAccent} />
-                    )}
-                  </View>
-                  <Text style={styles.featureDescription}>{feature.description}</Text>
-                  {feature.start_date && feature.end_date && (
-                    <Text style={styles.featureDates}>
-                      {new Date(feature.start_date).toLocaleDateString()} - {new Date(feature.end_date).toLocaleDateString()}
-                    </Text>
-                  )}
-                </Pressable>
-              ))}
-            </CollapsibleSection>
-          )}
-
-          {/* Weekly Specials Section - Now Collapsible */}
-          {specials.length > 0 && (
-            <CollapsibleSection
-              title="Weekly Specials"
-              icon="star"
-              iconColor={colors.employeeAccent}
-              defaultExpanded={true}
-              variant="employee"
-            >
-              {specials.map((special) => (
-                <View key={special.id} style={styles.specialItem}>
-                  {special.image_url && (
-                    <Pressable onPress={() => setExpandedImage(special.image_url)}>
-                      <Image
-                        source={{ uri: special.image_url }}
-                        style={special.display_style === 'banner' ? styles.specialImageWide : styles.specialImageSquare}
-                        resizeMode="cover"
-                      />
-                    </Pressable>
-                  )}
-                  <View style={styles.specialHeader}>
-                    <Text style={styles.specialTitle}>{special.title}</Text>
-                    {special.price && (
-                      <Text style={styles.specialPrice}>${special.price.toFixed(2)}</Text>
-                    )}
-                  </View>
-                  <Text style={styles.specialDescription}>{special.description}</Text>
-                  {special.valid_until && (
-                    <Text style={styles.specialValidUntil}>
-                      Valid until: {new Date(special.valid_until).toLocaleDateString()}
-                    </Text>
-                  )}
+            <View style={styles.iconContainer}>
+              <MaterialIcons name="inbox" size={32} color="#3289a8" />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
                 </View>
-              ))}
-            </CollapsibleSection>
-          )}
+              )}
+            </View>
+            <Text style={styles.messagesButtonText}>Messages</Text>
+          </Pressable>
+
+          {/* My Profile Info - Elongated */}
+          <Pressable
+            style={styles.profileButton}
+            onPress={() => router.push('/employee/profile')}
+          >
+            <MaterialIcons name="person" size={32} color="#3289a8" />
+            <Text style={styles.profileButtonText}>My Profile Info</Text>
+          </Pressable>
+
+          {/* Tools Section Header */}
+          <Text style={styles.toolsHeader}>{user?.full_name}&apos;s Tools</Text>
+
+          {/* Quick Links - 3 smaller tiles */}
+          <View style={styles.quickLinksGrid}>
+            <Pressable
+              style={styles.quickLinkButton}
+              onPress={() => router.push('/employee/training')}
+            >
+              <MaterialIcons name="menu-book" size={36} color="#3289a8" />
+              <Text style={styles.quickLinkText}>Guides & Training</Text>
+            </Pressable>
+            <Pressable
+              style={styles.quickLinkButton}
+              onPress={() => router.push('/employee/rewards')}
+            >
+              <MaterialIcons name="stars" size={36} color="#3289a8" />
+              <Text style={styles.quickLinkText}>Rewards</Text>
+            </Pressable>
+            <Pressable
+              style={styles.quickLinkButton}
+              onPress={() => router.push('/employee/checkouts')}
+            >
+              <MaterialIcons name="calculate" size={36} color="#3289a8" />
+              <Text style={styles.quickLinkText}>Check Outs</Text>
+            </Pressable>
+          </View>
         </ScrollView>
       </View>
-
-      {/* Expanded Image Modal with Swipe-Down Gesture */}
-      <SwipeableImageModal
-        visible={expandedImage !== null}
-        imageUrl={expandedImage}
-        onClose={() => setExpandedImage(null)}
-      />
     </>
   );
 }
@@ -423,51 +272,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: colors.employeeAccent,
-    marginBottom: 12,
+    marginBottom: 8,
   },
-  bucksContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#1E88E5',
-  },
-  bucksText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginLeft: 8,
-  },
-  bucksAmount: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1E88E5',
-    flex: 1,
-  },
-  messagesIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: colors.employeeCard,
-    borderRadius: 8,
-    gap: 8,
-  },
-  messagesIndicatorText: {
-    flex: 1,
+  welcomeSubtitle: {
     fontSize: 15,
-    fontWeight: '600',
-    color: colors.employeeAccent,
-  },
-  noMessagesText: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '500',
     color: colors.textSecondary,
+    fontStyle: 'italic',
   },
   announcementItem: {
     paddingVertical: 12,
@@ -507,158 +317,97 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontStyle: 'italic',
   },
-  noEventsText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    fontStyle: 'italic',
-  },
-  eventItem: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  eventImageWide: {
-    width: '100%',
-    height: 150,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: colors.border,
-  },
-  eventImageSquare: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: colors.border,
-  },
-  eventHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  eventTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+  profileHeader: {
+    fontSize: 20,
+    fontWeight: '700',
     color: colors.text,
-    flex: 1,
+    marginTop: 8,
+    marginBottom: 16,
   },
-  eventDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: 6,
-  },
-  eventDateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  eventDate: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: '500',
-  },
-  viewAllButton: {
+  messagesButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    marginTop: 8,
-    gap: 6,
+    backgroundColor: colors.employeeCard,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 12,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+    gap: 12,
   },
-  viewAllText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.employeeAccent,
+  iconContainer: {
+    position: 'relative',
   },
-  featureItem: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  featureImageWide: {
-    width: '100%',
-    height: 150,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: colors.border,
-  },
-  featureImageSquare: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: colors.border,
-  },
-  featureHeader: {
-    flexDirection: 'row',
+  badge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: colors.error,
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    paddingHorizontal: 6,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.employeeCard,
   },
-  featureTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    flex: 1,
-  },
-  featureDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  featureDates: {
+  badgeText: {
+    color: '#FFFFFF',
     fontSize: 12,
-    color: colors.textSecondary,
-    fontStyle: 'italic',
-  },
-  specialItem: {
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  specialImageWide: {
-    width: '100%',
-    height: 150,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: colors.border,
-  },
-  specialImageSquare: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: colors.border,
-  },
-  specialHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  specialTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    flex: 1,
-  },
-  specialPrice: {
-    fontSize: 16,
     fontWeight: '700',
-    color: colors.employeeAccent,
   },
-  specialDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: 4,
+  messagesButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
   },
-  specialValidUntil: {
+  profileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.employeeCard,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 12,
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+    gap: 12,
+  },
+  profileButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  toolsHeader: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  quickLinksGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  quickLinkButton: {
+    width: '31.5%',
+    aspectRatio: 1,
+    backgroundColor: colors.employeeCard,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+    elevation: 3,
+    gap: 8,
+  },
+  quickLinkText: {
     fontSize: 12,
-    color: colors.textSecondary,
-    fontStyle: 'italic',
+    fontWeight: '600',
+    color: colors.text,
+    textAlign: 'center',
   },
 });

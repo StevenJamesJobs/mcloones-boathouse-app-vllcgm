@@ -5,7 +5,7 @@ export const colors = {
   // Customer side colors (light blue and white theme)
   background: '#FFFFFF',
   text: '#000000',
-  textSecondary: '#666666',
+  textSecondary: '#000000',
   primary: '#3289a8',      // Light blue
   secondary: '#000000',    // Sky blue
   accent: '#3289a8',       // Steel blue // Buttons and Tagline
@@ -18,21 +18,19 @@ export const colors = {
   success: '#28A745',
   warning: '#FFC107',
   
-  // Employee side colors (unified light blue theme)
-  employeeBackground: '#F0F8FB',
-  employeePrimary: '#B8E0F0',
-  employeeSecondary: '#87CEEB',
-  employeeAccent: '#3289a8',
-  employeeCard: '#FFFFFF',
-  employeeSectionHeader: '#C5E3F0',  // Slightly darker than card for section headers
+  // Employee side colors (slightly darker)
+  employeeBackground: '#F5F5F5',
+  employeePrimary: '#87CEEB',
+  employeeSecondary: '#4682B4',
+  employeeAccent: '#5F9EA0',
+  employeeCard: '#daebf7',
   
   // Manager side colors (darker blue and gray)
   managerBackground: '#E8EEF2',
   managerPrimary: '#2C5F7C',
   managerSecondary: '#4682B4',
   managerAccent: '#5F9EA0',
-  managerCard: '#FFFFFF',
-  managerSectionHeader: '#D0DCE3',  // Slightly darker than card for section headers
+  managerCard: '#daebf7',
 };
 
 export const commonStyles = StyleSheet.create({
