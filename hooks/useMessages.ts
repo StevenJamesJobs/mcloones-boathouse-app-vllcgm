@@ -397,8 +397,6 @@ ${originalMessage.body}`;
   // Fetch all users for recipient selection
   const fetchRecipients = async (): Promise<RecipientOption[]> => {
     try {
-      console.log('Fetching recipients for message composition...');
-      
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, job_title, profile_picture_url')
@@ -406,12 +404,8 @@ ${originalMessage.body}`;
         .neq('id', user?.id || '')
         .order('full_name');
 
-      if (error) {
-        console.error('Error fetching recipients:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log(`Successfully fetched ${data?.length || 0} recipients`);
       return data || [];
     } catch (err: any) {
       console.error('Error fetching recipients:', err);
@@ -422,7 +416,6 @@ ${originalMessage.body}`;
   // Fetch job title groups
   const fetchJobTitleGroups = async (): Promise<JobTitleGroup[]> => {
     try {
-      console.log('Fetching job title groups...');
       const recipients = await fetchRecipients();
       
       const groupMap = new Map<string, RecipientOption[]>();
@@ -441,7 +434,6 @@ ${originalMessage.body}`;
         users,
       }));
 
-      console.log(`Successfully created ${groups.length} job title groups`);
       return groups.sort((a, b) => a.job_title.localeCompare(b.job_title));
     } catch (err: any) {
       console.error('Error fetching job title groups:', err);
@@ -452,8 +444,6 @@ ${originalMessage.body}`;
   // Fetch all managers for default selection
   const fetchManagers = async (): Promise<RecipientOption[]> => {
     try {
-      console.log('Fetching managers...');
-      
       const { data, error } = await supabase
         .from('profiles')
         .select('id, full_name, job_title, profile_picture_url')
@@ -462,12 +452,8 @@ ${originalMessage.body}`;
         .neq('id', user?.id || '')
         .order('full_name');
 
-      if (error) {
-        console.error('Error fetching managers:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log(`Successfully fetched ${data?.length || 0} managers`);
       return data || [];
     } catch (err: any) {
       console.error('Error fetching managers:', err);
