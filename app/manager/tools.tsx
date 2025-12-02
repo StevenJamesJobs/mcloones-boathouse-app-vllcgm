@@ -16,23 +16,35 @@ export default function ManagerToolsScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('employee');
 
   const employeeTools = [
-    { id: 1, title: 'Menu Editor', icon: 'restaurant', route: '/manager/menu-editor', color: colors.managerAccent },
-    { id: 2, title: 'Weekly Specials Editor', icon: 'star', route: '/manager/weekly-specials-editor', color: colors.managerAccent },
-    { id: 3, title: 'Events Editor', icon: 'event', route: '/manager/events-editor', color: colors.managerAccent },
-    { id: 4, title: 'Special Features Editor', icon: 'auto-awesome', route: '/manager/special-features-editor', color: colors.managerAccent },
-    { id: 5, title: 'Reviews Editor', icon: 'star-rate', route: '/manager/reviews-editor', color: colors.managerAccent },
+    { id: 1, title: 'Menu Editor', icon: 'restaurant', route: 'menu-editor', color: colors.managerAccent },
+    { id: 2, title: 'Weekly Specials Editor', icon: 'star', route: 'weekly-specials-editor', color: colors.managerAccent },
+    { id: 3, title: 'Events Editor', icon: 'event', route: 'events-editor', color: colors.managerAccent },
+    { id: 4, title: 'Special Features Editor', icon: 'auto-awesome', route: 'special-features-editor', color: colors.managerAccent },
+    { id: 5, title: 'Reviews Editor', icon: 'star-rate', route: 'reviews-editor', color: colors.managerAccent },
   ];
 
   const managementTools = [
-    { id: 1, title: 'Employees', icon: 'people', route: '/manager/employees', color: colors.managerSecondary },
-    { id: 2, title: 'Announcements', icon: 'campaign', route: '/manager/announcements-editor', color: colors.managerSecondary },
-    { id: 3, title: 'Rewards', icon: 'attach-money', route: '/manager/rewards', color: colors.managerSecondary },
-    { id: 4, title: 'Schedules', icon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
+    { id: 1, title: 'Employees', icon: 'people', route: 'employees', color: colors.managerSecondary },
+    { id: 2, title: 'Announcements', icon: 'campaign', route: 'announcements-editor', color: colors.managerSecondary },
+    { id: 3, title: 'Rewards', icon: 'attach-money', route: 'rewards', color: colors.managerSecondary },
+    { id: 4, title: 'Schedules', icon: 'schedule', route: 'schedule', color: colors.managerSecondary },
     { id: 5, title: 'Check Outs', icon: 'calculate', route: '/employee/checkouts', color: colors.managerSecondary },
-    { id: 6, title: 'Training & Guides', icon: 'menu-book', route: '/manager/guides-editor', color: colors.managerSecondary },
+    { id: 6, title: 'Training & Guides', icon: 'menu-book', route: 'guides-editor', color: colors.managerSecondary },
   ];
 
   const currentTools = activeTab === 'employee' ? employeeTools : managementTools;
+
+  const handleToolPress = (route: string) => {
+    console.log('Navigating to:', route);
+    
+    // Handle absolute paths (like /employee/checkouts)
+    if (route.startsWith('/')) {
+      router.push(route as any);
+    } else {
+      // Handle relative paths within manager portal
+      router.push(`/manager/${route}` as any);
+    }
+  };
 
   return (
     <>
@@ -118,7 +130,7 @@ export default function ManagerToolsScreen() {
                 <Pressable
                   key={tool.id}
                   style={[styles.toolCard, { backgroundColor: tool.color }]}
-                  onPress={() => router.push(tool.route as any)}
+                  onPress={() => handleToolPress(tool.route)}
                 >
                   <MaterialIcons name={tool.icon as any} color="#FFFFFF" size={28} />
                   <Text style={styles.toolTitle}>{tool.title}</Text>
