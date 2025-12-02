@@ -150,13 +150,9 @@ export default function ManagerHomeScreen() {
             backgroundColor: colors.managerPrimary,
           },
           headerTintColor: '#FFFFFF',
-          headerLeft: () => (
-            <Pressable onPress={handleBackPress} style={styles.backButton}>
-              <MaterialIcons name="arrow-back" size={24} color="#FFFFFF" />
-            </Pressable>
-          ),
           headerRight: () => (
             <Pressable onPress={handleLogout} style={styles.logoutButton}>
+              <MaterialIcons name="logout" size={20} color="#FFFFFF" />
               <Text style={styles.logoutButtonText}>Logout</Text>
             </Pressable>
           ),
@@ -173,7 +169,7 @@ export default function ManagerHomeScreen() {
             <Text style={styles.welcomeTitle}>Welcome, {user?.full_name}!</Text>
             <Text style={styles.welcomeJobTitle}>{user?.job_title}</Text>
 
-            {/* Messages Indicator */}
+            {/* Messages Indicator - Always visible */}
             <Pressable
               style={styles.messagesIndicator}
               onPress={() => router.push('/manager/inbox' as any)}
@@ -183,13 +179,21 @@ export default function ManagerHomeScreen() {
                 size={20} 
                 color={unreadCount > 0 ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)'} 
               />
-              {unreadCount > 0 ? (
-                <Text style={styles.messagesIndicatorText}>
-                  {unreadCount} New Message{unreadCount !== 1 ? 's' : ''}
-                </Text>
-              ) : (
-                <Text style={styles.noMessagesText}>No New Messages</Text>
-              )}
+              <View style={styles.messagesContent}>
+                {unreadCount > 0 ? (
+                  <>
+                    <Text style={styles.messagesIndicatorText}>
+                      {unreadCount} New Message{unreadCount !== 1 ? 's' : ''}
+                    </Text>
+                    <Text style={styles.messagesSubtext}>Tap to view your inbox</Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.noMessagesText}>Messages</Text>
+                    <Text style={styles.messagesSubtext}>View your inbox</Text>
+                  </>
+                )}
+              </View>
               <MaterialIcons name="chevron-right" size={20} color="rgba(255, 255, 255, 0.7)" />
             </Pressable>
           </View>
@@ -278,15 +282,13 @@ export default function ManagerHomeScreen() {
                     </View>
                   </Pressable>
                 ))}
-                {events.length > 3 && (
-                  <Pressable
-                    style={styles.viewAllButton}
-                    onPress={() => router.push('/manager/full-events' as any)}
-                  >
-                    <Text style={styles.viewAllText}>View All Events</Text>
-                    <MaterialIcons name="arrow-forward" size={18} color={colors.managerAccent} />
-                  </Pressable>
-                )}
+                <Pressable
+                  style={styles.viewAllButton}
+                  onPress={() => router.push('/manager/full-events' as any)}
+                >
+                  <Text style={styles.viewAllText}>View All Events</Text>
+                  <MaterialIcons name="arrow-forward" size={18} color={colors.managerAccent} />
+                </Pressable>
               </>
             )}
           </CollapsibleSection>
@@ -482,14 +484,17 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginRight: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 20,
+    gap: 6,
   },
   logoutButtonText: {
-    color: colors.managerPrimary,
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -520,17 +525,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 8,
   },
-  messagesIndicatorText: {
+  messagesContent: {
     flex: 1,
+  },
+  messagesIndicatorText: {
     fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
   },
   noMessagesText: {
-    flex: 1,
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  messagesSubtext: {
+    fontSize: 13,
     color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 2,
   },
   announcementItem: {
     paddingVertical: 12,

@@ -315,7 +315,7 @@ export default function EmployeeProfileScreen() {
             </View>
           </LinearGradient>
 
-          {/* Messages Card - Added here */}
+          {/* Messages Card - Always visible */}
           <View style={styles.cardContainer}>
             <View style={styles.card}>
               <View style={styles.cardHeader}>

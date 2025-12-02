@@ -121,11 +121,12 @@ export default function EmployeeHomeScreen() {
         options={{
           title: 'Employee Portal',
           headerStyle: {
-            backgroundColor: colors.employeeBackground,
+            backgroundColor: colors.employeeAccent,
           },
-          headerTintColor: colors.text,
+          headerTintColor: '#FFFFFF',
           headerRight: () => (
             <Pressable onPress={handleLogout} style={styles.logoutButton}>
+              <MaterialIcons name="logout" size={20} color="#FFFFFF" />
               <Text style={styles.logoutButtonText}>Logout</Text>
             </Pressable>
           ),
@@ -153,7 +154,7 @@ export default function EmployeeHomeScreen() {
               <MaterialIcons name="chevron-right" size={20} color="#1E88E5" />
             </Pressable>
 
-            {/* Messages Indicator */}
+            {/* Messages Indicator - Always visible */}
             <Pressable
               style={styles.messagesIndicator}
               onPress={() => router.push('/employee/inbox' as any)}
@@ -163,13 +164,21 @@ export default function EmployeeHomeScreen() {
                 size={20} 
                 color={unreadCount > 0 ? colors.employeeAccent : colors.textSecondary} 
               />
-              {unreadCount > 0 ? (
-                <Text style={styles.messagesIndicatorText}>
-                  {unreadCount} New Message{unreadCount !== 1 ? 's' : ''}
-                </Text>
-              ) : (
-                <Text style={styles.noMessagesText}>No New Messages</Text>
-              )}
+              <View style={styles.messagesContent}>
+                {unreadCount > 0 ? (
+                  <>
+                    <Text style={styles.messagesIndicatorText}>
+                      {unreadCount} New Message{unreadCount !== 1 ? 's' : ''}
+                    </Text>
+                    <Text style={styles.messagesSubtext}>Tap to view your inbox</Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.noMessagesText}>Messages</Text>
+                    <Text style={styles.messagesSubtext}>View your inbox</Text>
+                  </>
+                )}
+              </View>
               <MaterialIcons name="chevron-right" size={20} color={colors.textSecondary} />
             </Pressable>
           </View>
@@ -258,15 +267,13 @@ export default function EmployeeHomeScreen() {
                     </View>
                   </Pressable>
                 ))}
-                {events.length > 3 && (
-                  <Pressable
-                    style={styles.viewAllButton}
-                    onPress={() => router.push('/employee/full-events' as any)}
-                  >
-                    <Text style={styles.viewAllText}>View All Events</Text>
-                    <MaterialIcons name="arrow-forward" size={18} color={colors.employeeAccent} />
-                  </Pressable>
-                )}
+                <Pressable
+                  style={styles.viewAllButton}
+                  onPress={() => router.push('/employee/full-events' as any)}
+                >
+                  <Text style={styles.viewAllText}>View All Events</Text>
+                  <MaterialIcons name="arrow-forward" size={18} color={colors.employeeAccent} />
+                </Pressable>
               </>
             )}
           </CollapsibleSection>
@@ -381,11 +388,14 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginRight: 8,
-    backgroundColor: colors.employeeAccent,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 20,
+    gap: 6,
   },
   logoutButtonText: {
     color: '#FFFFFF',
@@ -442,17 +452,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 8,
   },
-  messagesIndicatorText: {
+  messagesContent: {
     flex: 1,
+  },
+  messagesIndicatorText: {
     fontSize: 15,
     fontWeight: '600',
     color: colors.employeeAccent,
   },
   noMessagesText: {
-    flex: 1,
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: '600',
+    color: colors.text,
+  },
+  messagesSubtext: {
+    fontSize: 13,
     color: colors.textSecondary,
+    marginTop: 2,
   },
   announcementItem: {
     paddingVertical: 12,
