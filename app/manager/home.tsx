@@ -16,8 +16,6 @@ import { SwipeableImageModal } from '@/components/SwipeableImageModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
-type TabType = 'customer' | 'employee';
-
 export default function ManagerHomeScreen() {
   const { user, logout, isLoading } = useAuth();
   const { announcements } = useAnnouncements('managers');
@@ -25,7 +23,6 @@ export default function ManagerHomeScreen() {
   const { events } = useEvents();
   const { features } = useSpecialFeatures();
   const { specials } = useWeeklySpecials();
-  const [activeTab, setActiveTab] = useState<TabType>('customer');
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
   const bannerHeight = insets.top + 60;
@@ -69,25 +66,6 @@ export default function ManagerHomeScreen() {
     // Navigate back to login screen instead of splash
     router.replace('/login');
   };
-
-  const customerTools = [
-    { id: 1, title: 'Menu Editor', icon: 'restaurant', route: '/manager/menu-editor', color: colors.managerAccent },
-    { id: 2, title: 'Weekly Specials Editor', icon: 'star', route: '/manager/weekly-specials-editor', color: colors.managerAccent },
-    { id: 3, title: 'Events Editor', icon: 'event', route: '/manager/events-editor', color: colors.managerAccent },
-    { id: 9, title: 'Special Features', icon: 'auto-awesome', route: '/manager/special-features-editor', color: colors.managerAccent },
-    { id: 4, title: 'Gallery Editor', icon: 'photo', route: '/manager/gallery-editor', color: colors.managerAccent },
-    { id: 5, title: 'About Us Editor', icon: 'info', route: '/manager/about-us-editor', color: colors.managerAccent },
-    { id: 7, title: 'Reviews Editor', icon: 'star', route: '/manager/reviews-editor', color: colors.managerAccent },
-    { id: 8, title: 'Tagline Editor', icon: 'edit', route: '/manager/tagline-editor', color: colors.managerAccent },
-  ];
-
-  const employeeTools = [
-    { id: 2, title: 'Employees', icon: 'people', route: '/manager/employees', color: colors.managerSecondary },
-    { id: 3, title: 'Announcements', icon: 'campaign', route: '/manager/announcements-editor', color: colors.managerSecondary },
-    { id: 4, title: 'Rewards', icon: 'attach-money', route: '/manager/rewards', color: colors.managerSecondary },
-    { id: 5, title: 'Schedules', icon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
-    { id: 6, title: 'Check Outs', icon: 'calculate', route: '/employee/checkouts', color: colors.managerSecondary },
-  ];
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -133,8 +111,6 @@ export default function ManagerHomeScreen() {
   if (!user) {
     return null;
   }
-
-  const currentTools = activeTab === 'customer' ? customerTools : employeeTools;
 
   // Get top 3 upcoming events
   const upcomingEvents = events
@@ -375,82 +351,6 @@ export default function ManagerHomeScreen() {
               ))}
             </CollapsibleSection>
           )}
-
-          {/* Profile Section Header */}
-          <Text style={styles.profileHeader}>{user?.full_name}&apos;s Profile</Text>
-
-          {/* My Profile Info - Elongated Tile */}
-          <Pressable
-            style={styles.profileButton}
-            onPress={() => router.push('/manager/profile')}
-          >
-            <MaterialIcons name="person" size={32} color={colors.managerAccent} />
-            <Text style={styles.profileButtonText}>My Profile Info</Text>
-          </Pressable>
-
-          {/* Guides and Training - Elongated Tile */}
-          <Pressable
-            style={styles.guidesButton}
-            onPress={() => router.push('/employee/training')}
-          >
-            <MaterialIcons name="menu-book" size={32} color={colors.managerAccent} />
-            <Text style={styles.guidesButtonText}>Guides & Training</Text>
-          </Pressable>
-
-          {/* Manager Tools */}
-          <View style={styles.toolsSection}>
-            <Text style={styles.toolsSectionTitle}>Management Tools</Text>
-            
-            {/* Tabs */}
-            <View style={styles.tabContainer}>
-              <Pressable
-                style={[styles.tab, activeTab === 'customer' && styles.tabActive]}
-                onPress={() => setActiveTab('customer')}
-              >
-                <MaterialIcons 
-                  name="storefront" 
-                  size={20} 
-                  color={activeTab === 'customer' ? '#FFFFFF' : colors.text} 
-                />
-                <Text style={[
-                  styles.tabText,
-                  activeTab === 'customer' && styles.tabTextActive
-                ]}>
-                  Customer Tools
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[styles.tab, activeTab === 'employee' && styles.tabActive]}
-                onPress={() => setActiveTab('employee')}
-              >
-                <MaterialIcons 
-                  name="people" 
-                  size={20} 
-                  color={activeTab === 'employee' ? '#FFFFFF' : colors.text} 
-                />
-                <Text style={[
-                  styles.tabText,
-                  activeTab === 'employee' && styles.tabTextActive
-                ]}>
-                  Employee Tools
-                </Text>
-              </Pressable>
-            </View>
-
-            {/* Tools Grid */}
-            <View style={styles.toolsGrid}>
-              {currentTools.map((tool) => (
-                <Pressable
-                  key={tool.id}
-                  style={[styles.toolCard, { backgroundColor: tool.color }]}
-                  onPress={() => router.push(tool.route as any)}
-                >
-                  <MaterialIcons name={tool.icon as any} color="#FFFFFF" size={28} />
-                  <Text style={styles.toolTitle}>{tool.title}</Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
         </ScrollView>
       </View>
 
@@ -762,106 +662,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
     fontStyle: 'italic',
-  },
-  profileHeader: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  profileButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.managerCard,
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 12,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
-    gap: 12,
-  },
-  profileButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  guidesButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.managerCard,
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 12,
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
-    gap: 12,
-  },
-  guidesButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  toolsSection: {
-    marginTop: 20,
-  },
-  toolsSectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 16,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: colors.managerCard,
-    borderRadius: 8,
-    padding: 4,
-    marginBottom: 16,
-    gap: 4,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-    gap: 6,
-  },
-  tabActive: {
-    backgroundColor: colors.managerAccent,
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  tabTextActive: {
-    color: '#FFFFFF',
-  },
-  toolsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  toolCard: {
-    width: '48%',
-    aspectRatio: 2,
-    borderRadius: 12,
-    padding: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
-  },
-  toolTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginTop: 8,
-    textAlign: 'center',
   },
 });

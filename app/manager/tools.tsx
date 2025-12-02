@@ -19,8 +19,8 @@ export default function ManagerToolsScreen() {
     { id: 1, title: 'Menu Editor', icon: 'restaurant', route: '/manager/menu-editor', color: colors.managerAccent },
     { id: 2, title: 'Weekly Specials Editor', icon: 'star', route: '/manager/weekly-specials-editor', color: colors.managerAccent },
     { id: 3, title: 'Events Editor', icon: 'event', route: '/manager/events-editor', color: colors.managerAccent },
-    { id: 4, title: 'Special Features', icon: 'auto-awesome', route: '/manager/special-features-editor', color: colors.managerAccent },
-    { id: 5, title: 'Reviews Editor', icon: 'star', route: '/manager/reviews-editor', color: colors.managerAccent },
+    { id: 4, title: 'Special Features Editor', icon: 'auto-awesome', route: '/manager/special-features-editor', color: colors.managerAccent },
+    { id: 5, title: 'Reviews Editor', icon: 'star-rate', route: '/manager/reviews-editor', color: colors.managerAccent },
   ];
 
   const managementTools = [
@@ -29,6 +29,7 @@ export default function ManagerToolsScreen() {
     { id: 3, title: 'Rewards', icon: 'attach-money', route: '/manager/rewards', color: colors.managerSecondary },
     { id: 4, title: 'Schedules', icon: 'schedule', route: '/manager/schedule', color: colors.managerSecondary },
     { id: 5, title: 'Check Outs', icon: 'calculate', route: '/employee/checkouts', color: colors.managerSecondary },
+    { id: 6, title: 'Training & Guides', icon: 'menu-book', route: '/manager/guides-editor', color: colors.managerSecondary },
   ];
 
   const currentTools = activeTab === 'employee' ? employeeTools : managementTools;
