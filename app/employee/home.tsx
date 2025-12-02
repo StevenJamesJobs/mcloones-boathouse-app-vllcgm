@@ -62,11 +62,6 @@ export default function EmployeeHomeScreen() {
     }
   };
 
-  const handleBackPress = () => {
-    // Navigate back to login screen instead of splash
-    router.replace('/login');
-  };
-
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -129,11 +124,6 @@ export default function EmployeeHomeScreen() {
             backgroundColor: colors.employeeBackground,
           },
           headerTintColor: colors.text,
-          headerLeft: () => (
-            <Pressable onPress={handleBackPress} style={styles.backButton}>
-              <MaterialIcons name="arrow-back" size={24} color={colors.text} />
-            </Pressable>
-          ),
           headerRight: () => (
             <Pressable onPress={handleLogout} style={styles.logoutButton}>
               <Text style={styles.logoutButtonText}>Logout</Text>
@@ -389,11 +379,6 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: colors.textSecondary,
-  },
-  backButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginLeft: 8,
   },
   logoutButton: {
     paddingHorizontal: 16,

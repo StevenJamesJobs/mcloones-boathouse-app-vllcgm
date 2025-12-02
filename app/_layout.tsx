@@ -95,19 +95,8 @@ export default function RootLayout() {
               {/* Login Screen */}
               <Stack.Screen name="login" options={{ headerShown: false }} />
 
-              {/* Employee Portal */}
-              <Stack.Screen name="employee/home" options={{ headerShown: true }} />
-              <Stack.Screen name="employee/inbox" options={{ headerShown: true }} />
-              <Stack.Screen name="employee/profile" options={{ headerShown: true }} />
-              <Stack.Screen name="employee/training" options={{ headerShown: true }} />
-              <Stack.Screen name="employee/rewards" options={{ headerShown: true }} />
-              <Stack.Screen name="employee/rewards-and-reviews" options={{ headerShown: true }} />
-              <Stack.Screen name="employee/tools" options={{ headerShown: true }} />
-              <Stack.Screen name="employee/checkouts" options={{ headerShown: true }} />
-              <Stack.Screen name="employee/full-events" options={{ headerShown: true }} />
-              <Stack.Screen name="employee/message-detail" options={{ headerShown: true }} />
-              <Stack.Screen name="employee/sent-message-detail" options={{ headerShown: true }} />
-              <Stack.Screen name="employee/new-message" options={{ headerShown: true }} />
+              {/* Employee Portal - Now with tab navigation */}
+              <Stack.Screen name="employee" options={{ headerShown: false }} />
 
               {/* Manager Portal */}
               <Stack.Screen name="manager/home" options={{ headerShown: true }} />
